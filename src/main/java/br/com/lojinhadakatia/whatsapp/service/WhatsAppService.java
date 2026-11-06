@@ -1,0 +1,54 @@
+package br.com.lojinhadakatia.whatsapp.service;
+
+import br.com.lojinhadakatia.catalog.service.CatalogService;
+import br.com.lojinhadakatia.offering.service.OfferingService;
+import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
+import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
+import br.com.lojinhadakatia.shared.exception.BusinessException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * Constrói links de atendimento sem registrar pedidos ou dados pessoais.
+ * Telefone publicado vem exclusivamente das configurações da loja.
+ */
+@Service
+@Transactional(readOnly = true)
+public class WhatsAppService {
+    private final StoreInformationRepository storeRepository;
+    private final CatalogService catalogService;
+    private final OfferingService offeringService;
+
+    public WhatsAppService(StoreInformationRepository storeRepository,
+                           CatalogService catalogService,
+                           OfferingService offeringService) {
+        this.storeRepository = storeRepository;
+        this.catalogService = catalogService;
+        this.offeringService = offeringService;
+    }
+
+    /** Uma consulta só é permitida para produtos atualmente publicados. */
+    public WhatsAppLinkResponse forProduct(Long productId) {
+        var product = catalogService.published(productId);
+        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() + ".");
+    }
+
+    /** Uma consulta só é permitida para serviços atualmente publicados. */
+    public WhatsAppLinkResponse forOffering(Long offeringId) {
+        var offering = offeringService.publicOne(offeringId);
+        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ".");
+    }
+
+    private WhatsAppLinkResponse buildLink(String message) {
+        String phone = storeRepository.findById(1L)
+            .map(info -> info.getWhatsapp())
+            .filter(number -> !number.isBlank())
+            .orElseThrow(() -> new BusinessException("O WhatsApp da loja ainda não foi configurado."));
+        String digits = phone.replaceAll("[^0-9]", "");
+        String encodedText = URLEncoder.encode(message, StandardCharsets.UTF_8)
+            .replace("+", "%20");
+        return new WhatsAppLinkResponse("https://wa.me/" + digits + "?text=" + encodedText, message);
+    }
+}
