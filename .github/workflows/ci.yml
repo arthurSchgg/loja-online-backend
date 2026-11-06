@@ -28,3 +28,17 @@ jobs:
           POSTGRES_TEST_USER: postgres
           POSTGRES_TEST_PASSWORD: postgres_ci_password
         run: mvn -B verify
+      - name: Verify PostgreSQL backup and isolated restore
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGPASSWORD: postgres_ci_password
+          PGDATABASE: lojinha_ci
+          BACKUP_DIR: /tmp/lojinha-ci-backups
+          RESTORE_TARGET_DATABASE: lojinha_ci_restore_test
+        run: |
+          bash scripts/backup-postgres.sh
+          archive="$(find "$BACKUP_DIR" -maxdepth 1 -name '*.dump' -print -quit)"
+          test -n "$archive"
+          bash scripts/verify-postgres-restore.sh "$archive"
