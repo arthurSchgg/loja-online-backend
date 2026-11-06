@@ -1,78 +1,108 @@
-# Lojinha da Kátia — API REST
+# Lojinha da Kátia — Backend
 
-Backend do catálogo digital da **Lojinha da Kátia**. O site apresenta produtos e direciona clientes ao WhatsApp; **não possui carrinho, pedidos, checkout nem pagamentos**.
+Backend REST do site **Lojinha da Kátia**: vitrine digital, experiências interativas, espaço das velas e administração de conteúdo. O objetivo é apresentar ofertas e estimular conversas pelo WhatsApp. **Não existe carrinho, checkout, pedido, cobrança, agendamento automático ou gestão de estoque transacional.**
 
-## Stack
+## Tecnologias
 
-Java 21 · Spring Boot 3.5.7 · Spring Web MVC · Spring Data JPA (Hibernate) · PostgreSQL 16 · Flyway · Jakarta Validation · Spring Security · Springdoc OpenAPI · Maven.
+Java 21 • Spring Boot 3.5.7 • Spring MVC • Spring Data JPA/Hibernate • PostgreSQL • Flyway • Jakarta Validation • Spring Security • OpenAPI/Swagger • Maven • JUnit/MockMvc.
 
-## Estrutura por domínio
+## Estrutura
 
 ```text
 src/main/java/br/com/lojinhadakatia/
-├── catalog/
-│   ├── controller/    # Consultas públicas e operações admin
-│   ├── dto/           # Contratos HTTP
-│   ├── entity/        # Entidades persistentes
-│   ├── repository/    # Acesso ao banco via Spring Data JPA
-│   └── service/       # Casos de uso e regras de negócio
-├── store/             # Institucional, contato e WhatsApp
-├── security/          # Autorização ADMIN e CORS
-├── shared/            # OpenAPI, erros padronizados
-└── LojaOnlineApplication.java
+├── LojaOnlineApplication.java
+├── catalog/       # Produtos, marcas, categorias, fotos, busca e filtros
+├── store/         # Contatos e informações oficiais da loja
+├── experience/    # Quizzes, perguntas, alternativas e resultados
+├── offering/      # Velas artesanais, oficinas e locações
+├── content/       # Blocos e seções institucionais publicáveis
+├── campaign/      # Banners e destaques com período de publicação
+├── security/      # ADMIN, CORS e auditoria mínima
+└── shared/        # OpenAPI e respostas de erro ProblemDetail
+
+src/main/resources/
+├── application.yml
+└── db/migration/  # Migrações Flyway V1 a V6
+
+src/test/          # Testes MockMvc/JPA/H2 e PostgreSQL real em CI
+docs/              # Contratos, operações, segurança, testes e Git Flow
 ```
 
-## Executar localmente
+Cada domínio usa `controller` (HTTP), `dto` (contratos), `entity` (persistência), `repository` (Spring Data JPA) e `service` (regras de negócio). As entidades **não** são serializadas diretamente nas respostas.
 
-Pré-requisitos: Java 21, Maven 3.9+, Docker e Docker Compose.
+## Iniciando localmente
 
-1. Copie `.env.example` para `.env` e altere **DB_PASSWORD** e **ADMIN_PASSWORD** para valores fortes. O arquivo `.env` não deve ser comitado.
-2. Exporte as variáveis de `.env` para o ambiente do terminal (o Spring Boot **não lê automaticamente** o arquivo `.env`). No PowerShell, use `$env:DB_PASSWORD="..."`, `$env:ADMIN_USERNAME="..."`, `$env:ADMIN_PASSWORD="..."` e, se necessário, as outras variáveis.
+Pré-requisitos: JDK 21, Maven 3.9+ e PostgreSQL (ou Docker Compose).
+
+1. Copie `.env.example` para `.env` e **substitua os valores de exemplo por credenciais fortes**.
+2. Exporte ao terminal `DB_PASSWORD`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` (mínimo 12 caracteres), além de `DB_URL` e `DB_USERNAME` se diferirem do padrão. O Spring **não carrega `.env` automaticamente**.
 3. Execute `docker compose --env-file .env up -d`.
-4. Rode `mvn spring-boot:run`.
+4. Execute `mvn spring-boot:run`.
+5. Confira `http://localhost:8080/swagger-ui.html` e `http://localhost:8080/actuator/health`.
 
-**Windows PowerShell:** além das variáveis de admin e banco, informe `$env:DB_URL="jdbc:postgresql://localhost:5432/lojinha_da_katia"` se sua configuração diferir do padrão.
+No PowerShell, defina variáveis com `$env:ADMIN_USERNAME="admin"`, `$env:ADMIN_PASSWORD="senha-longa-e-exclusiva"` etc. Credenciais jamais devem ser comitadas.
 
-- API: `http://localhost:8080/api/v1/products`
-- OpenAPI: `http://localhost:8080/swagger-ui.html`
-- Health: `http://localhost:8080/actuator/health`
+## Endpoints públicos
 
-## Rotas do MVP
-
-| Método | Endpoint | Acesso |
+| Método | Rota | Função |
 |---|---|---|
-| GET | `/api/v1/products` | Público |
-| GET | `/api/v1/products/{id}` | Público |
-| GET | `/api/v1/brands` | Público |
-| GET | `/api/v1/categories` | Público |
-| GET | `/api/v1/store` | Público |
-| GET | `/api/v1/admin/products` | ADMIN |
-| POST, PUT, DELETE | `/api/v1/admin/products[/{id}]` | ADMIN |
-| POST, PUT, DELETE | `/api/v1/admin/brands[/{id}]` | ADMIN |
-| POST, PUT, DELETE | `/api/v1/admin/categories[/{id}]` | ADMIN |
-| PUT | `/api/v1/admin/store` | ADMIN |
+| GET | `/api/v1/products` | Produtos publicados, busca e filtros |
+| GET | `/api/v1/products/{id}` | Detalhes do produto publicado |
+| GET | `/api/v1/brands` | Marcas ativas |
+| GET | `/api/v1/categories` | Categorias ativas |
+| GET | `/api/v1/store` | Contato e dados institucionais |
+| GET | `/api/v1/experiences` | Quizzes publicados |
+| GET | `/api/v1/experiences/{id}` | Perguntas e alternativas |
+| POST | `/api/v1/experiences/{id}/evaluate` | Avaliação anônima |
+| GET | `/api/v1/offerings` | Velas, oficinas e locações |
+| GET | `/api/v1/offerings/{id}` | Detalhes de oferta |
+| GET | `/api/v1/content-sections` | Conteúdo institucional publicado |
+| GET | `/api/v1/campaigns` | Banners ativos |
 
-A busca aceita `q`, `brandId`, `categoryId`, `available`, `page` e `size` (até 50). A API oferece fotos via URL HTTPS aprovada, sem upload binário.
+Filtros de produtos: `q`, `brandId`, `categoryId`, `available`, `page`, `size` (máximo 50). Ofertas aceitam `type=CANDLE|WORKSHOP|RENTAL`.
 
-### Exemplo: cadastro administrativo
+## Endpoints de administração
+
+Todas as rotas usam o prefixo `/api/v1/admin` e exigem **ADMIN** (HTTP Basic, credenciais por ambiente):
+
+- `/products`: GET/POST e GET/PUT/DELETE por ID;
+- `/brands` e `/categories`: POST, PUT e desativação por DELETE;
+- `/store`: PUT de contatos e dados públicos;
+- `/experiences`: GET/POST e GET/PUT/DELETE por ID;
+- `/offerings`: GET/POST e GET/PUT/DELETE por ID;
+- `/content-sections`: GET/POST e PUT/DELETE por ID;
+- `/campaigns`: GET/POST e PUT/DELETE por ID.
+
+Exemplo para criar uma marca de demonstração, após configurar credenciais:
 
 ```bash
 curl -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -X POST http://localhost:8080/api/v1/admin/brands \
-  -H 'Content-Type: application/json' -d '{"name":"Marca de Exemplo"}'
+  -H "Content-Type: application/json" -d '{"name":"Marca demonstrativa"}'
 ```
 
-Antes de cadastrar um produto, crie uma marca e uma categoria e utilize os IDs retornados. O campo `published=false` mantém rascunhos ocultos; `available` apenas informa disponibilidade visual, **não controla estoque**.
+**Nunca utilize HTTP sem HTTPS em produção.** Uma autenticação definitiva (sessão ou JWT), proteção contra abuso e política de administradores ainda exigem aprovação e implementação antes de uma liberação pública.
 
-## Testes e entrega
+## Testes
 
-`mvn clean verify` executa testes de integração rápidos em H2 (perfil `test`). A integração real com PostgreSQL/Testcontainers continua como melhoria planejada. O GitHub Actions valida os PRs.
+```bash
+mvn clean verify
+```
 
-## Segurança e decisões
+Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL real e executa um teste de integração com Flyway/Hibernate no banco-alvo, sem depender de Docker. Veja [docs/TESTING.md](docs/TESTING.md).
 
-Atualmente o administrador utiliza **HTTP Basic + BCrypt**, credenciais fornecidas por variáveis de ambiente, sem credenciais padrão. **Use apenas sob HTTPS** fora do computador local. A estratégia definitiva de autenticação aguarda aprovação; veja [docs/SECURITY.md](docs/SECURITY.md). Não publique um painel administrativo sem rever essa decisão.
+## Documentos
 
-Há campos de negócio intencionalmente vazios: telefone, Instagram, preços e imagens reais dependem de informações da proprietária. As experiências interativas e a área completa de velas estão planejadas para funcionalidades posteriores.
+- [Arquitetura](docs/ARCHITECTURE.md)
+- [Contrato da API](docs/API.md)
+- [Segurança](docs/SECURITY.md)
+- [Experiências](docs/EXPERIENCES.md)
+- [Serviços e velas](docs/OFFERINGS.md)
+- [Conteúdo institucional](docs/CONTENT.md)
+- [Campanhas](docs/CAMPAIGNS.md)
+- [Testes](docs/TESTING.md)
+- [Implantação](docs/DEPLOYMENT.md)
+- [Git Flow](docs/GIT-FLOW.md)
 
-## Fluxo de trabalho
+## Situação do projeto
 
-`main` para versões estáveis; `develop` para integração; `feature/<escopo>` para mudanças; PRs para revisão e CI. Mensagens de commit seguem Conventional Commits.
+As funcionalidades principais estão implementadas em `develop`, organizadas em branches `feature/*` e integradas por PRs. **A implementação não significa que a plataforma esteja aprovada para produção.** Ainda são necessários homologação comercial, credenciais definitivas, endurecimento de segurança, revisão de privacidade, testes de casos-limite, backup e aprovação de imagens/contatos/preços reais.
