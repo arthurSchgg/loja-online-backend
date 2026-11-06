@@ -66,7 +66,18 @@ public class CatalogService {
         Specification<Product> filter=(root,cq,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();
             if(!admin)predicates.add(cb.isTrue(root.get("published")));
-            if(query!=null&&!query.isBlank())predicates.add(cb.like(cb.lower(root.get("name")),"%"+query.trim().toLowerCase(Locale.ROOT).replace("%","\\%").replace("_","\\_")+"%",'\\'));
+            if (query != null && !query.isBlank()) {
+                // Escapes LIKE wildcards and searches both title and description.
+                String term = query.trim().toLowerCase(Locale.ROOT)
+                    .replace("\\", "\\\\")
+                    .replace("%", "\\%")
+                    .replace("_", "\\_");
+                String pattern = "%" + term + "%";
+                predicates.add(cb.or(
+                    cb.like(cb.lower(root.get("name")), pattern, '\\'),
+                    cb.like(cb.lower(root.get("description")), pattern, '\\')
+                ));
+            }
             if(brandId!=null)predicates.add(cb.equal(root.get("brand").get("id"),brandId));
             if(categoryId!=null){Join<Product,Category> cat=root.join("categories");predicates.add(cb.equal(cat.get("id"),categoryId));cq.distinct(true);}
             if(available!=null)predicates.add(cb.equal(root.get("available"),available));

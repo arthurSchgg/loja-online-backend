@@ -105,6 +105,10 @@ Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL 
 - [Testes](docs/TESTING.md)
 - [Implantação](docs/DEPLOYMENT.md)
 - [Git Flow](docs/GIT-FLOW.md)
+- [Aprovações necessárias antes da publicação](docs/REVIEW-DECISIONS.md)
+- [Backup e restauração](docs/BACKUP-RECOVERY.md)
+- [Gestão administrativa de marcas e categorias](docs/ADMIN-LOOKUPS.md)
+- [Matriz de testes](docs/TEST-COVERAGE.md)
 
 ## Situação do projeto
 
