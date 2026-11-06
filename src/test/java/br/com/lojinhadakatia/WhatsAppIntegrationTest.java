@@ -9,7 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import static org.hamcrest.Matchers.startsWith;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -23,11 +24,11 @@ class WhatsAppIntegrationTest {
 
     @Test
     void publishedOfferUsesConfiguredPhone() throws Exception {
-        mvc.perform(put("/api/v1/admin/store").with(httpBasic("tester","testpassword123"))
+        mvc.perform(put("/api/v1/admin/store").with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"displayName\":\"Lojinha da Kátia\",\"whatsapp\":\"5547999999999\"}"))
             .andExpect(status().isOk());
-        String response = mvc.perform(post("/api/v1/admin/offerings").with(httpBasic("tester","testpassword123"))
+        String response = mvc.perform(post("/api/v1/admin/offerings").with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"title\":\"Vela demonstrativa\",\"type\":\"CANDLE\",\"published\":true,\"position\":0}"))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
