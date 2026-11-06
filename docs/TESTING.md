@@ -1,21 +1,11 @@
-# Estratégia de testes
+# Testes de backend
 
-## Testes rápidos (H2)
+- `CatalogIntegrationTest` e `StoreIntegrationTest`: smoke tests rápidos usando H2 (Spring Test + MockMvc).
+- `PostgresMigrationIntegrationTest`: teste de integração que conecta ao PostgreSQL real, executa todas as migrações Flyway e valida Hibernate/schema + endpoint administrativo.
 
-`CatalogIntegrationTest` e `StoreIntegrationTest` verificam rotas, validação de payloads, segurança e JPA em perfil isolado `test`.
+O workflow `.github/workflows/ci.yml` instala e inicia PostgreSQL no runner, prepara o banco `lojinha_ci` e define `RUN_POSTGRES_INTEGRATION=true`, além de todas as variáveis de teste necessárias. As credenciais de teste do CI **não** devem ser reutilizadas em produção.
 
-## Integração PostgreSQL + Flyway
+## Local
+Execute `mvn clean verify` para os testes H2 sem dependências extras. Para incluir o teste PostgreSQL, inicie PostgreSQL local e configure `RUN_POSTGRES_INTEGRATION=true`, `POSTGRES_TEST_URL`, `POSTGRES_TEST_USER`, `POSTGRES_TEST_PASSWORD`. Use um banco temporário vazio dedicado aos testes.
 
-`PostgresMigrationIntegrationTest` usa **Testcontainers PostgreSQL 16** e aplica as migrations reais, com Hibernate em modo `validate`. O teste verifica que o schema e um fluxo de escrita administrativa funcionam no banco-alvo.
-
-### Comandos
-
-```bash
-mvn clean verify
-```
-
-Para executar o teste PostgreSQL na máquina local, o Docker precisa estar ativo. Se Docker não estiver disponível, o teste está configurado para ser ignorado; **um build local verde não substitui o CI completo**. No GitHub Actions, o runner disponibiliza Docker.
-
-## Pendente de cobertura
-
-Ainda faltam testes mais amplos de alterações e exclusões, erros de concorrência, segurança em profundidade, campanhas, experiências e serviços, além de testes de carga, análises de dependência e homologação do frontend. Não interpretar as provas atuais como certificação de produção.
+Os testes ainda **não** cobrem todos os fluxos da aplicação; antes do lançamento são necessários cenários negativos e de domínio para todos os módulos, segurança em profundidade e homologação.
