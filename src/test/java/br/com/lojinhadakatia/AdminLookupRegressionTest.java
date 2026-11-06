@@ -2,6 +2,7 @@ package br.com.lojinhadakatia;
 
 import br.com.lojinhadakatia.catalog.repository.BrandRepository;
 import br.com.lojinhadakatia.catalog.repository.CategoryRepository;
+import br.com.lojinhadakatia.catalog.repository.ProductRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +23,12 @@ class AdminLookupRegressionTest {
     @Autowired MockMvc mvc;
     @Autowired BrandRepository brands;
     @Autowired CategoryRepository categories;
+    @Autowired ProductRepository products;
 
     @BeforeEach
     void reset() {
+        // Products reference brands: delete dependents before lookup rows.
+        products.deleteAll();
         brands.deleteAll();
         categories.deleteAll();
     }
