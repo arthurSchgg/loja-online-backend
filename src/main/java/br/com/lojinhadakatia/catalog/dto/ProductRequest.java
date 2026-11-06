@@ -9,9 +9,9 @@ public record ProductRequest(
     @NotBlank @Size(max=180) String name,
     @Size(max=4000) String description,
     @NotNull @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal price,
-    @NotNull Long brandId,
-    @NotNull Set<@NotNull Long> categoryIds,
+    @NotNull @Positive Long brandId,
+    @NotNull Set<@NotNull @Positive Long> categoryIds,
     boolean available,
     boolean published,
-    @NotNull List<@Valid ImageRequest> images
+    @NotNull @Size(max=12) List<@NotNull @Valid ImageRequest> images
 ) {}

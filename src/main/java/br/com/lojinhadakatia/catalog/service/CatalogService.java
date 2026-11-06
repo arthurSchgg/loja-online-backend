@@ -25,6 +25,43 @@ public class CatalogService {
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
+
+    /** Includes disabled brands and categories in administrative queries. */
+    public List<LookupDto> adminBrands() {
+        return brands.findAll(Sort.by("name")).stream()
+            .map(brand -> new LookupDto(brand.getId(), brand.getName())).toList();
+    }
+
+    public List<LookupDto> adminCategories() {
+        return categories.findAll(Sort.by("name")).stream()
+            .map(category -> new LookupDto(category.getId(), category.getName())).toList();
+    }
+
+    public LookupDto adminBrand(Long id) {
+        Brand brand = brands.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Marca não encontrada."));
+        return new LookupDto(brand.getId(), brand.getName());
+    }
+
+    public LookupDto adminCategory(Long id) {
+        Category category = categories.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
+        return new LookupDto(category.getId(), category.getName());
+    }
+
+    @Transactional
+    public void activateBrand(Long id) {
+        Brand brand = brands.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Marca não encontrada."));
+        brand.setActive(true);
+    }
+
+    @Transactional
+    public void activateCategory(Long id) {
+        Category category = categories.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Categoria não encontrada."));
+        category.setActive(true);
+    }
     public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,Pageable pageable,boolean admin){
         Specification<Product> filter=(root,cq,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();
