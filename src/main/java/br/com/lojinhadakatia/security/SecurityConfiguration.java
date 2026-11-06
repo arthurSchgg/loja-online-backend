@@ -57,7 +57,6 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET,"/api/v1/**","/actuator/health","/actuator/info",
                     "/v3/api-docs/**","/swagger-ui/**","/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.POST,"/api/v1/experiences/*/evaluate").permitAll()
                 .anyRequest().denyAll())
             .httpBasic(Customizer.withDefaults())
             .build();
