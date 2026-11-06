@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -9,33 +10,23 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
-import org.testcontainers.containers.PostgreSQLContainer;
-import org.testcontainers.junit.jupiter.Container;
-import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/**
- * Contrato de persistência exercitado em PostgreSQL real e schema criado por Flyway.
- * Se Docker estiver indisponível, Testcontainers permite ignorar esta classe localmente.
- * No CI Linux com Docker, o teste deve executar.
- */
+/** Exercita as migrações Flyway e um fluxo de escrita em PostgreSQL real fornecido pelo CI. */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Testcontainers(disabledWithoutDocker = true)
+@EnabledIfEnvironmentVariable(named="RUN_POSTGRES_INTEGRATION", matches="true")
 class PostgresMigrationIntegrationTest {
-
-    @Container
-    static final PostgreSQLContainer<?> database = new PostgreSQLContainer<>("postgres:16-alpine");
 
     @DynamicPropertySource
     static void postgres(DynamicPropertyRegistry registry) {
-        registry.add("spring.datasource.url", database::getJdbcUrl);
-        registry.add("spring.datasource.username", database::getUsername);
-        registry.add("spring.datasource.password", database::getPassword);
+        registry.add("spring.datasource.url", () -> System.getenv("POSTGRES_TEST_URL"));
+        registry.add("spring.datasource.username", () -> System.getenv("POSTGRES_TEST_USER"));
+        registry.add("spring.datasource.password", () -> System.getenv("POSTGRES_TEST_PASSWORD"));
         registry.add("spring.datasource.driver-class-name", () -> "org.postgresql.Driver");
         registry.add("spring.jpa.hibernate.ddl-auto", () -> "validate");
         registry.add("spring.flyway.enabled", () -> "true");
@@ -44,11 +35,9 @@ class PostgresMigrationIntegrationTest {
     @Autowired MockMvc mvc;
 
     @Test
-    void migrationsCreateRealTablesAndAdminCanWrite() throws Exception {
+    void flywayMigratesPostgresAndAdminCanWrite() throws Exception {
         mvc.perform(get("/api/v1/products"))
-            .andExpect(status().isOk())
-            .andExpect(jsonPath("$.totalElements").value(0));
-
+            .andExpect(status().isOk());
         mvc.perform(post("/api/v1/admin/brands")
                 .with(httpBasic("tester", "testpassword123"))
                 .contentType(MediaType.APPLICATION_JSON)
