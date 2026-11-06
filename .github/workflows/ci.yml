@@ -1,9 +1,9 @@
 name: Backend CI
 on:
   push:
-    branches: [main, develop, 'feature/**']
+    branches: [main, develop, 'feature/**', 'release/**']
   pull_request:
-    branches: [main, develop]
+    branches: [main, develop, 'release/**']
 jobs:
   verify:
     runs-on: ubuntu-latest
@@ -14,6 +14,11 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
+      - name: Validate Docker Compose definitions without starting containers
+        run: |
+          docker compose --env-file .env.example -f compose.yaml config --quiet
+          docker compose --env-file .env.staging.example -f compose.staging.yaml config --quiet
+          bash -n scripts/*.sh
       - name: Install and start PostgreSQL for integration tests
         run: |
           sudo apt-get update -qq
@@ -21,7 +26,7 @@ jobs:
           sudo service postgresql start
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres_ci_password';"
           sudo -u postgres createdb lojinha_ci
-      - name: Run unit and PostgreSQL integration tests
+      - name: Run tests and package
         env:
           RUN_POSTGRES_INTEGRATION: 'true'
           POSTGRES_TEST_URL: jdbc:postgresql://localhost:5432/lojinha_ci
