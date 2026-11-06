@@ -48,6 +48,7 @@ No PowerShell, defina variáveis com `$env:ADMIN_USERNAME="admin"`, `$env:ADMIN_
 |---|---|---|
 | GET | `/api/v1/products` | Produtos publicados, busca e filtros |
 | GET | `/api/v1/products/{id}` | Detalhes do produto publicado |
+| GET | `/api/v1/products/{id}/whatsapp` | Link contextualizado para WhatsApp |
 | GET | `/api/v1/brands` | Marcas ativas |
 | GET | `/api/v1/categories` | Categorias ativas |
 | GET | `/api/v1/store` | Contato e dados institucionais |
@@ -56,6 +57,7 @@ No PowerShell, defina variáveis com `$env:ADMIN_USERNAME="admin"`, `$env:ADMIN_
 | POST | `/api/v1/experiences/{id}/evaluate` | Avaliação anônima |
 | GET | `/api/v1/offerings` | Velas, oficinas e locações |
 | GET | `/api/v1/offerings/{id}` | Detalhes de oferta |
+| GET | `/api/v1/offerings/{id}/whatsapp` | Link contextualizado para WhatsApp |
 | GET | `/api/v1/content-sections` | Conteúdo institucional publicado |
 | GET | `/api/v1/campaigns` | Banners ativos |
 
@@ -99,6 +101,7 @@ Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL 
 - [Serviços e velas](docs/OFFERINGS.md)
 - [Conteúdo institucional](docs/CONTENT.md)
 - [Campanhas](docs/CAMPAIGNS.md)
+- [WhatsApp](docs/WHATSAPP.md)
 - [Testes](docs/TESTING.md)
 - [Implantação](docs/DEPLOYMENT.md)
 - [Git Flow](docs/GIT-FLOW.md)
