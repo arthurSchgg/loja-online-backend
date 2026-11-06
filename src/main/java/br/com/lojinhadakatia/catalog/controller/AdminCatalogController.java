@@ -6,6 +6,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import java.net.URI;
+import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
@@ -55,6 +56,19 @@ public class AdminCatalogController {
         return ResponseEntity.noContent().build();
     }
 
+
+    @GetMapping("/brands")
+    public List<LookupDto> brands() { return catalog.adminBrands(); }
+
+    @GetMapping("/brands/{id}")
+    public LookupDto brand(@PathVariable Long id) { return catalog.adminBrand(id); }
+
+    @PutMapping("/brands/{id}/activate")
+    public ResponseEntity<Void> activateBrand(@PathVariable Long id) {
+        catalog.activateBrand(id);
+        return ResponseEntity.noContent().build();
+    }
+
     @PostMapping("/brands")
     public ResponseEntity<LookupDto> createBrand(@Valid @RequestBody LookupRequest request) {
         LookupDto result = catalog.addBrand(request);
@@ -69,6 +83,19 @@ public class AdminCatalogController {
     @DeleteMapping("/brands/{id}")
     public ResponseEntity<Void> deactivateBrand(@PathVariable Long id) {
         catalog.deactivateBrand(id);
+        return ResponseEntity.noContent().build();
+    }
+
+
+    @GetMapping("/categories")
+    public List<LookupDto> categories() { return catalog.adminCategories(); }
+
+    @GetMapping("/categories/{id}")
+    public LookupDto category(@PathVariable Long id) { return catalog.adminCategory(id); }
+
+    @PutMapping("/categories/{id}/activate")
+    public ResponseEntity<Void> activateCategory(@PathVariable Long id) {
+        catalog.activateCategory(id);
         return ResponseEntity.noContent().build();
     }
 
