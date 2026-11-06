@@ -37,7 +37,7 @@ Pré-requisitos: JDK 21, Maven 3.9+ e PostgreSQL (ou Docker Compose).
 1. Copie `.env.example` para `.env` e **substitua os valores de exemplo por credenciais fortes**.
 2. Exporte ao terminal `DB_PASSWORD`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` (mínimo 12 caracteres), além de `DB_URL` e `DB_USERNAME` se diferirem do padrão. O Spring **não carrega `.env` automaticamente**.
 3. Execute `docker compose --env-file .env up -d`.
-4. Execute `mvn spring-boot:run`.
+4. Para testar sem HTTPS **somente em localhost**, execute `mvn spring-boot:run -Dspring-boot.run.profiles=local`. O perfil `local` permite o cookie de sessão sem `Secure`; **nunca use esse perfil em produção**. Fora do localhost, use HTTPS e o perfil padrão.
 5. Confira `http://localhost:8080/swagger-ui.html` e `http://localhost:8080/actuator/health`.
 
 No PowerShell, defina variáveis com `$env:ADMIN_USERNAME="admin"`, `$env:ADMIN_PASSWORD="senha-longa-e-exclusiva"` etc. Credenciais jamais devem ser comitadas.
@@ -65,7 +65,7 @@ Filtros de produtos: `q`, `brandId`, `categoryId`, `available`, `page`, `size` (
 
 ## Endpoints de administração
 
-Todas as rotas usam o prefixo `/api/v1/admin` e exigem **ADMIN** (HTTP Basic, credenciais por ambiente):
+Todas as rotas usam o prefixo `/api/v1/admin` e exigem **ADMIN** por sessão HTTP segura e proteção CSRF. A proprietária faz login pelo endpoint `/api/v1/auth/login`; o painel deve compartilhar a mesma origem da API:
 
 - `/products`: GET/POST e GET/PUT/DELETE por ID;
 - `/brands` e `/categories`: POST, PUT e desativação por DELETE;
@@ -75,14 +75,9 @@ Todas as rotas usam o prefixo `/api/v1/admin` e exigem **ADMIN** (HTTP Basic, cr
 - `/content-sections`: GET/POST e PUT/DELETE por ID;
 - `/campaigns`: GET/POST e PUT/DELETE por ID.
 
-Exemplo para criar uma marca de demonstração, após configurar credenciais:
+Para integrar o formulário HTML/JavaScript, consulte [docs/SECURITY.md](docs/SECURITY.md), que contém o fluxo de obtenção do CSRF, login por formulário, chamadas autenticadas e logout. O frontend administrativo e a API devem estar sob a **mesma origem**, ainda que em repositórios separados.
 
-```bash
-curl -u "$ADMIN_USERNAME:$ADMIN_PASSWORD" -X POST http://localhost:8080/api/v1/admin/brands \
-  -H "Content-Type: application/json" -d '{"name":"Marca demonstrativa"}'
-```
-
-**Nunca utilize HTTP sem HTTPS em produção.** Uma autenticação definitiva (sessão ou JWT), proteção contra abuso e política de administradores ainda exigem aprovação e implementação antes de uma liberação pública.
+**Nunca publique o painel sem HTTPS.** A autenticação por sessão foi aprovada, mas limites de tentativas, configuração de hospedagem, operação e homologação ainda precisam de validação.
 
 ## Testes
 
@@ -112,4 +107,4 @@ Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL 
 
 ## Situação do projeto
 
-As funcionalidades principais estão implementadas em `develop`, organizadas em branches `feature/*` e integradas por PRs. **A implementação não significa que a plataforma esteja aprovada para produção.** Ainda são necessários homologação comercial, credenciais definitivas, endurecimento de segurança, revisão de privacidade, testes de casos-limite, backup e aprovação de imagens/contatos/preços reais.
+As funcionalidades principais estão implementadas em `develop`, organizadas em branches `feature/*` e integradas por PRs. **A implementação não significa que a plataforma esteja aprovada para produção.** Ainda são necessários homologação comercial, endurecimento de segurança, revisão de privacidade, configuração de backups reais e aprovação de imagens/contatos/preços.

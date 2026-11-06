@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -26,22 +27,24 @@ class SecurityReleaseIntegrationTest {
 
     @Test
     void anonymousCannotWriteInstitutionalContent() throws Exception {
-        mvc.perform(post("/api/v1/admin/content-sections")
+        mvc.perform(post("/api/v1/admin/content-sections").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")).andExpect(status().isUnauthorized());
     }
 
     @Test
     void unsupportedPublicWriteIsDenied() throws Exception {
-        mvc.perform(post("/api/v1/products")
+        mvc.perform(post("/api/v1/products").with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")).andExpect(status().isUnauthorized());
     }
 
     @Test
     void invalidCredentialsCannotAccessAdministration() throws Exception {
-        mvc.perform(get("/api/v1/admin/products")
-                .with(httpBasic("tester", "invalid-password")))
+        mvc.perform(post("/api/v1/auth/login")
+                .with(csrf())
+                .param("username", "tester")
+                .param("password", "invalid-password"))
             .andExpect(status().isUnauthorized());
     }
 
@@ -61,7 +64,7 @@ class SecurityReleaseIntegrationTest {
     @Test
     void authenticatedAdminCanReadCatalog() throws Exception {
         mvc.perform(get("/api/v1/admin/products")
-                .with(httpBasic("tester", "testpassword123")))
+                .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isOk());
     }
 }

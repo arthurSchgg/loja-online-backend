@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -28,7 +29,7 @@ class CatalogReleaseIntegrationTest {
     @Test
     void draftCannotBeReadPubliclyButCanBeReadByAdministrator() throws Exception {
         String brandJson = mvc.perform(post("/api/v1/admin/brands")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Marca Rascunho Homologacao\"}"))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -47,7 +48,7 @@ class CatalogReleaseIntegrationTest {
             """.formatted(brand.get("id").asLong());
 
         String draftJson = mvc.perform(post("/api/v1/admin/products")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(draftPayload))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -55,14 +56,14 @@ class CatalogReleaseIntegrationTest {
         long productId = mapper.readTree(draftJson).get("id").asLong();
         mvc.perform(get("/api/v1/products/" + productId)).andExpect(status().isNotFound());
         mvc.perform(get("/api/v1/admin/products/" + productId)
-                .with(httpBasic("tester", "testpassword123")))
+                .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.published").value(false));
     }
 
     @Test
     void administrativePaginationRejectsInvalidLimit() throws Exception {
         mvc.perform(get("/api/v1/admin/products?size=100")
-                .with(httpBasic("tester", "testpassword123")))
+                .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isBadRequest());
     }
 }

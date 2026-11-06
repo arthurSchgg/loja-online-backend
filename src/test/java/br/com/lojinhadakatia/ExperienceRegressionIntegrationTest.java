@@ -12,7 +12,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -84,7 +85,7 @@ class ExperienceRegressionIntegrationTest {
     @Test
     void incompleteExperienceCannotBePublished() throws Exception {
         mvc.perform(post("/api/v1/admin/experiences")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"title":"Incompleto","published":true,"questions":[],"results":[]}
@@ -112,7 +113,7 @@ class ExperienceRegressionIntegrationTest {
             }
             """.formatted(published);
         String json = mvc.perform(post("/api/v1/admin/experiences")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
             .andExpect(status().isCreated())

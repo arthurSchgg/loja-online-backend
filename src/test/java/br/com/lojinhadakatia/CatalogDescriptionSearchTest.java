@@ -9,7 +9,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -24,13 +25,13 @@ class CatalogDescriptionSearchTest {
     @Test
     void publicSearchFindsTermOnlyPresentInDescription() throws Exception {
         String brand = mvc.perform(post("/api/v1/admin/brands")
-                .with(httpBasic("tester","testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Marca Descricao Especial\"}"))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         long brandId = mapper.readTree(brand).get("id").asLong();
         mvc.perform(post("/api/v1/admin/products")
-                .with(httpBasic("tester","testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"name":"Vela exemplo",

@@ -8,7 +8,8 @@ A execução anterior em `develop` foi aprovada, incluindo testes HTTP e migraç
 
 - [ ] CI da branch `release/*` aprovado no último commit.
 - [ ] Todas as rotas administrativas autenticadas e sem escritas públicas indevidas.
-- [ ] Autenticação definitiva (sessão ou JWT), proteção contra força bruta e regras CORS/CSRF aprovadas e testadas.
+- [x] Arquitetura de autenticação por sessão e CSRF aprovada e implementada no backend.
+- [ ] Proteção contra força bruta, HTTPS real, origens CORS e integração com frontend testadas.
 - [ ] Dados oficiais (telefone, preços, marcas, categorias e imagens) confirmados pela proprietária.
 - [ ] Quizzes, recomendações, textos, serviços e campanhas aprovados pela proprietária.
 - [ ] Política de privacidade, armazenamento e retenção analisados para o cenário real.
