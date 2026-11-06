@@ -27,17 +27,16 @@ Este documento separa fatos implementados de decisões ainda não tomadas. **Nen
 - [ ] Validar política de privacidade e textos legais pertinentes com responsável qualificado, conforme realidade da loja.
 - [ ] Validar integração real com o frontend (separado deste repositório) e todas as telas com a proprietária.
 
-## C. Segurança administrativa — decisão técnica com aprovação
+## C. Segurança administrativa — arquitetura aprovada
 
-**Atual:** HTTP Basic com usuário único, credenciais em variáveis de ambiente, BCrypt, rotas administrativas bloqueadas para anônimos. Esta implementação é uma etapa de homologação, **não é solução definitiva de login exposto à internet**.
+**Decisão confirmada:** somente a proprietária terá acesso administrativo, através do Spring Security com sessão HTTP, cookie HttpOnly/Secure/SameSite e token CSRF. Não haverá cadastro público ou JWT. Implementação e testes: `feature/admin-session-csrf`; consultar `docs/ADR-001-ADMIN-SESSION.md` e `docs/SECURITY.md`.
 
-Escolher uma estratégia e aprovar a implementação e a política operacional:
-- [ ] Sessão com cookie HttpOnly/Secure/SameSite e proteção CSRF adequada, **ou**
-- [ ] API autenticada por token com armazenamento seguro e políticas definidas (não simplesmente salvar JWT em localStorage sem avaliação).
-- [ ] Definir número de administradores, criação/revogação de contas, recuperação de acesso e rotação de segredos.
-- [ ] Definir proteção contra tentativas de login abusivas (limites distribuídos, gateway/proxy, alertas).
-- [ ] Revisar políticas CORS, exposição do Swagger e domínio HTTPS.
-- [ ] Homologar testes negativos, dependências, autorização de rotas e resiliência.
+- [x] Definir única administradora.
+- [x] Aprovar autenticação por sessão HTTP e proteção CSRF.
+- [ ] Definir procedimento de recuperação de acesso e rotação de segredos.
+- [ ] Implementar/validar limite de tentativas de login no gateway e alertas.
+- [ ] Homologar CORS, HTTPS real, proxy reverso e origens (painel e API sob a mesma origem).
+- [ ] Completar testes de segurança e integração com o frontend antes de publicar.
 
 ## D. Hospedagem e operação — decisão técnica com aprovação de custo
 

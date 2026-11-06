@@ -28,7 +28,7 @@ A URL de imagem é pública e não é carregada pelo servidor; não armazene dad
 
 ## Autorização
 
-Prefixo `/api/v1/admin/**` requer papel `ADMIN` e credenciais HTTP Basic. Chamadas anônimas retornam 401.
+Prefixo `/api/v1/admin/**` requer papel `ADMIN` e sessão HTTP autenticada. O login usa formulário `POST /api/v1/auth/login` com CSRF; veja `docs/SECURITY.md`. Chamadas anônimas retornam 401, e escritas sem CSRF válido retornam 403.
 
 ## Evolução
 
