@@ -13,7 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -59,7 +60,7 @@ class OfferingAndContentRegressionTest {
     @Test
     void negativePriceIsRejected() throws Exception {
         mvc.perform(post("/api/v1/admin/offerings")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"title":"Valor inválido","type":"CANDLE","price":-1,"published":true}
@@ -74,7 +75,7 @@ class OfferingAndContentRegressionTest {
              "body":"Conteúdo de teste","position":1,"published":false}
             """;
         mvc.perform(post("/api/v1/admin/content-sections")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
             .andExpect(status().isCreated());
@@ -84,14 +85,14 @@ class OfferingAndContentRegressionTest {
             .andExpect(jsonPath("$").isEmpty());
 
         mvc.perform(get("/api/v1/admin/content-sections")
-                .with(httpBasic("tester", "testpassword123")))
+                .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$[0].slug").value("quem-somos"));
     }
 
     private long createdOffering(boolean published) throws Exception {
         String response = mvc.perform(post("/api/v1/admin/offerings")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"title":"Vela de demonstração","type":"CANDLE",

@@ -11,6 +11,7 @@
 - `ADMIN_USERNAME` e `ADMIN_PASSWORD`: credenciais administrativas fortes, nunca adicionadas ao repositório; senha mínima de 12 caracteres.
 - `CORS_ALLOWED_ORIGINS`: lista separada por vírgulas de URLs HTTPS do frontend, sem barra final.
 - `SERVER_PORT`: opcional, padrão 8080.
+- `SESSION_COOKIE_SECURE`: deve permanecer `true` em qualquer ambiente HTTPS. O perfil `local` desativa esse atributo somente em localhost HTTP.
 
 O Spring falha no startup sem credenciais de administrador válidas. **Nunca reutilizar valores do arquivo de exemplo.**
 
@@ -24,7 +25,7 @@ O Spring falha no startup sem credenciais de administrador válidas. **Nunca reu
 6. Subir container com variáveis de ambiente e proxy HTTPS.
 7. Verificar `GET /actuator/health`, respostas públicas e rejeição de acessos anônimos a `/api/v1/admin/**`.
 
-**Importante:** a autenticação atual é HTTP Basic com senha fornecida em cada requisição. Não expor o admin pela internet antes da aprovação da estratégia definitiva e revisão de segurança. Não configurar HTTPS somente dentro do Java; usar também o proxy reverso e encaminhar cabeçalhos corretamente.
+**Importante:** a autenticação usa sessão HTTP com cookie HttpOnly/Secure/SameSite e CSRF. Servir frontend administrativo e API pela mesma origem HTTPS (com proxy reverso quando necessário). Não expor o painel sem proteção contra tentativas abusivas, testes no domínio real e revisão de segurança. A aplicação mantém sessões em memória: se operar com múltiplas instâncias, definir armazenamento compartilhado.
 
 ## Operação
 
@@ -40,7 +41,8 @@ Definir com o provedor frequência, criptografia, acesso e retenção dos backup
 
 ## Checklist de liberação
 
-- [ ] Autenticação definitiva e política de administradores aprovadas.
+- [x] Arquitetura de autenticação por sessão aprovada e implementada para uma proprietária.
+- [ ] Proteção contra força bruta e operação do login em HTTPS real homologadas.
 - [ ] HTTPS, CORS e domínio corretos.
 - [ ] Segredos e banco isolados por ambiente.
 - [ ] Dados da loja, preços e fotos reais homologados.

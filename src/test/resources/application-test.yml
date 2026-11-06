@@ -9,6 +9,11 @@ spring:
       ddl-auto: create-drop
   flyway:
     enabled: false
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false
 app:
   security:
     admin-username: tester

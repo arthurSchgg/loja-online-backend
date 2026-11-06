@@ -10,7 +10,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.httpBasic;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
@@ -42,7 +43,7 @@ class CampaignRegressionTest {
     @Test
     void invalidDateWindowIsRejected() throws Exception {
         mvc.perform(post("/api/v1/admin/campaigns")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"title":"Período inválido","published":true,
@@ -64,7 +65,7 @@ class CampaignRegressionTest {
 
     private void createCampaign(String body) throws Exception {
         mvc.perform(post("/api/v1/admin/campaigns")
-                .with(httpBasic("tester", "testpassword123"))
+                .with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(body))
             .andExpect(status().isCreated());
