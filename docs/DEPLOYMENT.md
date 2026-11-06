@@ -1,5 +1,9 @@
 # Implantação e operação
 
+## Local e staging sem serviços externos
+
+Para executar somente com Docker local, usar os ambientes independentes documentados em [LOCAL-STAGING.md](LOCAL-STAGING.md). O staging utiliza Caddy com HTTPS interno, volumes PostgreSQL separados e portas restritas a loopback. O certificado local deve ser explicitamente confiável; a configuração não publica nada na internet.
+
 ## Ambiente
 
 **Dependências:** Java 21, PostgreSQL (versão recomendada: 16), Maven para compilar, domínio HTTPS e um serviço persistente de banco.
@@ -21,7 +25,7 @@ O Spring falha no startup sem credenciais de administrador válidas. **Nunca reu
 2. Definir segredos no serviço de hospedagem, nunca no Git.
 3. Executar `mvn clean verify` (no CI, instala PostgreSQL e valida as seis migrações Flyway existentes).
 4. Gerar artefato com `mvn -DskipTests package` somente após CI verde.
-5. Construir container: `docker build -t lojinha-backend .` (o `Dockerfile` espera JAR em `target/`).
+5. Construir container: `docker build -t lojinha-backend .` (o Dockerfile multi-stage compila o JAR automaticamente, sem precisar de `target/` no host).
 6. Subir container com variáveis de ambiente e proxy HTTPS.
 7. Verificar `GET /actuator/health`, respostas públicas e rejeição de acessos anônimos a `/api/v1/admin/**`.
 

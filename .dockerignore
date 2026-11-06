@@ -1,7 +1,12 @@
 **/.git
 **/.idea
+**/.vscode
 **/.env
 **/.env.*
-!**/.env.example
-target/*
-!target/*.jar
+**/target
+**/backups
+**/*.dump
+**/*.sha256
+**/*.log
+**/.DS_Store
+**/staging-local-ca.crt
