@@ -1,0 +1,7 @@
+# Local staging HTTPS with an internal CA; never publish port 443 externally.
+# Browser trust must be configured explicitly; do not disable certificate checks.
+https://localhost {
+    tls internal
+    encode gzip
+    reverse_proxy backend:8080
+}
