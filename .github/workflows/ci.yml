@@ -14,5 +14,17 @@ jobs:
           distribution: temurin
           java-version: '21'
           cache: maven
-      - name: Run tests and package
+      - name: Install and start PostgreSQL for integration tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql
+          sudo service postgresql start
+          sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres_ci_password';"
+          sudo -u postgres createdb lojinha_ci
+      - name: Run unit and PostgreSQL integration tests
+        env:
+          RUN_POSTGRES_INTEGRATION: 'true'
+          POSTGRES_TEST_URL: jdbc:postgresql://localhost:5432/lojinha_ci
+          POSTGRES_TEST_USER: postgres
+          POSTGRES_TEST_PASSWORD: postgres_ci_password
         run: mvn -B verify
