@@ -30,17 +30,34 @@ docs/              # Contratos, operações, segurança, testes e Git Flow
 
 Cada domínio usa `controller` (HTTP), `dto` (contratos), `entity` (persistência), `repository` (Spring Data JPA) e `service` (regras de negócio). As entidades **não** são serializadas diretamente nas respostas.
 
-## Iniciando localmente
+## Execução local e staging (sem nuvem)
 
-Pré-requisitos: JDK 21, Maven 3.9+ e PostgreSQL (ou Docker Compose).
+Existem duas configurações Docker independentes: **local HTTP em 127.0.0.1** e **staging HTTPS em localhost**. Elas utilizam bancos e volumes PostgreSQL diferentes. O Dockerfile compila o Spring Boot internamente com Maven/Java 21.
 
-1. Copie `.env.example` para `.env` e **substitua os valores de exemplo por credenciais fortes**.
-2. Exporte ao terminal `DB_PASSWORD`, `ADMIN_USERNAME` e `ADMIN_PASSWORD` (mínimo 12 caracteres), além de `DB_URL` e `DB_USERNAME` se diferirem do padrão. O Spring **não carrega `.env` automaticamente**.
-3. Execute `docker compose --env-file .env up -d`.
-4. Para testar sem HTTPS **somente em localhost**, execute `mvn spring-boot:run -Dspring-boot.run.profiles=local`. O perfil `local` permite o cookie de sessão sem `Secure`; **nunca use esse perfil em produção**. Fora do localhost, use HTTPS e o perfil padrão.
-5. Confira `http://localhost:8080/swagger-ui.html` e `http://localhost:8080/actuator/health`.
+**Local:**
 
-No PowerShell, defina variáveis com `$env:ADMIN_USERNAME="admin"`, `$env:ADMIN_PASSWORD="senha-longa-e-exclusiva"` etc. Credenciais jamais devem ser comitadas.
+```bash
+cp .env.example .env
+# Edite .env e troque as senhas de exemplo.
+docker compose --env-file .env -f compose.yaml up --build -d
+```
+
+- API: `http://localhost:8080/actuator/health`
+- Swagger (apenas local): `http://localhost:8080/swagger-ui.html`
+
+**Staging:**
+
+```bash
+cp .env.staging.example .env.staging
+# Defina senhas exclusivas para staging.
+docker compose --env-file .env.staging -f compose.staging.yaml up --build -d
+```
+
+- API: `https://localhost:8443/actuator/health`
+- HTTPS usa autoridade certificadora local do Caddy; confie explicitamente no certificado antes de acessar no navegador. Consulte o guia para exportar o certificado e verificar com `curl --cacert`.
+- Porta publicada somente em `127.0.0.1`; backend/PostgreSQL não ficam expostos e o Swagger está desativado.
+
+Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações, certificados, verificação dos dois Compose, logs, parada sem perda de dados e limitações de segurança. Não há deploy externo nem frontend neste repositório.
 
 ## Endpoints públicos
 
@@ -99,6 +116,7 @@ Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL 
 - [WhatsApp](docs/WHATSAPP.md)
 - [Testes](docs/TESTING.md)
 - [Implantação](docs/DEPLOYMENT.md)
+- [Docker local e staging HTTPS](docs/LOCAL-STAGING.md)
 - [Git Flow](docs/GIT-FLOW.md)
 - [Aprovações necessárias antes da publicação](docs/REVIEW-DECISIONS.md)
 - [Backup e restauração](docs/BACKUP-RECOVERY.md)
