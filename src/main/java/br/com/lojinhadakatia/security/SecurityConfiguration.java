@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -17,16 +18,17 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Política de acesso explícita: somente recursos públicos conhecidos podem ser
- * consultados sem autenticação. Qualquer operação administrativa exige ADMIN.
+ * Autenticação do único administrador por sessão HTTP, protegida por CSRF.
  *
- * HTTP Basic é transitório: deve ser utilizado somente sobre HTTPS e revisado
- * antes da disponibilização pública do painel.
+ * O frontend administrativo e a API devem compartilhar a mesma origem.
+ * Não existe HTTP Basic, JWT ou cadastro público. Todas as outras rotas
+ * permanecem negadas por padrão.
  */
 @Configuration
 public class SecurityConfiguration {
@@ -36,6 +38,10 @@ public class SecurityConfiguration {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Credenciais injetadas do ambiente, nunca persistidas nem versionadas.
+     * Uma única conta é adequada ao escopo aprovado pela proprietária.
+     */
     @Bean
     UserDetailsService administrators(
             @Value("${app.security.admin-username:}") String username,
@@ -52,14 +58,18 @@ public class SecurityConfiguration {
         return new InMemoryUserDetailsManager(admin);
     }
 
+    /**
+     * CORS permite somente leitura pública sem credenciais em origens externas.
+     * Escritas e sessão administrativa devem usar a mesma origem da API.
+     */
     @Bean
     CorsConfigurationSource corsSource(@Value("${app.cors.allowed-origins:}") String origins) {
         CorsConfiguration configuration = new CorsConfiguration();
         List<String> allowed = Arrays.stream(origins.split(","))
             .map(String::trim).filter(s -> !s.isBlank()).toList();
         configuration.setAllowedOrigins(allowed);
-        configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept"));
+        configuration.setAllowedMethods(List.of("GET", "HEAD", "OPTIONS"));
+        configuration.setAllowedHeaders(List.of("Content-Type", "Accept"));
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
@@ -68,13 +78,23 @@ public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+        HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
+        csrfRepository.setHeaderName("X-CSRF-TOKEN");
+
         return http
             .cors(Customizer.withDefaults())
-            // Não há cookies nem sessões; rever CSRF se o mecanismo mudar.
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+            .csrf(csrf -> csrf
+                .csrfTokenRepository(csrfRepository)
+                // Quiz público: avaliação de leitura, sem persistência ou alteração de estado.
+                .ignoringRequestMatchers("/api/v1/experiences/*/evaluate"))
+            .sessionManagement(session -> session
+                .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
+                .sessionFixation(fixation -> fixation.changeSessionId()))
+            .requestCache(AbstractHttpConfigurer::disable)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
+                .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/products", "/api/v1/products/*",
                     "/api/v1/products/*/whatsapp",
@@ -85,11 +105,32 @@ public class SecurityConfiguration {
                     "/api/v1/content-sections", "/api/v1/campaigns",
                     "/actuator/health", "/actuator/info",
                     "/v3/api-docs", "/v3/api-docs/**",
-                    "/swagger-ui/**", "/swagger-ui.html"
-                ).permitAll()
+                    "/swagger-ui/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.POST, "/api/v1/experiences/*/evaluate").permitAll()
                 .anyRequest().denyAll())
-            .httpBasic(Customizer.withDefaults())
+            .formLogin(form -> form
+                .loginProcessingUrl("/api/v1/auth/login")
+                .successHandler((request, response, authentication) -> {
+                    response.setStatus(200);
+                    response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                    response.getWriter().write("{\"authenticated\":true}");
+                })
+                .failureHandler((request, response, exception) ->
+                    response.sendError(401, "Credenciais inválidas."))
+                .permitAll())
+            .logout(logout -> logout
+                .logoutUrl("/api/v1/auth/logout")
+                .invalidateHttpSession(true)
+                .clearAuthentication(true)
+                .deleteCookies("JSESSIONID")
+                .logoutSuccessHandler((request, response, authentication) ->
+                    response.setStatus(204)))
+            .exceptionHandling(exceptions -> exceptions
+                .authenticationEntryPoint((request, response, exception) ->
+                    response.sendError(401, "Autenticação necessária."))
+                .accessDeniedHandler((request, response, exception) ->
+                    response.sendError(403, "Acesso negado.")))
+            .httpBasic(AbstractHttpConfigurer::disable)
             .build();
     }
 }
