@@ -43,7 +43,7 @@ class CatalogDescriptionSearchTest {
                      "images":[]}
                     """.formatted(brandId)))
             .andExpect(status().isCreated());
-        mvc.perform(get("/api/v1/products?q=lavanda%20unica"))
+        mvc.perform(get("/api/v1/products").param("q", "lavanda unica"))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.totalElements").value(1))
             .andExpect(jsonPath("$.content[0].name").value("Vela exemplo"));
