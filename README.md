@@ -104,6 +104,22 @@ mvn clean verify
 
 Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL real e executa um teste de integração com Flyway/Hibernate no banco-alvo, sem depender de Docker. Veja [docs/TESTING.md](docs/TESTING.md).
 
+## Especificação em consolidação (não aprovada)
+
+Os documentos abaixo representam **requisitos planejados**, não funcionalidades já implementadas nem homologadas. A consolidação está em revisão e ainda depende da auditoria de identificadores e da aprovação técnica formal.
+
+- [Inventário das regras de negócio](docs/business-rules.md)
+- [Requisitos funcionais e não funcionais](docs/requirements.md)
+- [Arquitetura de referência e divergências](docs/architecture.md)
+- [Sete fases e critérios de aceitação](docs/development-phases.md)
+- [GitHub Projects, issues e Git Flow](docs/github-workflow.md)
+- [Políticas de segurança consolidadas](docs/security.md)
+- [Operação, backups e incidentes](docs/operations.md)
+- [Matriz inicial de rastreabilidade](docs/traceability.md)
+- [Auditoria de consistência e bloqueios](docs/consistency-audit.md)
+
+**Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
+
 ## Documentos
 
 - [Arquitetura](docs/ARCHITECTURE.md)
