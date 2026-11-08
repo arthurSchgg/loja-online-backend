@@ -4,6 +4,6 @@ CREATE TABLE offering_options (
  kind VARCHAR(16) NOT NULL CHECK (kind IN ('AROMA','COLOR','PACKAGING')),
  option_value VARCHAR(120) NOT NULL,
  active BOOLEAN NOT NULL DEFAULT TRUE,
- UNIQUE(offering_id, kind, value)
+ UNIQUE(offering_id, kind, option_value)
 );
 CREATE INDEX idx_offering_options_offering ON offering_options(offering_id,kind,id);
