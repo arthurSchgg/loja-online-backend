@@ -73,6 +73,14 @@ public class SecurityConfiguration {
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
+        // Public POST endpoints are stateless and accept no credentials from external sites.
+        CorsConfiguration publicPost = new CorsConfiguration();
+        publicPost.setAllowedOrigins(allowed);
+        publicPost.setAllowedMethods(List.of("POST", "OPTIONS"));
+        publicPost.setAllowedHeaders(List.of("Content-Type", "Accept"));
+        publicPost.setAllowCredentials(false);
+        source.registerCorsConfiguration("/api/v1/whatsapp/confirm", publicPost);
+        source.registerCorsConfiguration("/api/v1/experiences/*/evaluate", publicPost);
         return source;
     }
 
@@ -86,7 +94,7 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfRepository)
                 // Quiz público: avaliação de leitura, sem persistência ou alteração de estado.
-                .ignoringRequestMatchers("/api/v1/experiences/*/evaluate"))
+                .ignoringRequestMatchers("/api/v1/experiences/*/evaluate", "/api/v1/whatsapp/confirm"))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .sessionFixation(fixation -> fixation.changeSessionId()))
@@ -106,7 +114,7 @@ public class SecurityConfiguration {
                     "/actuator/health", "/actuator/info",
                     "/v3/api-docs", "/v3/api-docs/**",
                     "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/experiences/*/evaluate").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/experiences/*/evaluate", "/api/v1/whatsapp/confirm").permitAll()
                 .anyRequest().denyAll())
             .formLogin(form -> form
                 .loginProcessingUrl("/api/v1/auth/login")
