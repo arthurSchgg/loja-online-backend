@@ -71,10 +71,11 @@ Pré-configuração GitHub Actions (variables/secrets não versionados):
 - A action deve usar somente OIDC e não credenciais AWS long-lived.
 
 ## Frontend (repositório GitHub separado)
-- Arquivos estáticos `index.html`, `styles.css`, `app.js`, assets e `amplify.yml`.
+- Frontend entregue como projeto independente em ZIP, com `index.html`, `admin.html`, CSS/JS, `scripts/build-public.mjs`, `.github/workflows/ci.yml` e `amplify.yml`. O ZIP deverá ser publicado em um repositório GitHub **separado**, porque o conector atual não disponibiliza a criação de novos repositórios.
 - Escolher Amplify Hosting > Deploy from Git provider > repo frontend > branch `main`.
 - Não colocar número real WhatsApp, preços, fotos ou dados da loja sem aprovação comercial.
-- Definir `API_BASE_URL` público em arquivo de configuração estático (sem segredos).
+- Definir `API_BASE_URL` público HTTPS nas variáveis de ambiente de build do Amplify (ex.: `https://api.dominio.com/api/v1`, sem segredos). O build gera `dist/config.js` com essa URL e **falha na branch main** se estiver ausente.
+- `amplify.yml` publica somente `dist/`: vitrine e arquivos públicos; **não inclui `admin.html` nem `assets/admin.js`**. O painel deve ser servido na mesma origem HTTPS da API após configuração do roteamento.
 - A vitrine consulta API GET por CORS estrito; ações administrativas exigem **mesmo domínio**. Configurar roteamento antes de ativá-las.
 - Habilitar cache longo apenas para assets versionados; `index.html` com cache curto e API sem cache.
 
@@ -91,3 +92,10 @@ Pré-configuração GitHub Actions (variables/secrets não versionados):
 - [ ] Aprovação técnica e comercial de release registrada.
 
 **Nenhum valor comercial, domínio, serviço pago ou assinatura de aprovação foi presumido.**
+
+## Entrega frontend para repositório separado (2026-11-08)
+- O pacote `lojinha-da-katia-frontend-repositorio-aws.zip` foi gerado como artefato da conversa. Não há URL GitHub frontend até o usuário criar ou disponibilizar o repositório de destino.
+- Validação local realizada com Node 22: `node --check assets/app.js`, `node --check assets/admin.js`, `node scripts/build-public.mjs` e `node --test tests/*.test.mjs` (3 testes passaram).
+- Build de produção sem `API_BASE_URL` foi testado e falhou como esperado; build com URL HTTPS válida passou.
+- A página de política de privacidade é provisória e **não pode ser tratada como aprovada para produção**.
+- A autenticação administrativa continua exigindo mesma origem; não liberar painel em domínio Amplify separado.
