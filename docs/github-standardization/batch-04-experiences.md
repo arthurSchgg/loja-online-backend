@@ -42,3 +42,22 @@
 - [ ] Campos e vínculos conferidos após edição.
 - [ ] Histórico preservado; inconsistências corrigidas.
 - [ ] Relatório validado e aprovação final explícita.
+
+
+## Backlog adicional preparado para revisão
+As issues abaixo já existem no GitHub. Sua **criação não constitui aprovação técnica, execução do lote ou atribuição de campos do Projects**.
+
+| Issue real | Natureza | Situação |
+|---|---|---|
+| [#84](https://github.com/arthurSchgg/loja-online/issues/84) | História proposta | Pendente de padronização aprovada |
+| [#98](https://github.com/arthurSchgg/loja-online/issues/98) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#99](https://github.com/arthurSchgg/loja-online/issues/99) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+
+**Referências de comparação:** #40, #41, #42.
+
+### Validação antes da aplicação
+- [ ] Verificar que nenhuma issue nova reproduz por inteiro trabalho já concluído ou aberto.
+- [ ] Registrar snapshots antes/depois de labels, títulos, descrições, responsáveis e vínculos.
+- [ ] Validar IDs de `US-###` e `TASK-###` em todas as issues, inclusive fechadas.
+- [ ] Atualizar campos reais do GitHub Projects (fase, status, prioridade, SP e assignee).
+- [ ] Registrar aprovação técnica explícita e resultado por lote.
