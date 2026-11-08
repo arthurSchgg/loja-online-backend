@@ -57,10 +57,17 @@ public class RecommendationService {
             found.add(product);
         }
         recommendations.deleteByExperienceIdAndResultKey(experienceId,resultKey);
-        for(int i=0;i<found.size();i++)
+        recommendations.flush();
+        for(int i=i<found.size();i++)
             recommendations.save(new ExperienceProductRecommendation(experience,resultKey,found.get(i),i));
         recommendations.flush();
         return suggestions(experienceId,resultKey);
+    }
+
+    @Transactional
+    public void clearForExperience(Long experienceId){
+        recommendations.deleteByExperienceId(experienceId);
+        recommendations.flush();
     }
 
     public boolean hasRecommendationsForProduct(Long productId){
