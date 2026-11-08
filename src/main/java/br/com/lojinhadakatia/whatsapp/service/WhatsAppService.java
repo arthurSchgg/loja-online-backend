@@ -7,6 +7,8 @@ import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
 import br.com.lojinhadakatia.shared.exception.BusinessException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -33,7 +35,8 @@ public class WhatsAppService {
     public WhatsAppLinkResponse forProduct(Long productId) {
         var product = catalogService.published(productId);
         if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
-        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() + ".");
+        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() +
+            ". Preço atual: " + NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(product.effectivePrice()) + ".");
     }
 
     /** Uma consulta só é permitida para serviços atualmente publicados. */
