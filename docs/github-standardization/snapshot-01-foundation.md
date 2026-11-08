@@ -1,6 +1,453 @@
 # Snapshot pré-padronização — lote 01-foundation
 
-> **Evidência somente leitura.** Extraído das issues existentes do GitHub em 2026-11-08 (horário da consulta). O conteúdo preserva estado e descrição anterior para comparação futura. Não atesta aprovação técnica do lote, não representa alteração nas issues e não deve ser usado para reverter comentários ou informações posteriores sem comparação.
+> **Evidência somente leitura.** Extraído das issues existentes do GitHub em 2026-11-08. Estados e descrições observados abaixo para comparação futura. Não atesta aprovação do lote e não representa alteração nas issues.
+
+## Issue #1
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/1
+- Título antes: [BACKEND] Definir escopo do backend, regras de negócio e matriz de rastreabilidade
+- Estado antes: open
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T11:15:55Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** definir escopo do backend, regras de negócio e matriz de rastreabilidade,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+documentar escopo da API, requisitos funcionais/não funcionais, regras de negócio, personas e fronteiras com frontend; indicar MVP vs pós-MVP e decisões pendentes.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Docs/visao-backend.md, docs/requisitos.md, docs/regras-negocio.md e tabela RF → issue → endpoint/teste
+- [ ] Nenhuma regra comercial presumida
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- Nenhuma dependência técnica prévia.
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** foundation
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `foundation`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #2
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/2
+- Título antes: [BACKEND] Inicializar aplicação Java 21 / Spring Boot / Maven
+- Estado antes: closed
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T12:46:52Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** inicializar aplicação java 21 / spring boot / maven,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+gerar projeto Spring Boot com Spring Web MVC, Spring Data JPA, Validation, PostgreSQL, springdoc-openapi e testes; estruturar pacote br.com.lojinhadakatia (ou nome definitivo decidido em configuração).
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Mvnw e pom.xml versionados
+- [ ] Aplicação inicializa
+- [ ] GET health endpoint ou Actuator planejado
+- [ ] Sem endpoints administrativos públicos
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `project` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** foundation
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `foundation`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #3
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/3
+- Título antes: [BACKEND] Configurar PostgreSQL, perfis e variáveis de ambiente
+- Estado antes: closed
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T12:46:55Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** configurar postgresql, perfis e variáveis de ambiente,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+definir application.yml e perfis local/test/prod; usar variáveis de ambiente para credenciais; configurar datasource, timezone e logs sem segredos.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Conexão local funcional
+- [ ] Arquivos example sem senhas
+- [ ] Segredos excluídos do Git
+- [ ] Teste executado em ambiente isolado
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `bootstrap` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** database
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `database`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #4
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/4
+- Título antes: [BACKEND] Introduzir migrações versionadas do banco
+- Estado antes: closed
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T12:46:57Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** introduzir migrações versionadas do banco,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+integrar Flyway (ou ferramenta definida) e substituir ddl-auto=update em produção por validate; organizar migrações incrementais.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Migrações reproduzíveis em banco novo
+- [ ] Rollback documentado quando necessário
+- [ ] Dados preservados em atualizações
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `config` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** database
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `database`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #5
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/5
+- Título antes: [BACKEND] Estruturar módulos MVC, DTOs, mappers e tratamento global de erros
+- Estado antes: open
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T11:16:03Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** estruturar módulos mvc, dtos, mappers e tratamento global de erros,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+organizar pacotes por domínio (product, category, brand, store, auth, etc.) com controller/service/repository/entity/dto/mapper e exceções compartilhadas; definir ProblemDetail.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Exceções 400/404/409/500 coerentes
+- [ ] Respostas não expõem stack trace
+- [ ] Testes de controller e serviço de exemplo
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `bootstrap` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** foundation
+- **Story Points:** 5
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `foundation`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #6
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/6
+- Título antes: [BACKEND] Configurar OpenAPI/Swagger e contrato de API
+- Estado antes: open
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T11:16:05Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** configurar openapi/swagger e contrato de api,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+habilitar documentação Springdoc, schemas DTO, exemplos, códigos de erro, paginação e agrupamento rotas públicas/admin.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Swagger-ui local acessível
+- [ ] Operações com parâmetros/respostas documentados
+- [ ] Endpoints protegidos identificados
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `architecture` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** api
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `api`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #8
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/8
+- Título antes: [BACKEND] Criar validações de DTO e sanitização de entradas
+- Estado antes: open
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T11:16:14Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** responsável pela Lojinha da Kátia ou integrante da equipe de desenvolvimento,
+**Eu quero** criar validações de dto e sanitização de entradas,
+**Para** oferecer uma vitrine digital confiável, gerenciável e integrada ao frontend.
+
+## Contexto e escopo
+aplicar Bean Validation nos requests (tamanhos, valores numéricos não-negativos, URLs/strings quando aplicável), regras cruzadas no serviço e limites de paginação.
+
+## Requisitos técnicos
+- **Stack:** Java 21, Spring Boot, Spring Data JPA, PostgreSQL, Bean Validation e Maven.
+- **Arquitetura:** módulos por domínio, camadas Controller/Service/Repository, DTO e mapper onde pertinente.
+- **Contrato:** documentar rotas e estados com Springdoc OpenAPI quando aplicável.
+- **Segurança:** toda gravação administrativa precisa estar protegida; não expor dados ou segredos.
+
+## Critérios de aceitação
+- [ ] Inputs inválidos geram 400 com mensagens seguras por campo
+- [ ] Payloads inesperados não geram 500
+- [ ] Testes negativos
+- [ ] Documentação atualizada e testes pertinentes adicionados.
+- [ ] Pull request com revisão e validação do build.
+
+## Dependências e ordem sugerida
+- `architecture` (issue correspondente do backlog)
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Fase:** MVP
+- **Área:** api
+- **Story Points:** 3
+- **Responsável:** a definir
+- **Labels propostas:** `backend`, `api`, `MVP`, `feature`.
+
+> Decisões comerciais e abordagens sugeridas dependem de validação; não assumir informações da loja sem confirmação.
+~~~
+
+---
+
+## Issue #17
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/17
+- Título antes: [BACKEND] Definir ADR de autenticação e autorização administrativa
+- Estado antes: closed
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T13:16:08Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** visitante da loja, administradora ou integrante da equipe responsável,
+**Eu quero** definir adr de autenticação e autorização administrativa,
+**Para** manter a Lojinha da Kátia funcional, segura e administrável.
+
+## Contexto e objetivo
+Documentar decisão Spring Security + sessão ou JWT com análise de CORS/CSRF, gerenciamento de credenciais e inicialização de conta admin.
+
+## Diretrizes de implementação
+- **Backend:** Java 21, Spring Boot, MVC, Spring Data JPA/PostgreSQL e Bean Validation.
+- **Padrão:** modularização por domínio, Repository, Service, Controller, DTOs e Mapper quando pertinente.
+- **Contrato HTTP:** usar códigos de status adequados, erros padronizados e Swagger quando houver endpoint.
+- **Segurança:** operações administrativas requerem autenticação/autorização; **não publicar endpoints de escrita abertos**.
+- **Escopo:** não há carrinho, checkout nem processamento de pagamentos nesta fase.
+
+## Critérios de aceitação
+- [ ] Decisão aprovada antes do código
+- [ ] requisitos de senha e acesso documentados
+- [ ] nenhuma escrita exposta durante desenvolvimento.
+- [ ] Documentação técnica atualizada.
+- [ ] Testes automatizados relevantes implementados ou explicitamente justificados.
+- [ ] Pull request revisado, sem credenciais e com CI verde.
+
+## Dependências
+- Issue #01
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Labels propostas:** `backend`, `security`, `MVP`, `feature`
+- **Esforço (Story Points):** 3
+- **Responsável (Assignee):** a definir
+- **Fase:** MVP
+
+> Para detalhes comerciais não aprovados (preços, WhatsApp, serviços, horários e regras de quizzes), registrar ADR e validar antes de codificar.
+~~~
+
+---
+
+## Issue #18
+
+- URL: https://github.com/arthurSchgg/loja-online/issues/18
+- Título antes: [BACKEND] Implementar autenticação administrativa segura com Spring Security
+- Estado antes: closed
+- Assignees antes: (nenhum)
+- Labels antes: (nenhuma)
+- Milestone antes: (nenhuma)
+- Data de atualização observada: 2026-11-06T13:16:34Z
+- Corpo anterior:
+
+~~~markdown
+## História de usuário
+**Como** visitante da loja, administradora ou integrante da equipe responsável,
+**Eu quero** implementar autenticação administrativa segura com spring security,
+**Para** manter a Lojinha da Kátia funcional, segura e administrável.
+
+## Contexto e objetivo
+Implementar a opção aprovada na ADR; senha com hash adaptativo, login, expiração, autorização de admin; restringir /api/v1/admin/**.
+
+## Diretrizes de implementação
+- **Backend:** Java 21, Spring Boot, MVC, Spring Data JPA/PostgreSQL e Bean Validation.
+- **Padrão:** modularização por domínio, Repository, Service, Controller, DTOs e Mapper quando pertinente.
+- **Contrato HTTP:** usar códigos de status adequados, erros padronizados e Swagger quando houver endpoint.
+- **Segurança:** operações administrativas requerem autenticação/autorização; **não publicar endpoints de escrita abertos**.
+- **Escopo:** não há carrinho, checkout nem processamento de pagamentos nesta fase.
+
+## Critérios de aceitação
+- [ ] Sem autenticação retorna 401
+- [ ] sem papel 403
+- [ ] credenciais inválidas sem enumeração
+- [ ] CORS/CSRF corretos
+- [ ] testes.
+- [ ] Documentação técnica atualizada.
+- [ ] Testes automatizados relevantes implementados ou explicitamente justificados.
+- [ ] Pull request revisado, sem credenciais e com CI verde.
+
+## Dependências
+- Issue #17
+- Issue #05
+
+## Informações adicionais
+- **Prioridade:** Alta
+- **Labels propostas:** `backend`, `security`, `MVP`, `feature`
+- **Esforço (Story Points):** 8
+- **Responsável (Assignee):** a definir
+- **Fase:** MVP
+
+> Para detalhes comerciais não aprovados (preços, WhatsApp, serviços, horários e regras de quizzes), registrar ADR e validar antes de codificar.
+~~~
+
+---
 
 ## Issue #25
 
