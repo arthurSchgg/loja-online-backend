@@ -116,7 +116,7 @@ class CandleCustomizationIntegrationTest {
             .with(user("admin").roles("ADMIN")).with(csrf())
             .contentType(MediaType.APPLICATION_JSON).content("[]"))
             .andExpect(status().isNotFound());
-        mvc.perform(put("/api/v1/admin/offerings/" + draft + "/options")
+        mvc.perform(put("/api/v1/admin/offerings/" + draft + "/options").with(csrf())
             .contentType(MediaType.APPLICATION_JSON).content("[]"))
             .andExpect(status().isUnauthorized());
     }
