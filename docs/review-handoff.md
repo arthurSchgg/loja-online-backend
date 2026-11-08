@@ -40,3 +40,8 @@
 - Não foram inventados preços, marcas ativas, número WhatsApp, endereço, imagens oficiais ou logotipo.
 - Não houve merge em `develop`/`main`, alteração de produção, tag documental ou aprovação de homologação.
 - O planejamento de sete fases não equivale à implementação de sete fases.
+
+## Rastreabilidade do documento original
+- O pacote inicial de documentação recuperado contém 17 RN legadas, 28 RF, 14 RNF e quatro histórias de usuário. O inventário encontra-se em [legacy-baseline-crosswalk.md](legacy-baseline-crosswalk.md).
+- Os nomes `LEGACY-US001–US004` são separados das issues novas `US-001–US-004`, que possuem escopos parcialmente diferentes.
+- Docs antigos `ARCHITECTURE.md`, `WHATSAPP.md`, `CAMPAIGNS.md` e `REVIEW-DECISIONS.md` receberam avisos preservando o conteúdo original, mas indicando substituições e diferenças com a especificação aprovada.
