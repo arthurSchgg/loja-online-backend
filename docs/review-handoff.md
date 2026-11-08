@@ -55,3 +55,22 @@
 - Foi feita consulta paginada (2 páginas) de todas as **53 issues antigas #1–#53**.
 - Foram preservados títulos, estados, responsáveis, labels, milestones, descrição e timestamp de atualização em sete arquivos `docs/github-standardization/snapshot-*.md`.
 - Esses snapshots permitem comparação antes/depois quando a padronização dos lotes for tecnicamente aprovada; **não substituem** a autorização nem o histórico do GitHub e não incluem campos externos do Project v2.
+
+## Execução adicional de código e AWS — 2026-11-08
+
+> Esta seção registra mudanças reais em **branches separadas**. Nenhuma foi integrada a `develop` ou `main`, publicada na AWS ou tecnicamente homologada.
+
+| Área | PR | Implementação / evidências | Integração |
+|---|---|---|---|
+| Deploy AWS | [#119](https://github.com/arthurSchgg/loja-online/pull/119) | `application-prod.yml`, ECS Express Mode/ECR/RDS/Amplify e GitHub Actions manual para ECR; CI verificado | Não integrada |
+| Estoque | [#120](https://github.com/arthurSchgg/loja-online/pull/120) | Flyway V7, ledger, API protegida, saldo/disponibilidade, testes. CI aprovado | Não integrada |
+| Promoções | [#121](https://github.com/arthurSchgg/loja-online/pull/121) | Flyway V8, preço efetivo e períodos sem sobreposição, testes. CI aprovado | PR empilhado sobre #120 |
+| WhatsApp | [#122](https://github.com/arthurSchgg/loja-online/pull/122) | Confirmação com revalidação de preço/estoque, CORS público restrito e testes; verificar o último CI | PR empilhado sobre #121 |
+
+**Ordem recomendada de revisão/merge, após os gates formais:** #120 → #121 → #122. O PR #119 é independente, mas configurações de AWS não significam deploy.
+
+**Frontend:** arquivo ZIP externo ao repositório com HTML/CSS/JS, catálogo, quizzes públicos, painel de administração inicial, integração com API, confirmação WhatsApp, `amplify.yml` e `config.js`. O repositório separado do frontend ainda precisa ser criado pelo titular da conta. O painel só deverá usar sessões quando hospedado na **mesma origem HTTPS** que a API administrativa.
+
+**Bloqueios restantes:** auditoria final de RN e aprovação da especificação; tarefas não implementadas (recomendações de produto por perfil, personalização avançada de velas, recuperação de senha/outbox, auditoria persistente, dados reais e conteúdo oficial), testes E2E/a11y, homologações por fase, configuração de conta AWS e orçamento, provisionamento real ECS/RDS/Amplify, backups externos e aprovação comercial/técnica de produção.
+
+**Nenhum dado comercial, credential, assinatura ou cobrança AWS foi presumido ou criado.**
