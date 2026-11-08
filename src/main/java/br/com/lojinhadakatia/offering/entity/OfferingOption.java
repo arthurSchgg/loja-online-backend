@@ -9,7 +9,7 @@ public class OfferingOption {
  @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="offering_id",nullable=false)
  private ServiceOffering offering;
  @Enumerated(EnumType.STRING) @Column(nullable=false,length=16) private Kind kind;
- @Column(nullable=false,length=120) private String value;
+ @Column(name="option_value",nullable=false,length=120) private String value;
  @Column(nullable=false) private boolean active=true;
  protected OfferingOption(){}
  public OfferingOption(Kind kind,String value,boolean active){
