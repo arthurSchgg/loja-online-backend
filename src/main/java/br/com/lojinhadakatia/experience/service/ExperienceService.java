@@ -17,7 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @Transactional(readOnly=true)
 public class ExperienceService {
  private final ExperienceRepository repository;
- public ExperienceService(ExperienceRepository repository){this.repository=repository;}
+ private final RecommendationService recommendations;
+ public ExperienceService(ExperienceRepository repository,RecommendationService recommendations){this.repository=repository;this.recommendations=recommendations;}
  public List<ExperienceResponse> published(){return repository.findByPublishedTrueOrderByIdDesc().stream().map(this::map).toList();}
  public ExperienceResponse publicOne(Long id){
   return map(repository.findById(id).filter(Experience::isPublished)
@@ -47,7 +48,8 @@ public class ExperienceService {
       .orElseThrow(()->new BusinessException("Experiência sem resultado.")).getKey();
   ExperienceResult winner=experience.getResults().stream().filter(result->result.getResultKey().equals(key))
       .findFirst().orElseThrow(()->new BusinessException("Resultado não configurado."));
-  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription());
+  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription(),
+      recommendations.suggestions(experience.getId(),winner.getResultKey()));
  }
  @Transactional
  public ExperienceResponse create(ExperienceRequest request){
