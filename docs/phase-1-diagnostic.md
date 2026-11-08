@@ -22,7 +22,7 @@
 | F1-08 | DEV/STAGING/PROD isolados | Docker Compose local e staging isolado, volumes distintos | Parcial | Definir/homologar PROD, segredos, TLS, origens |
 | F1-09 | HTTPS em staging | `compose.staging.yaml` e Caddy local no loopback | Parcial | Validar ambiente real de homologação |
 | F1-10 | Pipeline CI com testes Maven e PostgreSQL | `.github/workflows/ci.yml`, histórico do GitHub Actions | Parcial | Completar gate de cobertura e verificar evidências completas |
-| F1-11 | Cobertura de linhas JaCoCo >=80% | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) e [CI](https://github.com/arthurSchgg/loja-online/actions/runs/42439648039): 439/579 linhas = 75,82% | Pendente | Testes adicionais; manter gate de 80% sem exclusões artificiais |
+| F1-11 | Cobertura de linhas JaCoCo >=80% | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) e [CI aprovado](https://github.com/arthurSchgg/loja-online/actions/runs/42440101382): 491/579 linhas = 84,80% | Parcial | Gate e testes em PR draft, ainda não integrados em develop nem homologados |
 | F1-12 | Auditoria administrativa e logs | `AdminAuditInterceptor`, `AdminAuditConfiguration` | Parcial | Persistência, ator/recurso, retenção e proteção do dado |
 | F1-13 | Backup e restauração | `scripts/backup-postgres.sh`, `scripts/verify-postgres-restore.sh` | Parcial | Agendamento, retenção, cifragem externa e exercício periódico, [#52](https://github.com/arthurSchgg/loja-online/issues/52) |
 | F1-14 | OpenAPI e erros HTTP | `pom.xml`, `OpenApiConfiguration`, `ApiExceptionHandler` | Parcial | Verificar documentação/erros negativos de todos os contratos |
@@ -32,7 +32,8 @@
 - 62 classes analisadas na primeira execução do PR #111.
 - `LINE covered=439; missed=140; total=579; ratio=75,82%`.
 - Principal cobertura faltante no relatório inicial: `CatalogService` (34 linhas), `OfferingService` (14), `ContentSectionService` (14), `CampaignService` (14) e `AdminCatalogController` (12).
-- Testes adicionais foram preparados no PR #111; verificar o resultado do CI do **último commit**, não assumir 80% antes da validação.
+- **Nova execução validada no PR #111:** 491 linhas cobertas / 579 totais = **84,80%**; check de 80% e pipeline aprovados no commit `a85f726a58528732ce66843a0fce2e22834ce542`.
+- O CI do branch de proposta passou, mas o gate **não foi integrado a develop**; não equiparar resultado no PR com homologação ou entrega definitiva.
 
 ## Condições de aprovação deste diagnóstico
 - [ ] Aprovação técnica da especificação, tag documental e commit exato de referência.
