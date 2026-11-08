@@ -60,3 +60,25 @@ CI e testes: #26/#33, #27/#34, #28/#35; CORS #25/#32. Segurança de sessão exis
 - [ ] Campos e vínculos conferidos após edição.
 - [ ] Histórico preservado; inconsistências corrigidas.
 - [ ] Relatório validado e aprovação final explícita.
+
+
+## Backlog adicional preparado para revisão
+As issues abaixo já existem no GitHub. Sua **criação não constitui aprovação técnica, execução do lote ou atribuição de campos do Projects**.
+
+| Issue real | Natureza | Situação |
+|---|---|---|
+| [#88](https://github.com/arthurSchgg/loja-online/issues/88) | História proposta | Pendente de padronização aprovada |
+| [#89](https://github.com/arthurSchgg/loja-online/issues/89) | História proposta | Pendente de padronização aprovada |
+| [#107](https://github.com/arthurSchgg/loja-online/issues/107) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#108](https://github.com/arthurSchgg/loja-online/issues/108) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#109](https://github.com/arthurSchgg/loja-online/issues/109) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#110](https://github.com/arthurSchgg/loja-online/issues/110) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+
+**Referências de comparação:** #18 (autenticação já implementada), #27 (testes integração pendentes), #51 (proteções adicionais).
+
+### Validação antes da aplicação
+- [ ] Verificar que nenhuma issue nova reproduz por inteiro trabalho já concluído ou aberto.
+- [ ] Registrar snapshots antes/depois de labels, títulos, descrições, responsáveis e vínculos.
+- [ ] Validar IDs de `US-###` e `TASK-###` em todas as issues, inclusive fechadas.
+- [ ] Atualizar campos reais do GitHub Projects (fase, status, prioridade, SP e assignee).
+- [ ] Registrar aprovação técnica explícita e resultado por lote.
