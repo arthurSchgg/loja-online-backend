@@ -91,4 +91,37 @@ class AdminAuditPersistenceIntegrationTest {
         mvc.perform(get("/api/v1/admin/audit-events"))
             .andExpect(status().isUnauthorized());
     }
+    @Test
+    void filtersAuditByActionActorResourceAndTimeWithoutLeakingData() throws Exception {
+        mvc.perform(post("/api/v1/admin/content-sections")
+                .with(user("responsavel").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                    {"slug":"auditoria","title":"Auditável","position":1,"published":false}
+                    """))
+            .andExpect(status().isCreated());
+
+        mvc.perform(get("/api/v1/admin/audit-events")
+                .with(user("responsavel").roles("ADMIN"))
+                .param("action", "POST")
+                .param("actor", "responsavel")
+                .param("resource", "/api/v1/admin/content-sections")
+                .param("from", "2020-01-01T00:00:00Z")
+                .param("to", "2099-01-01T00:00:00Z"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(1));
+
+        mvc.perform(get("/api/v1/admin/audit-events")
+                .with(user("responsavel").roles("ADMIN"))
+                .param("action", "DELETE"))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.totalElements").value(0));
+
+        mvc.perform(get("/api/v1/admin/audit-events")
+                .with(user("responsavel").roles("ADMIN"))
+                .param("from", "2030-01-01T00:00:00Z")
+                .param("to", "2020-01-01T00:00:00Z"))
+            .andExpect(status().isBadRequest());
+    }
+
 }
