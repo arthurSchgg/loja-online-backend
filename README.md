@@ -137,6 +137,7 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 - [PR #111 — JaCoCo 80%, testes complementares, sem merge](https://github.com/arthurSchgg/loja-online/pull/111)
 - [Plano de preenchimento dos campos GitHub Projects](docs/project-board-plan.md)
 - [Relatório final de preparação para revisão](docs/review-handoff.md)
+- [Equivalência e preservação da documentação inicial](docs/legacy-baseline-crosswalk.md)
 
 **Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
 
