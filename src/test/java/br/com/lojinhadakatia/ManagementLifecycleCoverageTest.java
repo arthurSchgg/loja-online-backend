@@ -44,7 +44,7 @@ class ManagementLifecycleCoverageTest {
     }
 
     private void put(String endpoint, String body, int statusCode) throws Exception {
-        mvc.perform(put(endpoint).with(user("tester").roles("ADMIN")).with(csrf())
+        mvc.perform(org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put(endpoint).with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(body))
             .andExpect(status().is(statusCode));
     }
