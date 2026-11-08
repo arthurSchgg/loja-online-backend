@@ -126,3 +126,8 @@ Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL 
 ## Situação do projeto
 
 As funcionalidades principais estão implementadas em `develop`, organizadas em branches `feature/*` e integradas por PRs. **A implementação não significa que a plataforma esteja aprovada para produção.** Ainda são necessários homologação comercial, endurecimento de segurança, revisão de privacidade, configuração de backups reais e aprovação de imagens/contatos/preços.
+
+
+## AWS (proposta de implantação)
+
+A implantação planejada em ECS Express Mode, RDS PostgreSQL privado e Amplify Hosting para o frontend separado está documentada em [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md). O workflow manual [aws-ecr-publish.yml](.github/workflows/aws-ecr-publish.yml) publica apenas uma imagem ECR aprovada, sem provisionar infraestrutura nem executar deploy. Nenhum recurso AWS foi criado; consultar orçamento e gates de homologação antes de ativar.
