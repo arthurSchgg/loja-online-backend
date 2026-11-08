@@ -3,6 +3,7 @@ package br.com.lojinhadakatia.catalog.service;
 import br.com.lojinhadakatia.catalog.dto.*;
 import br.com.lojinhadakatia.catalog.entity.*;
 import br.com.lojinhadakatia.catalog.repository.*;
+import br.com.lojinhadakatia.experience.service.RecommendationService;
 import br.com.lojinhadakatia.shared.exception.*;
 import jakarta.persistence.criteria.Join;
 import java.net.URI;
@@ -22,8 +23,9 @@ public class CatalogService {
     private final CategoryRepository categories;
     private final ProductStockMovementRepository stockMovements;
     private final PromotionService promotionService;
-    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService){
-        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;
+    private final RecommendationService recommendationService;
+    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService,RecommendationService recommendationService){
+        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;this.recommendationService=recommendationService;
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
@@ -118,6 +120,7 @@ public class CatalogService {
         if(product.isPublished())throw new BusinessException("Despublique o produto antes de excluir.");
         if(stockMovements.existsByProductId(id))throw new BusinessException("Produto com histórico de estoque não pode ser excluído; arquive-o.");
         if(promotionService.hasPromotions(id))throw new BusinessException("Produto com promoções vinculadas não pode ser excluído; arquive-o.");
+        if(recommendationService.hasRecommendationsForProduct(id))throw new BusinessException("Produto recomendado por experiência não pode ser excluído; arquive-o.");
         products.delete(product);
     }
     private Product findProduct(Long id){return products.findById(id).orElseThrow(()->new ResourceNotFoundException("Produto não encontrado."));}
