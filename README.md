@@ -126,6 +126,15 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 - [Lote 6 — Conteúdo e frontend público](docs/github-standardization/batch-06-frontend.md)
 - [Lote 7 — Administração e qualidade](docs/github-standardization/batch-07-administration.md)
 - [Issue #79 — Consolidação e aprovação técnica](https://github.com/arthurSchgg/loja-online/issues/79)
+- [Visão do projeto e diferenças do briefing](docs/vision.md)
+- [Casos de uso e diagrama](docs/use-cases.md)
+- [Modelo de dados e dicionário inicial](docs/data-model.md)
+- [Contrato REST existente e evolução proposta](docs/api-contract-proposal.md)
+- [Design System e Motion Design provisórios](docs/ui-design-system.md)
+- [Plano de testes e homologação](docs/test-plan.md)
+- [Diagnóstico preliminar da Fase 1 (NÃO APROVADO)](docs/phase-1-diagnostic.md)
+- [Autorização AUTH-001 — NÃO AUTORIZADA](https://github.com/arthurSchgg/loja-online/issues/80)
+- [PR #111 — JaCoCo 80%, testes complementares, sem merge](https://github.com/arthurSchgg/loja-online/pull/111)
 
 **Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
 
