@@ -1,0 +1,42 @@
+# Handoff de revisão — Lojinha da Kátia
+
+**Gerado em 2026-11-07/08.** Este documento é um **relatório do trabalho executado**, não assinatura de aprovação técnica ou comercial.
+
+## Alterações concretas produzidas
+
+| Entrega | Localização | Situação |
+|---|---|---|
+| Especificação modular, visão, casos de uso, modelo de dados, API, Design System, testes e operações | [PR #78](https://github.com/arthurSchgg/loja-online/pull/78) | Draft, sem merge |
+| Regras, conflitos e rastreabilidade | `docs/business-rules.md`, `docs/consistency-audit.md`, `docs/traceability.md` | Revisão pendente de fonte integral RN |
+| Diagnóstico preliminar | `docs/phase-1-diagnostic.md` | Draft, não aprovado |
+| Sete relatórios de padronização | `docs/github-standardization/batch-0*.md` | Inventariados, não aplicados |
+| Issue de controle | [#79](https://github.com/arthurSchgg/loja-online/issues/79) | Aberta |
+| Autorização da Fase 1 | [AUTH-001 #80](https://github.com/arthurSchgg/loja-online/issues/80) | Expressamente não autorizada |
+| Backlog | #81–#89 + #91–#110; duplicata #90 encerrada e ligada à #52 | Issues reais criadas e relacionadas |
+| Homologações por fase | [#112](https://github.com/arthurSchgg/loja-online/issues/112)–[#118](https://github.com/arthurSchgg/loja-online/issues/118) | Não homologadas |
+| Gate de cobertura e testes | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) | CI passou em branch draft, sem merge |
+| Frontend público protótipo | ZIP fornecido separadamente na conversa | Não está no GitHub e não foi homologado |
+
+## Resultado de CI medido
+- Antes dos testes adicionais: 439/579 linhas = **75,82%**, gate 80% falhou.
+- Após testes adicionais: 491/579 linhas = **84,80%**, [run CI aprovado](https://github.com/arthurSchgg/loja-online/actions/runs/42440101382).
+- Nenhuma exclusão artificial de classes foi adicionada ao JaCoCo.
+- Resultado é da **branch de proposta**, não de `develop`/produção.
+
+## Revisão indispensável (não automatizável por suposição)
+- [ ] Conferir texto integral das decisões RN para reconciliar identificadores duplicados e registrar sucessoras.
+- [ ] Comparar briefing original com atualizações aprovadas; validar escopo, critérios e detalhamento.
+- [ ] Revisar PR #78, aprovar tecnicamente, fazer merge conforme Git Flow e registrar tag documental `spec-vX.Y.Z`.
+- [ ] Homologar o diagnóstico formal da Fase 1 com código e testes da versão correta.
+- [ ] Para **cada** lote: registrar valores anteriores, proposta, aprovação técnica, aplicação e verificação; nenhum dos sete está aprovado/aplicado.
+- [ ] Preencher os campos do GitHub Projects v2, ver `docs/project-board-plan.md`.
+- [ ] Aprovar/recusar formalmente AUTH-001 e registrar responsável, data, evidências.
+- [ ] Revisar PR #111 e integrar somente dentro do fluxo autorizado; CI aprovado não substitui revisão.
+- [ ] Incluir frontend em repositório independente, com segurança de mesma origem para painel; validar acessibilidade, identidade e conteúdo comercial.
+- [ ] Homologar cada HML-### e autorizar release à parte; não publicar sem dados reais aprovados.
+
+## Restrições e cautelas
+- Ninguém foi nomeado artificialmente como responsável técnico/administradora.
+- Não foram inventados preços, marcas ativas, número WhatsApp, endereço, imagens oficiais ou logotipo.
+- Não houve merge em `develop`/`main`, alteração de produção, tag documental ou aprovação de homologação.
+- O planejamento de sete fases não equivale à implementação de sete fases.
