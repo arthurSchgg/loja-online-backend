@@ -14,7 +14,7 @@
 | Autorização da Fase 1 | [AUTH-001 #80](https://github.com/arthurSchgg/loja-online/issues/80) | Expressamente não autorizada |
 | Backlog | #81–#89 + #91–#110; duplicata #90 encerrada e ligada à #52 | Issues reais criadas e relacionadas |
 | Homologações por fase | [#112](https://github.com/arthurSchgg/loja-online/issues/112)–[#118](https://github.com/arthurSchgg/loja-online/issues/118) | Não homologadas |
-| Gate de cobertura e testes | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) | CI passou em branch draft, sem merge |
+| Gate de cobertura e testes | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) | CI passou; pronto para revisão, sem merge |
 | Frontend público protótipo | ZIP fornecido separadamente na conversa | Não está no GitHub e não foi homologado |
 
 ## Resultado de CI medido
@@ -45,3 +45,8 @@
 - O pacote inicial de documentação recuperado contém 17 RN legadas, 28 RF, 14 RNF e quatro histórias de usuário. O inventário encontra-se em [legacy-baseline-crosswalk.md](legacy-baseline-crosswalk.md).
 - Os nomes `LEGACY-US001–US004` são separados das issues novas `US-001–US-004`, que possuem escopos parcialmente diferentes.
 - Docs antigos `ARCHITECTURE.md`, `WHATSAPP.md`, `CAMPAIGNS.md` e `REVIEW-DECISIONS.md` receberam avisos preservando o conteúdo original, mas indicando substituições e diferenças com a especificação aprovada.
+
+## Atualização de revisão — 2026-11-08
+- PR #111 (JaCoCo e testes): **marcado pronto para revisão**, sem merge; GitHub Actions aprovado, cobertura 84,80%.
+- PR #78 (especificação): **continua em rascunho**, porque conflitos de regras e aprovação técnica seguem pendentes.
+- Nenhuma assinatura técnica ou comercial foi inventada; HML-001 a HML-007 e AUTH-001 permanecem não aprovadas.
