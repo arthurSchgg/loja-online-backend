@@ -74,3 +74,18 @@
 **Bloqueios restantes:** auditoria final de RN e aprovação da especificação; tarefas não implementadas (recomendações de produto por perfil, personalização avançada de velas, recuperação de senha/outbox, auditoria persistente, dados reais e conteúdo oficial), testes E2E/a11y, homologações por fase, configuração de conta AWS e orçamento, provisionamento real ECS/RDS/Amplify, backups externos e aprovação comercial/técnica de produção.
 
 **Nenhum dado comercial, credential, assinatura ou cobrança AWS foi presumido ou criado.**
+
+## Propostas adicionais de backend e AWS — 2026-11-08
+
+| PR | Escopo | Base | Último CI observado | Integração |
+|---|---|---|---|---|
+| [#119](https://github.com/arthurSchgg/loja-online/pull/119) | AWS ECS Express, RDS, ECR, Amplify, OIDC e perfil prod | develop | Aprovado (commit `599397d`) | Não integrado |
+| [#120](https://github.com/arthurSchgg/loja-online/pull/120) | Estoque, ledger, disponibilidade efetiva | develop | Aprovado (`4ef3cb2`) | Não integrado |
+| [#121](https://github.com/arthurSchgg/loja-online/pull/121) | Promoções com vigência e preço efetivo | #120 | Aprovado (`9200d66`) | Não integrado |
+| [#122](https://github.com/arthurSchgg/loja-online/pull/122) | Confirmação WhatsApp com revalidação | #121 | Aprovado (`bb71d10`) | Não integrado |
+
+**Atenção à ordem de revisão:** #120 → #121 → #122. Como são PRs empilhados, a aprovação da pipeline de cada branch não equivale a integração segura na `develop`. Revisar migrações Flyway V7/V8, concorrência, compatibilidade com dados reais e contratos do frontend.
+
+**Frontend separado:** pacote `lojinha-da-katia-frontend-repositorio-aws.zip` disponibilizado na conversa. Inclui vitrine, quizzes, contato, confirmação WhatsApp, painel de administração (marcas, categorias, produtos, ofertas, conteúdo, campanhas, loja, estoque, promoções), build público `dist/` sem painel, `amplify.yml` e CI. Testes estáticos Node 22: **4/4 aprovados**, sem homologação E2E. A criação do repositório remoto independente e conexão AWS Amplify permanecem pendentes.
+
+**AWS:** nenhum recurso pago foi provisionado; faltam conta, orçamento, domínio, segredos e aprovação comercial. O painel administrativo exige mesma origem HTTPS da API. Não considerar CI de build como validação de segurança da infraestrutura.
