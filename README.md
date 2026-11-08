@@ -135,6 +135,8 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 - [Diagnóstico preliminar da Fase 1 (NÃO APROVADO)](docs/phase-1-diagnostic.md)
 - [Autorização AUTH-001 — NÃO AUTORIZADA](https://github.com/arthurSchgg/loja-online/issues/80)
 - [PR #111 — JaCoCo 80%, testes complementares, sem merge](https://github.com/arthurSchgg/loja-online/pull/111)
+- [Plano de preenchimento dos campos GitHub Projects](docs/project-board-plan.md)
+- [Relatório final de preparação para revisão](docs/review-handoff.md)
 
 **Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
 
