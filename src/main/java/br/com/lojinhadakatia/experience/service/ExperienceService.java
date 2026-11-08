@@ -66,7 +66,11 @@ public class ExperienceService {
   return map(repository.saveAndFlush(e));
  }
  @Transactional
- public void delete(Long id){repository.delete(find(id));}
+ public void delete(Long id){
+  Experience experience=find(id);
+  recommendations.clearForExperience(id);
+  repository.delete(experience);
+ }
  private Experience find(Long id){return repository.findById(id).orElseThrow(()->new ResourceNotFoundException("Experiência não encontrada."));}
  private void apply(Experience e,ExperienceRequest request){
   var questions=request.questions().stream().map(q->new ExperienceQuestion(q.title().trim(),q.position(),
