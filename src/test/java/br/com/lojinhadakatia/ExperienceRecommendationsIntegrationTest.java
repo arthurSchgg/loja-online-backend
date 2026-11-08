@@ -98,7 +98,7 @@ class ExperienceRecommendationsIntegrationTest {
     .andExpect(status().isUnauthorized());
   mvc.perform(put("/api/v1/admin/experiences/"+e+"/results/floral/recommendations")
     .contentType(MediaType.APPLICATION_JSON).content("{\"productIds\":[]}"))
-    .andExpect(status().isUnauthorized());
+    .andExpect(status().isForbidden());
   var outcome=json.readTree(evaluate(e));
   org.junit.jupiter.api.Assertions.assertEquals("floral",outcome.get("key").asText());
   org.junit.jupiter.api.Assertions.assertEquals(0,outcome.get("recommendations").size());
