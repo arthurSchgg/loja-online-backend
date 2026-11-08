@@ -30,6 +30,7 @@ jobs:
         with:
           ref: ${{ inputs.release_ref }}
           persist-credentials: false
+          fetch-depth: 0
       - name: Ensure release reference is a real tag
         shell: bash
         env:
@@ -37,6 +38,10 @@ jobs:
         run: |
           git show-ref --tags --verify --quiet "refs/tags/$RELEASE_REF"
           test "$(git rev-parse HEAD)" = "$(git rev-list -n 1 "$RELEASE_REF")"
+          # Do not allow a release tag outside the protected main history.
+          git merge-base --is-ancestor HEAD refs/remotes/origin/main || {
+            echo 'Release tag is not reachable from main'; exit 1;
+          }
       - uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
