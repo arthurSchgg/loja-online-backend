@@ -2,6 +2,7 @@ package br.com.lojinhadakatia.offering.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.*;
 /** Oferta publicada: pode ser vela, oficina ou locação, conforme cadastro real. */
 @Entity @Table(name="service_offerings")
 public class ServiceOffering {
@@ -12,6 +13,8 @@ public class ServiceOffering {
  @Column(precision=12,scale=2) private BigDecimal price;
  @Column(name="image_url",length=2048) private String imageUrl;
  @Column(nullable=false) private boolean published;
+ @OneToMany(mappedBy="offering",cascade=CascadeType.ALL,orphanRemoval=true)
+ @OrderBy("kind ASC,id ASC") private List<OfferingOption> options=new ArrayList<>();
  @Column(name="created_at",nullable=false,updatable=false) private Instant createdAt;
  @Column(name="updated_at",nullable=false) private Instant updatedAt;
  protected ServiceOffering(){}
@@ -26,4 +29,9 @@ public class ServiceOffering {
  public Long getId(){return id;} public String getTitle(){return title;} public String getDescription(){return description;}
  public OfferingType getType(){return type;} public BigDecimal getPrice(){return price;} public String getImageUrl(){return imageUrl;}
  public boolean isPublished(){return published;}
+ public List<OfferingOption> getOptions(){return options;}
+ public void replaceOptions(List<OfferingOption> replacements){
+  options.clear();
+  replacements.forEach(o->{o.assign(this);options.add(o);});
+ }
 }
