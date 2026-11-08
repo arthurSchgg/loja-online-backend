@@ -63,7 +63,7 @@ public class SecurityConfiguration {
      * Escritas e sessão administrativa devem usar a mesma origem da API.
      */
     @Bean
-    CorsConfigurationSource corsSource(@Value("${app.cors.allowed-origins:}") String origins) {
+    CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins:}") String origins) {
         CorsConfiguration configuration = new CorsConfiguration();
         List<String> allowed = Arrays.stream(origins.split(","))
             .map(String::trim).filter(s -> !s.isBlank()).toList();
