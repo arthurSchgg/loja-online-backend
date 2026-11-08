@@ -85,7 +85,7 @@ class ExperienceRecommendationsIntegrationTest {
   long e=experience();
   update(e,"{\"productIds\":["+unavailable+"]}");
   mvc.perform(get("/api/v1/admin/experiences/"+e+"/results/floral/recommendations")
-   .with(user("admin").roles("ADMIN"))
+   .with(user("admin").roles("ADMIN")))
    .andExpect(status().isOk()).andExpect(jsonPath("$.productIds[0]").value(unavailable));
   var outcome=json.readTree(evaluate(e));
   org.junit.jupiter.api.Assertions.assertEquals("floral",outcome.get("key").asText());
