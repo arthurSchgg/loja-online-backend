@@ -52,6 +52,8 @@ public class PromotionService {
         promotions.delete(promotion);
     }
 
+    public boolean hasPromotions(Long productId){return promotions.existsByProductId(productId);}
+
     public BigDecimal effectivePrice(Product product){
         List<ProductPromotion> active=promotions.findEffective(product.getId(),Instant.now());
         if(active.size()>1)throw new IllegalStateException("Promoções concorrentes para o produto.");
