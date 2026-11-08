@@ -32,6 +32,7 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para produtos atualmente publicados. */
     public WhatsAppLinkResponse forProduct(Long productId) {
         var product = catalogService.published(productId);
+        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
         return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() + ".");
     }
 
