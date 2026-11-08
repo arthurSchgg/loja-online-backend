@@ -72,7 +72,7 @@ public class SecurityConfiguration {
         configuration.setAllowedHeaders(List.of("Content-Type", "Accept"));
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", configuration);
+        // Match specific stateless POST paths before the general GET-only rule.
         // Public POST endpoints are stateless and accept no credentials from external sites.
         CorsConfiguration publicPost = new CorsConfiguration();
         publicPost.setAllowedOrigins(allowed);
@@ -81,6 +81,7 @@ public class SecurityConfiguration {
         publicPost.setAllowCredentials(false);
         source.registerCorsConfiguration("/api/v1/whatsapp/confirm", publicPost);
         source.registerCorsConfiguration("/api/v1/experiences/*/evaluate", publicPost);
+        source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
