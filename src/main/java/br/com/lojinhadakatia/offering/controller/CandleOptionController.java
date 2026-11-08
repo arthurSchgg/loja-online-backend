@@ -6,8 +6,10 @@ import jakarta.validation.*;
 import jakarta.validation.constraints.*;
 import java.util.List;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.validation.annotation.Validated;
 
 @RestController
+@Validated
 public class CandleOptionController {
     private final CandleOptionService service;
     public CandleOptionController(CandleOptionService service) {this.service = service;}
