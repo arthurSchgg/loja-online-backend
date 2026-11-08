@@ -58,6 +58,8 @@ public class WhatsAppService {
                 if (request.expectedPrice() == null ||
                     product.effectivePrice().compareTo(request.expectedPrice()) != 0)
                     throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
+                if(request.selections()!=null && !request.selections().isEmpty())
+                    throw new BusinessException("Produto não aceita personalização de serviço.");
                 return forProduct(request.id());
             }
             case OFFERING -> {
@@ -67,7 +69,10 @@ public class WhatsAppService {
                 if ((actual == null) != (expected == null) ||
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
-                return forOffering(request.id());
+                String options=offeringService.validateSelections(request.id(),request.selections());
+                String price=actual==null?"Valor sob consulta":
+                    NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
+                return buildLink("Olá! Gostaria de saber mais sobre: "+offering.title()+". "+price+"."+options);
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
