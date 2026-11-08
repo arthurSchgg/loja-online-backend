@@ -85,7 +85,7 @@ public class RecommendationService {
         if(categoryIds.isEmpty())return null;
         var byCategory=products.findAll((root,query,cb)->{
             query.distinct(true);
-            Join<Object,Object> cat=root.join("categories");
+            var cat=root.join("categories");
             return cb.and(cb.isTrue(root.get("published")),cb.isTrue(root.get("available")),
                 cb.greaterThan(root.<Integer>get("stockQuantity"),0),
                 cat.get("id").in(categoryIds));
