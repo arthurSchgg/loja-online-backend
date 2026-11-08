@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ExperienceProductRecommendationRepository extends JpaRepository<ExperienceProductRecommendation,Long> {
     List<ExperienceProductRecommendation> findByExperienceIdAndResultKeyOrderByPositionAscIdAsc(Long experienceId,String resultKey);
     void deleteByExperienceIdAndResultKey(Long experienceId,String resultKey);
+    void deleteByExperienceId(Long experienceId);
     boolean existsByProductId(Long productId);
 }
