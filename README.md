@@ -117,6 +117,15 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 - [Operação, backups e incidentes](docs/operations.md)
 - [Matriz inicial de rastreabilidade](docs/traceability.md)
 - [Auditoria de consistência e bloqueios](docs/consistency-audit.md)
+- [Inventário preliminar do código (sem diagnóstico formal)](docs/preliminary-code-inventory.md)
+- [Lote 1 — Fundação e segurança](docs/github-standardization/batch-01-foundation.md)
+- [Lote 2 — Catálogo e estoque](docs/github-standardization/batch-02-catalog.md)
+- [Lote 3 — Promoções e WhatsApp](docs/github-standardization/batch-03-promotions.md)
+- [Lote 4 — Experiências interativas](docs/github-standardization/batch-04-experiences.md)
+- [Lote 5 — Velas, oficinas e locações](docs/github-standardization/batch-05-offerings.md)
+- [Lote 6 — Conteúdo e frontend público](docs/github-standardization/batch-06-frontend.md)
+- [Lote 7 — Administração e qualidade](docs/github-standardization/batch-07-administration.md)
+- [Issue #79 — Consolidação e aprovação técnica](https://github.com/arthurSchgg/loja-online/issues/79)
 
 **Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
 
