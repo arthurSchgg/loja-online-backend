@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "candle_options", uniqueConstraints = @UniqueConstraint(
-    name = "uq_candle_option", columnNames = {"offering_id", "kind", "value"}))
+    name = "uq_candle_option", columnNames = {"offering_id", "kind", "option_value"}))
 public class CandleOption {
     public enum Kind { AROMA, COLOR, PACKAGING }
 
@@ -12,7 +12,7 @@ public class CandleOption {
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "offering_id", nullable = false) private ServiceOffering offering;
     @Enumerated(EnumType.STRING) @Column(nullable = false, length = 20) private Kind kind;
-    @Column(nullable = false, length = 100) private String value;
+    @Column(name = "option_value", nullable = false, length = 100) private String value;
     @Column(nullable = false) private boolean active;
 
     protected CandleOption() {}
