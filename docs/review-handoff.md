@@ -50,3 +50,8 @@
 - PR #111 (JaCoCo e testes): **marcado pronto para revisão**, sem merge; GitHub Actions aprovado, cobertura 84,80%.
 - PR #78 (especificação): **continua em rascunho**, porque conflitos de regras e aprovação técnica seguem pendentes.
 - Nenhuma assinatura técnica ou comercial foi inventada; HML-001 a HML-007 e AUTH-001 permanecem não aprovadas.
+
+## Snapshots auditáveis das issues legadas
+- Foi feita consulta paginada (2 páginas) de todas as **53 issues antigas #1–#53**.
+- Foram preservados títulos, estados, responsáveis, labels, milestones, descrição e timestamp de atualização em sete arquivos `docs/github-standardization/snapshot-*.md`.
+- Esses snapshots permitem comparação antes/depois quando a padronização dos lotes for tecnicamente aprovada; **não substituem** a autorização nem o histórico do GitHub e não incluem campos externos do Project v2.
