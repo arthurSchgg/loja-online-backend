@@ -89,3 +89,19 @@
 **Frontend separado:** pacote `lojinha-da-katia-frontend-repositorio-aws.zip` disponibilizado na conversa. Inclui vitrine, quizzes, contato, confirmação WhatsApp, painel de administração (marcas, categorias, produtos, ofertas, conteúdo, campanhas, loja, estoque, promoções), build público `dist/` sem painel, `amplify.yml` e CI. Testes estáticos Node 22: **4/4 aprovados**, sem homologação E2E. A criação do repositório remoto independente e conexão AWS Amplify permanecem pendentes.
 
 **AWS:** nenhum recurso pago foi provisionado; faltam conta, orçamento, domínio, segredos e aprovação comercial. O painel administrativo exige mesma origem HTTPS da API. Não considerar CI de build como validação de segurança da infraestrutura.
+
+## Implementações adicionais de 2026-11-08 — itens para revisão
+
+| PR | Entrega | Base | Resultado de testes observado | Situação |
+|---|---|---|---|---|
+| [#125](https://github.com/arthurSchgg/loja-online/pull/125) | Opções de velas AROMA/COLOR/PACKAGING e confirmação WhatsApp | #123 | GitHub Actions **sucesso** no último commit `f34c1bb` | Aberto, draft, não integrado |
+| [#130](https://github.com/arthurSchgg/loja-online/pull/130) | Auditoria persistente de escrita administrativa e consulta paginada | #125 | GitHub Actions **sucesso** no último commit `4d1bd6d` | Aberto, draft, não integrado |
+| [#131](https://github.com/arthurSchgg/loja-online/pull/131) | Disponibilidade independente de velas/oficinas/locações e bloqueio WhatsApp | #130 | GitHub Actions **sucesso** no último commit `d03147e` | Aberto, draft, não integrado |
+
+**Frontend independente atualizado:** artefato `lojinha-da-katia-frontend-aws-recomendacoes.zip`, criado na conversa, com apresentação de até três recomendações do quiz, opções de velas e indisponibilidade de ofertas. Build estático e **7 testes locais Node** aprovados. Não há repositório GitHub frontend criado pelo assistente, nem hospedagem AWS ativa.
+
+**Conflitos de trabalho paralelo:** [CR-001 #133](https://github.com/arthurSchgg/loja-online/issues/133) lista PRs concorrentes para as migrations Flyway V9, V10 e V11. Não aplicar simultaneamente #123 e #124, #125/#126/#128 ou #127/#129/#130 sem reconciliação. A origem dos PRs paralelos precisa ser conferida para escolher o contrato e consolidar os testes. Uma cadeia possível é #120 → #121 → #122 → #123 → #125 → #130 → #131, mas variantes concorrentes precisam ser comparadas primeiro.
+
+A [PR #132](https://github.com/arthurSchgg/loja-online/pull/132) apresenta tentativa de proteção de login em uma cadeia alternativa; a última verificação observada tinha falha de teste (esperava HTTP 429 e recebeu 401). Não é evidência de homologação de segurança.
+
+**Estado final desta preparação:** nenhuma mudança foi integrada a `develop` ou `main`; nenhum recurso AWS foi provisionado e nenhuma HML/AUTH foi assinada. Permanecem implementação de recuperação de senha/outbox, revisão de segurança, interface administrativa/homologação ponta a ponta, implantação AWS e conteúdo comercial.
