@@ -39,3 +39,26 @@ WhatsApp contextualizado já foi implementado parcialmente em PR #64, mas o cont
 - [ ] Campos e vínculos conferidos após edição.
 - [ ] Histórico preservado; inconsistências corrigidas.
 - [ ] Relatório validado e aprovação final explícita.
+
+
+## Backlog adicional preparado para revisão
+As issues abaixo já existem no GitHub. Sua **criação não constitui aprovação técnica, execução do lote ou atribuição de campos do Projects**.
+
+| Issue real | Natureza | Situação |
+|---|---|---|
+| [#82](https://github.com/arthurSchgg/loja-online/issues/82) | História proposta | Pendente de padronização aprovada |
+| [#83](https://github.com/arthurSchgg/loja-online/issues/83) | História proposta | Pendente de padronização aprovada |
+| [#93](https://github.com/arthurSchgg/loja-online/issues/93) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#94](https://github.com/arthurSchgg/loja-online/issues/94) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#95](https://github.com/arthurSchgg/loja-online/issues/95) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#96](https://github.com/arthurSchgg/loja-online/issues/96) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+| [#97](https://github.com/arthurSchgg/loja-online/issues/97) | Tarefa técnica vinculada | Pendente de padronização aprovada |
+
+**Referências de comparação:** #15 (WhatsApp antigo), #47 (banners não são promoções de preço).
+
+### Validação antes da aplicação
+- [ ] Verificar que nenhuma issue nova reproduz por inteiro trabalho já concluído ou aberto.
+- [ ] Registrar snapshots antes/depois de labels, títulos, descrições, responsáveis e vínculos.
+- [ ] Validar IDs de `US-###` e `TASK-###` em todas as issues, inclusive fechadas.
+- [ ] Atualizar campos reais do GitHub Projects (fase, status, prioridade, SP e assignee).
+- [ ] Registrar aprovação técnica explícita e resultado por lote.
