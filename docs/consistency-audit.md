@@ -37,3 +37,15 @@
 
 ## Observação
 Os arquivos `docs/REVIEW-DECISIONS.md` e demais guias são fontes existentes, mas contêm decisões antigas e pendências. Não promover seu texto como verdade comercial atual sem reconciliação.
+
+## Baseline original recuperado — segunda passada da auditoria
+Foi identificado um pacote documental anterior `lojinha-da-katia-documentacao-inicial.zip` com `RN001–RN017`, `RF001–RF028`, `RNF001–RNF014` e `US001–US004`. Um [crosswalk de preservação](legacy-baseline-crosswalk.md) distingue IDs legados de IDs atuais.
+
+**Conflitos adicionais identificados com evidência direta:**
+- `LEGACY-RN002` exigia categoria, enquanto a revisão posterior a tornou opcional.
+- `LEGACY-RN003` tornava marca opcional, enquanto a revisão a tornou obrigatória.
+- `LEGACY-US001` é administração de produtos, enquanto a issue `US-001 #81` representa estoque. O prefixo `LEGACY-` preserva a referência sem reutilizar a identidade.
+- `RF018/020–022/024–027` eram pós-MVP no baseline, enquanto a revisão posterior os incluiu em fases do MVP.
+- O briefing original descrevia JWT e oito fases; a especificação posterior adotou sessão+CSRF e sete fases.
+
+Os itens acima são divergências históricas documentadas, **não indicam que o código foi corrigido**. A auditoria de RN-### posteriores continua incompleta por falta de transcrição integral confiável.
