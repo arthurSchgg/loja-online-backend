@@ -12,6 +12,7 @@ public class Product {
     @Column(nullable=false,precision=12,scale=2) private BigDecimal price;
     @Column(nullable=false) private boolean available=true;
     @Column(nullable=false) private boolean published=false;
+    @Column(nullable=false) private boolean archived=false;
     @Column(name="stock_quantity", nullable=false) private int stockQuantity=0;
     @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="brand_id",nullable=false) private Brand brand;
     @ManyToMany(fetch=FetchType.LAZY)
@@ -29,13 +30,17 @@ public class Product {
     @PreUpdate void updated(){updatedAt=Instant.now();}
     public Long getId(){return id;} public String getName(){return name;} public String getDescription(){return description;}
     public BigDecimal getPrice(){return price;} public int getStockQuantity(){return stockQuantity;}
-    public void setStockQuantity(int quantity){if(quantity<0)throw new IllegalArgumentException("Estoque negativo.");this.stockQuantity=quantity;} public boolean isAvailable(){return available;} public boolean isPublished(){return published;}
+    public void setStockQuantity(int quantity){if(quantity<0)throw new IllegalArgumentException("Estoque negativo.");this.stockQuantity=quantity;} public boolean isAvailable(){return available;} public boolean isPublished(){return published;} public boolean isArchived(){return archived;}
     public Brand getBrand(){return brand;} public Set<Category> getCategories(){return categories;} public List<ProductImage> getImages(){return images;}
     public Instant getCreatedAt(){return createdAt;} public Instant getUpdatedAt(){return updatedAt;}
     public void update(String name,String description,BigDecimal price,Brand brand,Set<Category> categories,boolean available,boolean published){
         this.name=name;this.description=description;this.price=price;this.brand=brand;
         this.categories.clear();this.categories.addAll(categories);this.available=available;this.published=published;
     }
+    /** An archived product stays in the database for stock and promotion history. */
+    public void archive(){archived=true;published=false;}
+    /** Restoration never publishes the product without an explicit administrative update. */
+    public void restore(){archived=false;published=false;}
     public void replaceImages(List<ProductImage> replacements){
         images.clear();
         replacements.forEach(image->{image.assignTo(this);images.add(image);});
