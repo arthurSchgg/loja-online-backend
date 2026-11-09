@@ -1,3 +1,5 @@
+> **DISTINÇÃO DE ESCOPO:** este documento descreve campanhas de **banners** do código existente. Promoções de preço programadas são uma regra diferente, planejada na [US-002](https://github.com/arthurSchgg/loja-online/issues/82). Não inferir um mecanismo de desconto a partir do módulo de campanhas. Confira a decisão vigente em [business-rules.md](business-rules.md).
+
 # Campanhas e banners
 
 O módulo gerencia banners e chamadas de destaque no site, sem regra de desconto, cupom ou alteração automática de preços.

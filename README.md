@@ -104,6 +104,43 @@ mvn clean verify
 
 Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL real e executa um teste de integração com Flyway/Hibernate no banco-alvo, sem depender de Docker. Veja [docs/TESTING.md](docs/TESTING.md).
 
+## Especificação em consolidação (não aprovada)
+
+Os documentos abaixo representam **requisitos planejados**, não funcionalidades já implementadas nem homologadas. A consolidação está em revisão e ainda depende da auditoria de identificadores e da aprovação técnica formal.
+
+- [Inventário das regras de negócio](docs/business-rules.md)
+- [Requisitos funcionais e não funcionais](docs/requirements.md)
+- [Arquitetura de referência e divergências](docs/architecture.md)
+- [Sete fases e critérios de aceitação](docs/development-phases.md)
+- [GitHub Projects, issues e Git Flow](docs/github-workflow.md)
+- [Políticas de segurança consolidadas](docs/security.md)
+- [Operação, backups e incidentes](docs/operations.md)
+- [Matriz inicial de rastreabilidade](docs/traceability.md)
+- [Auditoria de consistência e bloqueios](docs/consistency-audit.md)
+- [Inventário preliminar do código (sem diagnóstico formal)](docs/preliminary-code-inventory.md)
+- [Lote 1 — Fundação e segurança](docs/github-standardization/batch-01-foundation.md)
+- [Lote 2 — Catálogo e estoque](docs/github-standardization/batch-02-catalog.md)
+- [Lote 3 — Promoções e WhatsApp](docs/github-standardization/batch-03-promotions.md)
+- [Lote 4 — Experiências interativas](docs/github-standardization/batch-04-experiences.md)
+- [Lote 5 — Velas, oficinas e locações](docs/github-standardization/batch-05-offerings.md)
+- [Lote 6 — Conteúdo e frontend público](docs/github-standardization/batch-06-frontend.md)
+- [Lote 7 — Administração e qualidade](docs/github-standardization/batch-07-administration.md)
+- [Issue #79 — Consolidação e aprovação técnica](https://github.com/arthurSchgg/loja-online/issues/79)
+- [Visão do projeto e diferenças do briefing](docs/vision.md)
+- [Casos de uso e diagrama](docs/use-cases.md)
+- [Modelo de dados e dicionário inicial](docs/data-model.md)
+- [Contrato REST existente e evolução proposta](docs/api-contract-proposal.md)
+- [Design System e Motion Design provisórios](docs/ui-design-system.md)
+- [Plano de testes e homologação](docs/test-plan.md)
+- [Diagnóstico preliminar da Fase 1 (NÃO APROVADO)](docs/phase-1-diagnostic.md)
+- [Autorização AUTH-001 — NÃO AUTORIZADA](https://github.com/arthurSchgg/loja-online/issues/80)
+- [PR #111 — JaCoCo 80%, testes complementares, sem merge](https://github.com/arthurSchgg/loja-online/pull/111)
+- [Plano de preenchimento dos campos GitHub Projects](docs/project-board-plan.md)
+- [Relatório final de preparação para revisão](docs/review-handoff.md)
+- [Equivalência e preservação da documentação inicial](docs/legacy-baseline-crosswalk.md)
+
+**Ordem obrigatória:** consolidar e aprovar especificação → diagnosticar código → aprovar sete lotes de issues → autorização AUTH-001 → iniciar Fase 1. Nenhuma destas aprovações está implícita neste README.
+
 ## Documentos
 
 - [Arquitetura](docs/ARCHITECTURE.md)
