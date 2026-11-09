@@ -73,19 +73,30 @@ public class ExperienceService {
    if(published!=null)selected.add(published);
    if(selected.size()==3)return selected;
   }
-  // Fallback stays within a configured product brand and never invents suggestions.
+  // Prefer the same brand; if necessary, use a shared category.
+  // Both searches apply publication, manual availability and stock filters.
   for(var link:configured){
    if(selected.size()==3)break;
    var brandId=link.getProduct().getBrand().getId();
-   var options=catalog.search(null, brandId, null, true,
-       PageRequest.of(0, 40, Sort.by("id").descending()), false);
-   for(var candidate:options.getContent()){
-    if(!candidate.available()||!seen.add(candidate.id()))continue;
-    selected.add(candidate);
+   addFallbacks(catalog.search(null, brandId, null, true,
+       PageRequest.of(0, 40, Sort.by("id").descending()), false).getContent(),selected,seen);
+  }
+  for(var link:configured){
+   if(selected.size()==3)break;
+   for(var category:link.getProduct().getCategories()){
     if(selected.size()==3)break;
+    addFallbacks(catalog.search(null, null, category.getId(), true,
+        PageRequest.of(0, 40, Sort.by("id").descending()), false).getContent(),selected,seen);
    }
   }
   return List.copyOf(selected);
+ }
+
+ private void addFallbacks(List<ProductResponse> candidates, List<ProductResponse> selected, Set<Long> seen) {
+  for(var candidate:candidates){
+   if(selected.size()==3)break;
+   if(candidate.available() && seen.add(candidate.id()))selected.add(candidate);
+  }
  }
 
  private ProductResponse eligible(Long productId) {
