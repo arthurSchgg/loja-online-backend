@@ -1,0 +1,14 @@
+target/
+.idea/
+.vscode/
+*.iml
+.env
+.env.*
+!.env.example
+!.env.staging.example
+.DS_Store
+backups/
+*.dump
+*.dump.sha256
+staging-local-ca.crt
+*.log

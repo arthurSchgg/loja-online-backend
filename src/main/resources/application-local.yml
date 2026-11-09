@@ -1,0 +1,7 @@
+# Perfil exclusivo para desenvolvimento em http://localhost.
+# Nunca ative este perfil em uma implantação acessível pela internet.
+server:
+  servlet:
+    session:
+      cookie:
+        secure: false

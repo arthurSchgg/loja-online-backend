@@ -1,0 +1,49 @@
+name: Backend CI
+on:
+  push:
+    branches: [main, develop, 'feature/**', 'release/**']
+  pull_request:
+    branches: [main, develop, 'release/**']
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+      - name: Validate Docker Compose definitions without starting containers
+        run: |
+          docker compose --env-file .env.example -f compose.yaml config --quiet
+          docker compose --env-file .env.staging.example -f compose.staging.yaml config --quiet
+          bash -n scripts/*.sh
+      - name: Install and start PostgreSQL for integration tests
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq postgresql
+          sudo service postgresql start
+          sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres_ci_password';"
+          sudo -u postgres createdb lojinha_ci
+      - name: Run tests and package
+        env:
+          RUN_POSTGRES_INTEGRATION: 'true'
+          POSTGRES_TEST_URL: jdbc:postgresql://localhost:5432/lojinha_ci
+          POSTGRES_TEST_USER: postgres
+          POSTGRES_TEST_PASSWORD: postgres_ci_password
+        run: mvn -B verify
+      - name: Verify PostgreSQL backup and isolated restore
+        env:
+          PGHOST: localhost
+          PGPORT: '5432'
+          PGUSER: postgres
+          PGPASSWORD: postgres_ci_password
+          PGDATABASE: lojinha_ci
+          BACKUP_DIR: /tmp/lojinha-ci-backups
+          RESTORE_TARGET_DATABASE: lojinha_ci_restore_test
+        run: |
+          bash scripts/backup-postgres.sh
+          archive="$(find "$BACKUP_DIR" -maxdepth 1 -name '*.dump' -print -quit)"
+          test -n "$archive"
+          bash scripts/verify-postgres-restore.sh "$archive"
