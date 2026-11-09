@@ -10,9 +10,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.HexFormat;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.function.Function;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -35,6 +35,7 @@ public class BreachedPasswordVerifier {
     private final boolean enabled;
     private final Function<String, String> fetchRange;
 
+    @Autowired
     public BreachedPasswordVerifier(
             @Value("${app.security.breached-password-check-enabled:true}") boolean enabled) {
         this(enabled, BreachedPasswordVerifier::fetchPwnedRange);
