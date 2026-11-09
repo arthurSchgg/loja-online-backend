@@ -27,9 +27,13 @@ public class AdminEmailOutbox {
         this.createdAt = Instant.now();
         this.nextAttemptAt = createdAt;
     }
+    public Long getId() { return id; }
     public String getRecipient() { return recipient; }
     public String getSubject() { return subject; }
     public String getEncryptedBody() { return encryptedBody; }
+    public int getAttempts() { return attempts; }
+    public Instant getNextAttemptAt() { return nextAttemptAt; }
+    public Instant getSentAt() { return sentAt; }
     public void sent() { sentAt = Instant.now(); }
     public void failed() {
         attempts++;
