@@ -1,3 +1,5 @@
+> **CONTRATO IMPLEMENTADO NO BACKEND ATUAL, NÃO A REGRA-ALVO COMPLETA.** O fluxo aprovado posteriormente exige confirmação obrigatória, revalidação de preço/estoque/disponibilidade e mensagens estruturadas pelo servidor; ver [business-rules.md](business-rules.md), [api-contract-proposal.md](api-contract-proposal.md) e [US-003](https://github.com/arthurSchgg/loja-online/issues/83). O GET abaixo é histórico e não comprova cumprimento desses requisitos.
+
 # Integração de atendimento via WhatsApp
 
 O sistema não cria vendas nem processa pagamentos. Ele pode preparar links de conversas com o WhatsApp oficial que foi informado pela loja.

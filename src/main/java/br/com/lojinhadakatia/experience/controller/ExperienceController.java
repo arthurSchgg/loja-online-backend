@@ -24,6 +24,12 @@ public class ExperienceController {
  }
  @PutMapping("/api/v1/admin/experiences/{id}")
  public ExperienceResponse update(@PathVariable Long id,@Valid @RequestBody ExperienceRequest body){return service.update(id,body);}
+ /** Configure up to three ordered products for an existing result profile. */
+ @PutMapping("/api/v1/admin/experiences/{id}/results/{resultKey}/recommendations")
+ public ResultRecommendationsResponse recommend(@PathVariable Long id,@PathVariable String resultKey,
+     @Valid @RequestBody ResultRecommendationsRequest request){
+  return service.replaceRecommendations(id,resultKey,request);
+ }
  @DeleteMapping("/api/v1/admin/experiences/{id}")
  public ResponseEntity<Void> delete(@PathVariable Long id){service.delete(id);return ResponseEntity.noContent().build();}
 }

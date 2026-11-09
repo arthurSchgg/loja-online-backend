@@ -21,10 +21,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class CatalogIntegrationTest {
     @Autowired MockMvc mvc;
     @Autowired ProductRepository products;
+    @Autowired ProductStockMovementRepository stockMovements;
+    @Autowired ProductPromotionRepository promotions;
     @Autowired BrandRepository brands;
     @Autowired CategoryRepository categories;
 
     @BeforeEach void clean() {
+        promotions.deleteAll();
+        stockMovements.deleteAll();
         products.deleteAll();
         categories.deleteAll();
         brands.deleteAll();

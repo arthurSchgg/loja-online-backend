@@ -4,9 +4,13 @@ import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.offering.service.OfferingService;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
+import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
+import java.math.BigDecimal;
 import br.com.lojinhadakatia.shared.exception.BusinessException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
+import java.text.NumberFormat;
+import java.util.Locale;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -32,13 +36,51 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para produtos atualmente publicados. */
     public WhatsAppLinkResponse forProduct(Long productId) {
         var product = catalogService.published(productId);
-        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() + ".");
+        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() +
+            ". Preço atual: " + NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(product.effectivePrice()) + ".");
     }
 
     /** Uma consulta só é permitida para serviços atualmente publicados. */
     public WhatsAppLinkResponse forOffering(Long offeringId) {
         var offering = offeringService.publicOne(offeringId);
-        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ".");
+        String price = offering.price() == null ? "Valor sob consulta" :
+            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
+        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + price + ".");
+    }
+
+    /** Revalida dados atuais para o usuário confirmar antes de abrir o WhatsApp. */
+    public WhatsAppLinkResponse confirm(WhatsAppConfirmationRequest request) {
+        switch (request.type()) {
+            case PRODUCT -> {
+                if (request.customizations()!=null && !request.customizations().isEmpty())
+                    throw new BusinessException("Produtos não aceitam opções de velas.");
+                var product = catalogService.published(request.id());
+                if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+                if (request.expectedPrice() == null ||
+                    product.effectivePrice().compareTo(request.expectedPrice()) != 0)
+                    throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
+                return forProduct(request.id());
+            }
+            case OFFERING -> {
+                var offering = offeringService.publicOne(request.id());
+                BigDecimal actual = offering.price();
+                BigDecimal expected = request.expectedPrice();
+                if ((actual == null) != (expected == null) ||
+                    (actual != null && actual.compareTo(expected) != 0))
+                    throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
+                var selections = offeringService.validateCustomizations(request.id(), request.customizations());
+                if (selections.isEmpty()) return forOffering(request.id());
+                String formatted = actual == null ? "Valor sob consulta" :
+                    NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
+                String options = selections.entrySet().stream()
+                    .map(item -> item.getKey()+": "+item.getValue())
+                    .collect(java.util.stream.Collectors.joining("; "));
+                return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() +
+                    ". " + formatted + ". Personalização: " + options + ". Preço final a confirmar no WhatsApp.");
+            }
+            default -> throw new BusinessException("Tipo de consulta inválido.");
+        }
     }
 
     private WhatsAppLinkResponse buildLink(String message) {

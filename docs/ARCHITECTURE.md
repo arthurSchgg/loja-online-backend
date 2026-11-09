@@ -1,3 +1,5 @@
+> **DOCUMENTO LEGADO — NÃO NORMATIVO PARA O ESCOPO ATUAL.** A seção abaixo sobre Basic Auth/JWT como escolha pendente foi substituída pela decisão posterior de **sessão HTTP com CSRF**. Consulte [architecture.md](architecture.md), [security.md](security.md) e [ADR-001-ADMIN-SESSION.md](ADR-001-ADMIN-SESSION.md). O texto histórico foi preservado para rastreabilidade.
+
 # Arquitetura
 
 Monólito modular por domínio, Spring MVC, Spring Data JPA e PostgreSQL.

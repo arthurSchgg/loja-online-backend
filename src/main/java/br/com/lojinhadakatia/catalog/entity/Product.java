@@ -12,6 +12,7 @@ public class Product {
     @Column(nullable=false,precision=12,scale=2) private BigDecimal price;
     @Column(nullable=false) private boolean available=true;
     @Column(nullable=false) private boolean published=false;
+    @Column(name="stock_quantity", nullable=false) private int stockQuantity=0;
     @ManyToOne(fetch=FetchType.LAZY,optional=false) @JoinColumn(name="brand_id",nullable=false) private Brand brand;
     @ManyToMany(fetch=FetchType.LAZY)
     @JoinTable(name="product_categories",joinColumns=@JoinColumn(name="product_id"),inverseJoinColumns=@JoinColumn(name="category_id"))
@@ -27,7 +28,8 @@ public class Product {
     @PrePersist void inserted(){createdAt=Instant.now();updatedAt=createdAt;}
     @PreUpdate void updated(){updatedAt=Instant.now();}
     public Long getId(){return id;} public String getName(){return name;} public String getDescription(){return description;}
-    public BigDecimal getPrice(){return price;} public boolean isAvailable(){return available;} public boolean isPublished(){return published;}
+    public BigDecimal getPrice(){return price;} public int getStockQuantity(){return stockQuantity;}
+    public void setStockQuantity(int quantity){if(quantity<0)throw new IllegalArgumentException("Estoque negativo.");this.stockQuantity=quantity;} public boolean isAvailable(){return available;} public boolean isPublished(){return published;}
     public Brand getBrand(){return brand;} public Set<Category> getCategories(){return categories;} public List<ProductImage> getImages(){return images;}
     public Instant getCreatedAt(){return createdAt;} public Instant getUpdatedAt(){return updatedAt;}
     public void update(String name,String description,BigDecimal price,Brand brand,Set<Category> categories,boolean available,boolean published){

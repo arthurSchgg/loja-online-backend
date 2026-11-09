@@ -1,3 +1,5 @@
+> **CHECKLIST HISTÓRICO DE RELEASE — NÃO É A AUTORIZAÇÃO DA FASE 1.** A revisão posterior adotou sessão HTTP/CSRF, sete fases, backlog padronizado e o gate de autorização [AUTH-001](https://github.com/arthurSchgg/loja-online/issues/80). Os campos abaixo conservam seu histórico, mas o encerramento formal da especificação usa [consistency-audit.md](consistency-audit.md) e [review-handoff.md](review-handoff.md).
+
 # Aprovações pendentes — Lojinha da Kátia
 
 **Estado:** backend em versão de homologação, sem publicação de produção.
