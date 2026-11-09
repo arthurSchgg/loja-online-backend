@@ -12,6 +12,7 @@ public class AdminPasswordResetToken {
     private String tokenHash;
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
+    @Column(name = "credential_version", nullable = false) private long credentialVersion;
     @Column(name = "used_at") private Instant usedAt;
 
     protected AdminPasswordResetToken() {}
