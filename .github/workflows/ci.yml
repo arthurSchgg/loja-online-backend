@@ -134,6 +134,11 @@ jobs:
           STAGING_TEST_BASE_URL: https://localhost:18443
           STAGING_TEST_ENV_FILE: .env.staging.ci
         run: python3 scripts/smoke-staging-https.py
+      - name: Exercise recovery and email confirmation through HTTPS and Mailpit
+        env:
+          STAGING_TEST_BASE_URL: https://localhost:18443
+          STAGING_TEST_ENV_FILE: .env.staging.ci
+        run: python3 scripts/smoke-staging-security-email.py
       - name: Show containers on failure (no secret contents)
         if: failure()
         run: docker compose --env-file .env.staging.ci -f compose.staging.yaml ps
