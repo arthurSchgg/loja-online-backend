@@ -140,10 +140,14 @@ class EmailSecuritySmoke(Smoke):
         self.post_json(
             "/api/v1/auth/email-change/confirm", {"token": confirm_token}, 204
         )
+        # The successful confirmation advances credential_version. The previous
+        # authenticated browser session is rejected before reaching controllers.
+        self.request("GET", "/api/v1/auth/me", 401)
+        # A new anonymous session can still reach the public confirmation route,
+        # but a consumed token cannot be reused.
         self.post_json(
             "/api/v1/auth/email-change/confirm", {"token": confirm_token}, 400
         )
-        self.request("GET", "/api/v1/auth/me", 401)
         self.await_message(NEW_EMAIL, "Novo e-mail confirmado")
         self.await_message(ADMIN_EMAIL, "E-mail administrativo alterado")
         print("PASS confirmed email cannot be reused and revokes old admin session")
