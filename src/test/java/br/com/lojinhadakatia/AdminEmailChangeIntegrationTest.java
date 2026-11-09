@@ -35,6 +35,7 @@ class AdminEmailChangeIntegrationTest {
     @Autowired AdminCredentialRepository accounts;
     @Autowired AdminEmailOutboxRepository outboxRepository;
     @Autowired AdminEmailOutboxService mailOutbox;
+    @Autowired AdminEmailChangeTokenRepository changeTokens;
     @Autowired MockMvc mvc;
     @MockitoBean JavaMailSender sender;
 
@@ -68,6 +69,25 @@ class AdminEmailChangeIntegrationTest {
             () -> service.requestChange("tester", "wrong-password", "new@example.org"));
         assertThrows(IllegalArgumentException.class,
             () -> service.requestChange("tester", "testpassword123", "OLD@example.org"));
+    }
+
+    @Test
+    void expiredOrSupersededTokensAreRejected() throws Exception {
+        String expired = "expired-email-change-token";
+        String oldVersion = "outdated-email-change-token";
+        var digest = java.security.MessageDigest.getInstance("SHA-256");
+        String expiredHash = java.util.HexFormat.of().formatHex(
+            digest.digest(expired.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+        String previousHash = java.util.HexFormat.of().formatHex(
+            digest.digest(oldVersion.getBytes(java.nio.charset.StandardCharsets.US_ASCII)));
+        long version = accounts.findById(1L).orElseThrow().getCredentialVersion();
+        changeTokens.saveAndFlush(new AdminEmailChangeToken(expiredHash, "new@example.org",
+            version, java.time.Instant.now().minusSeconds(1)));
+        changeTokens.saveAndFlush(new AdminEmailChangeToken(previousHash, "new@example.org",
+            version - 1, java.time.Instant.now().plusSeconds(900)));
+        assertThrows(IllegalArgumentException.class, () -> service.confirm(expired));
+        assertThrows(IllegalArgumentException.class, () -> service.confirm(oldVersion));
+        assertEquals("old@example.org", accounts.findById(1L).orElseThrow().getEmail());
     }
 
     @Test
