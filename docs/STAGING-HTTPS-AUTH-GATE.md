@@ -13,7 +13,7 @@ O teste `scripts/smoke-staging-https.py` valida pelo caminho HTTPS real:
   é rejeitado com HTTP 401.
 - `GET /api/v1/auth/csrf` entrega `X-CSRF-TOKEN`, e o cookie `JSESSIONID`
   possui `Secure`, `HttpOnly` e `SameSite=Lax`.
-- Login por formulário, sem CSRF, é rejeitado (403); com CSRF,
+- Login por formulário, sem CSRF, não autentica (401 ou 403 conforme o contexto anônimo); com CSRF,
   retorna 200 e permite ler a identidade administrativa.
 - Logout exige CSRF e, ao final, a sessão deixa de autenticar o usuário.
 
