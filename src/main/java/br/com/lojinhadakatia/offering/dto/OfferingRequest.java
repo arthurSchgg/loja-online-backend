@@ -12,7 +12,8 @@ public record OfferingRequest(
  boolean published,
  Boolean available
 ) {
- public OfferingRequest(String title,String description,OfferingType type,BigDecimal price,String imageUrl,boolean published) {
-  this(title,description,type,price,imageUrl,published,null);
+ public OfferingRequest(String title, String description, OfferingType type, BigDecimal price,
+                        String imageUrl, boolean published) {
+  this(title, description, type, price, imageUrl, published, null);
  }
 }

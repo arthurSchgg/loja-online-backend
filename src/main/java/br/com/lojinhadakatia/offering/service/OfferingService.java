@@ -33,13 +33,12 @@ public class OfferingService {
  @Transactional public OfferingResponse create(OfferingRequest request){
   validate(request);
   return map(repo.saveAndFlush(new ServiceOffering(request.title().trim(),request.description(),
-    request.type(),request.price(),request.imageUrl(),request.published(),
-    request.available()==null || request.available())));
+    request.type(),request.price(),request.imageUrl(),request.published(),request.available())));
  }
  @Transactional public OfferingResponse update(Long id,OfferingRequest request){
   validate(request);
   var entity=find(id);entity.update(request.title().trim(),request.description(),request.type(),request.price(),
-    request.imageUrl(),request.published(),request.available()==null?entity.isAvailable():request.available());
+    request.imageUrl(),request.published(),request.available());
   return map(repo.saveAndFlush(entity));
  }
  @Transactional public void delete(Long id){
