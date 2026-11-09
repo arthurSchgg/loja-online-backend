@@ -21,8 +21,9 @@ public class CatalogService {
     private final BrandRepository brands;
     private final CategoryRepository categories;
     private final ProductStockMovementRepository stockMovements;
-    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements){
-        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;
+    private final PromotionService promotionService;
+    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService){
+        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
@@ -116,6 +117,7 @@ public class CatalogService {
         Product product=findProduct(id);
         if(product.isPublished())throw new BusinessException("Despublique o produto antes de excluir.");
         if(stockMovements.existsByProductId(id))throw new BusinessException("Produto com histórico de estoque não pode ser excluído; arquive-o.");
+        if(promotionService.hasPromotions(id))throw new BusinessException("Produto com promoções vinculadas não pode ser excluído; arquive-o.");
         products.delete(product);
     }
     private Product findProduct(Long id){return products.findById(id).orElseThrow(()->new ResourceNotFoundException("Produto não encontrado."));}
@@ -139,7 +141,8 @@ public class CatalogService {
         return new ProductResponse(p.getId(),p.getName(),p.getDescription(),p.getPrice(),(p.isAvailable()&&p.getStockQuantity()>0),p.isPublished(),
             new LookupDto(p.getBrand().getId(),p.getBrand().getName()),
             p.getCategories().stream().map(c->new LookupDto(c.getId(),c.getName())).sorted(Comparator.comparing(LookupDto::name)).toList(),
-            p.getImages().stream().map(i->new ImageResponse(i.getImageUrl(),i.getPosition(),i.getAltText())).toList());
+            p.getImages().stream().map(i->new ImageResponse(i.getImageUrl(),i.getPosition(),i.getAltText())).toList(),
+            promotionService.effectivePrice(p));
     }
     @Transactional
     public LookupDto addBrand(LookupRequest request){

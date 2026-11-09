@@ -25,10 +25,12 @@ class StockIntegrationTest {
     @Autowired ObjectMapper mapper;
     @Autowired ProductRepository products;
     @Autowired ProductStockMovementRepository movements;
+    @Autowired ProductPromotionRepository promotions;
     @Autowired BrandRepository brands;
 
     @BeforeEach
     void reset() {
+        promotions.deleteAll();
         movements.deleteAll();
         products.deleteAll();
         brands.deleteAll();
