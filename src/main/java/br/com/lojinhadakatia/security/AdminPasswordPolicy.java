@@ -30,7 +30,7 @@ public class AdminPasswordPolicy {
         if (normalized.isEmpty() || COMMON.contains(normalized))
             throw new IllegalArgumentException("Escolha uma senha menos comum.");
         String compact = normalized.replaceAll("[^\\p{L}\\p{N}]", "");
-        if (COMMON.contains(compact) || compact.chars().distinct().count() <= 2)
+        if (COMMON.contains(compact) || compact.chars().distinct().count() == 1)
             throw new IllegalArgumentException("Escolha uma senha menos previsível.");
         String usernameNormalized = username == null ? "" :
             Normalizer.normalize(username, Normalizer.Form.NFKC).toLowerCase(Locale.ROOT).strip();
