@@ -10,8 +10,8 @@ ambiente, e validar a primeira autenticação com dados reais em homologação.
 ## Troca de senha
 `POST /api/v1/admin/security/change-password`, com sessão administrativa e
 token CSRF, recebe `currentPassword`, `newPassword`, `confirmPassword`.
-A aplicação valida senha atual, confirmação, comprimento 12–128 e diferença
-da senha anterior, atualiza bcrypt e incrementa `credential_version`.
+A aplicação valida senha atual, confirmação, comprimento 12–128, política de senhas fracas/comprometidas e diferença
+da senha anterior, atualiza o hash PBKDF2 e incrementa `credential_version`.
 A sessão que efetuou a mudança é invalidada; sessões autenticadas pelo
 formLogin e portadoras da versão anterior são rejeitadas no próximo acesso.
 Não expor senhas em logs ou métricas.
@@ -41,17 +41,17 @@ as sessões devem ser compartilhadas ou fixadas de forma segura.
   Rotacionar a chave requer estratégia de recriptografia e recuperação das mensagens.
 
 ## Ainda NÃO implementado / bloqueios para produção
-- Alteração de e-mail com confirmação por link.
+- Alteração de e-mail com confirmação por link foi implementada na V15; consultar `docs/ADMIN-EMAIL-CHANGE.md` para procedimentos de homologação.
 - Alertas de login suspeito são enviados quando o limitador detecta repetidas falhas
   contra o nome da administradora, com supressão de duplicatas por 30 minutos por
   réplica. Em implantação distribuída, a deduplicação também deve ser compartilhada.
 - Proteção distribuída contra abuso em múltiplas réplicas.
-- Verificação de senhas comuns/comprometidas, além do comprimento.
-- Testes reais de SMTP, transporte TLS e recuperação do outbox após falha;
+- Verificação local e consulta por k-anonimato de senhas comprometidas foram implementadas; validar conectividade e política de falha em staging. Consultar `docs/ADMIN-PASSWORD-POLICY.md` e `docs/ADMIN-BREACHED-PASSWORD-CHECK.md`.
+- SMTP para Mailpit local já possui teste automático; ainda faltam testes com provedor real, transporte TLS e recuperação operacional do outbox após falha;
   revisar se os e-mails são entregues antes da expiração do token.
-- Endurecimento da política de sessão em infraestrutura distribuída,
-  proteção de secrets, testes de migração PostgreSQL com dados pré-existentes.
+- Endurecimento da política de sessão em infraestrutura distribuída e proteção de secrets.
+- Testes de upgrade com dados fictícios já existentes em PostgreSQL foram adicionados; resta homologar uma cópia restaurada de banco real, sem alterar produção.
 - Homologação e aprovação formal AUTH-001.
 
-**Estado:** implementado em branch isolada para CI e revisão, sem merge ou homologação.
-Não é conclusão da segurança administrativa do MVP.
+**Estado:** funcionalidades V13–V15 integradas em `develop` após PRs aprovados, com testes automatizados.
+A documentação técnica não equivale à homologação com SMTP real, ambiente de staging, autorização formal ou release de produção.
