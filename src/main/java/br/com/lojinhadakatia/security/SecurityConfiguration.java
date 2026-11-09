@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -63,7 +64,7 @@ public class SecurityConfiguration {
      * Escritas e sessão administrativa devem usar a mesma origem da API.
      */
     @Bean
-    CorsConfigurationSource corsSource(@Value("${app.cors.allowed-origins:}") String origins) {
+    CorsConfigurationSource corsConfigurationSource(@Value("${app.cors.allowed-origins:}") String origins) {
         CorsConfiguration configuration = new CorsConfiguration();
         List<String> allowed = Arrays.stream(origins.split(","))
             .map(String::trim).filter(s -> !s.isBlank()).toList();
@@ -72,12 +73,21 @@ public class SecurityConfiguration {
         configuration.setAllowedHeaders(List.of("Content-Type", "Accept"));
         configuration.setAllowCredentials(false);
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // Match specific stateless POST paths before the general GET-only rule.
+        // Public POST endpoints are stateless and accept no credentials from external sites.
+        CorsConfiguration publicPost = new CorsConfiguration();
+        publicPost.setAllowedOrigins(allowed);
+        publicPost.setAllowedMethods(List.of("POST", "OPTIONS"));
+        publicPost.setAllowedHeaders(List.of("Content-Type", "Accept"));
+        publicPost.setAllowCredentials(false);
+        source.registerCorsConfiguration("/api/v1/whatsapp/confirm", publicPost);
+        source.registerCorsConfiguration("/api/v1/experiences/*/evaluate", publicPost);
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
 
     @Bean
-    SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
 
@@ -86,11 +96,12 @@ public class SecurityConfiguration {
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfRepository)
                 // Quiz público: avaliação de leitura, sem persistência ou alteração de estado.
-                .ignoringRequestMatchers("/api/v1/experiences/*/evaluate"))
+                .ignoringRequestMatchers("/api/v1/experiences/*/evaluate", "/api/v1/whatsapp/confirm"))
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .sessionFixation(fixation -> fixation.changeSessionId()))
             .requestCache(AbstractHttpConfigurer::disable)
+            .addFilterBefore(new LoginThrottleFilter(loginLimiter), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
@@ -106,17 +117,20 @@ public class SecurityConfiguration {
                     "/actuator/health", "/actuator/info",
                     "/v3/api-docs", "/v3/api-docs/**",
                     "/swagger-ui/**", "/swagger-ui.html").permitAll()
-                .requestMatchers(HttpMethod.POST, "/api/v1/experiences/*/evaluate").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/experiences/*/evaluate", "/api/v1/whatsapp/confirm").permitAll()
                 .anyRequest().denyAll())
             .formLogin(form -> form
                 .loginProcessingUrl("/api/v1/auth/login")
                 .successHandler((request, response, authentication) -> {
+                    loginLimiter.succeeded(authentication.getName(), request.getRemoteAddr());
                     response.setStatus(200);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write("{\"authenticated\":true}");
                 })
-                .failureHandler((request, response, exception) ->
-                    response.sendError(401, "Credenciais inválidas."))
+                .failureHandler((request, response, exception) -> {
+                    loginLimiter.failed(request.getParameter("username"), request.getRemoteAddr());
+                    response.sendError(401, "Credenciais inválidas.");
+                })
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/api/v1/auth/logout")

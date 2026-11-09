@@ -3,6 +3,12 @@ package br.com.lojinhadakatia.experience.service;
 import br.com.lojinhadakatia.experience.dto.*;
 import br.com.lojinhadakatia.experience.entity.*;
 import br.com.lojinhadakatia.experience.repository.ExperienceRepository;
+import br.com.lojinhadakatia.experience.repository.ExperienceRecommendationRepository;
+import br.com.lojinhadakatia.catalog.repository.ProductRepository;
+import br.com.lojinhadakatia.catalog.service.CatalogService;
+import br.com.lojinhadakatia.catalog.dto.ProductResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import br.com.lojinhadakatia.shared.exception.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,7 +23,13 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @Transactional(readOnly=true)
 public class ExperienceService {
  private final ExperienceRepository repository;
- public ExperienceService(ExperienceRepository repository){this.repository=repository;}
+ private final ExperienceRecommendationRepository recommendations;
+ private final ProductRepository products;
+ private final CatalogService catalog;
+ public ExperienceService(ExperienceRepository repository, ExperienceRecommendationRepository recommendations,
+                          ProductRepository products, CatalogService catalog) {
+  this.repository=repository;this.recommendations=recommendations;this.products=products;this.catalog=catalog;
+ }
  public List<ExperienceResponse> published(){return repository.findByPublishedTrueOrderByIdDesc().stream().map(this::map).toList();}
  public ExperienceResponse publicOne(Long id){
   return map(repository.findById(id).filter(Experience::isPublished)
@@ -47,8 +59,67 @@ public class ExperienceService {
       .orElseThrow(()->new BusinessException("Experiência sem resultado.")).getKey();
   ExperienceResult winner=experience.getResults().stream().filter(result->result.getResultKey().equals(key))
       .findFirst().orElseThrow(()->new BusinessException("Resultado não configurado."));
-  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription());
+  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription(), eligibleRecommendations(winner));
  }
+ /** Resolve only products actually published, available and with positive stock. */
+ private List<ProductResponse> eligibleRecommendations(ExperienceResult winner) {
+  var configured=recommendations.findByResultIdOrderByPositionAscIdAsc(winner.getId());
+  List<ProductResponse> selected=new ArrayList<>();
+  Set<Long> seen=new HashSet<>();
+  for(var link:configured){
+   var product=link.getProduct();
+   if(!seen.add(product.getId()))continue;
+   ProductResponse published=eligible(product.getId());
+   if(published!=null)selected.add(published);
+   if(selected.size()==3)return selected;
+  }
+  // Fallback stays within a configured product brand and never invents suggestions.
+  for(var link:configured){
+   if(selected.size()==3)break;
+   var brandId=link.getProduct().getBrand().getId();
+   var options=catalog.search(null, brandId, null, true,
+       PageRequest.of(0, 40, Sort.by("id").descending()), false);
+   for(var candidate:options.getContent()){
+    if(!candidate.available()||!seen.add(candidate.id()))continue;
+    selected.add(candidate);
+    if(selected.size()==3)break;
+   }
+  }
+  return List.copyOf(selected);
+ }
+
+ private ProductResponse eligible(Long productId) {
+  try {
+   var candidate=catalog.published(productId);
+   return candidate.available()?candidate:null;
+  } catch(ResourceNotFoundException ignored) {
+   return null;
+  }
+ }
+
+ /** Replace the ordered manual links of a particular result of this experience. */
+ @Transactional
+ public ResultRecommendationsResponse replaceRecommendations(Long experienceId, String resultKey,
+                                                    ResultRecommendationsRequest request) {
+  Experience experience=find(experienceId);
+  ExperienceResult result=experience.getResults().stream()
+      .filter(r->r.getResultKey().equals(resultKey)).findFirst()
+      .orElseThrow(()->new ResourceNotFoundException("Resultado não encontrado."));
+  List<Long> ids=request.productIds();
+  if(new HashSet<>(ids).size()!=ids.size())
+   throw new BusinessException("Não repita produtos recomendados.");
+  List<ExperienceRecommendation> next=new ArrayList<>();
+  for(int i=0;i<ids.size();i++){
+   var product=products.findById(ids.get(i))
+       .orElseThrow(()->new ResourceNotFoundException("Produto recomendado não encontrado."));
+   next.add(new ExperienceRecommendation(result,product,i));
+  }
+  recommendations.deleteByResultId(result.getId());
+  recommendations.flush();
+  recommendations.saveAllAndFlush(next);
+  return new ResultRecommendationsResponse(resultKey,List.copyOf(ids));
+ }
+
  @Transactional
  public ExperienceResponse create(ExperienceRequest request){
   validate(request);

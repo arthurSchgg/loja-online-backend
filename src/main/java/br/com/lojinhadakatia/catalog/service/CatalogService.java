@@ -20,8 +20,10 @@ public class CatalogService {
     private final ProductRepository products;
     private final BrandRepository brands;
     private final CategoryRepository categories;
-    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories){
-        this.products=products;this.brands=brands;this.categories=categories;
+    private final ProductStockMovementRepository stockMovements;
+    private final PromotionService promotionService;
+    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService){
+        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
@@ -80,7 +82,11 @@ public class CatalogService {
             }
             if(brandId!=null)predicates.add(cb.equal(root.get("brand").get("id"),brandId));
             if(categoryId!=null){Join<Product,Category> cat=root.join("categories");predicates.add(cb.equal(cat.get("id"),categoryId));cq.distinct(true);}
-            if(available!=null)predicates.add(cb.equal(root.get("available"),available));
+            if(available!=null){
+                var inStock=cb.greaterThan(root.<Integer>get("stockQuantity"),0);
+                var manuallyAvailable=cb.isTrue(root.get("available"));
+                predicates.add(available?cb.and(manuallyAvailable,inStock):cb.or(cb.not(manuallyAvailable),cb.not(inStock)));
+            }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };
         return products.findAll(filter,pageable).map(this::map);
@@ -110,6 +116,8 @@ public class CatalogService {
     public void delete(Long id){
         Product product=findProduct(id);
         if(product.isPublished())throw new BusinessException("Despublique o produto antes de excluir.");
+        if(stockMovements.existsByProductId(id))throw new BusinessException("Produto com histórico de estoque não pode ser excluído; arquive-o.");
+        if(promotionService.hasPromotions(id))throw new BusinessException("Produto com promoções vinculadas não pode ser excluído; arquive-o.");
         products.delete(product);
     }
     private Product findProduct(Long id){return products.findById(id).orElseThrow(()->new ResourceNotFoundException("Produto não encontrado."));}
@@ -130,10 +138,11 @@ public class CatalogService {
         }).toList();
     }
     private ProductResponse map(Product p){
-        return new ProductResponse(p.getId(),p.getName(),p.getDescription(),p.getPrice(),p.isAvailable(),p.isPublished(),
+        return new ProductResponse(p.getId(),p.getName(),p.getDescription(),p.getPrice(),(p.isAvailable()&&p.getStockQuantity()>0),p.isPublished(),
             new LookupDto(p.getBrand().getId(),p.getBrand().getName()),
             p.getCategories().stream().map(c->new LookupDto(c.getId(),c.getName())).sorted(Comparator.comparing(LookupDto::name)).toList(),
-            p.getImages().stream().map(i->new ImageResponse(i.getImageUrl(),i.getPosition(),i.getAltText())).toList());
+            p.getImages().stream().map(i->new ImageResponse(i.getImageUrl(),i.getPosition(),i.getAltText())).toList(),
+            promotionService.effectivePrice(p));
     }
     @Transactional
     public LookupDto addBrand(LookupRequest request){
