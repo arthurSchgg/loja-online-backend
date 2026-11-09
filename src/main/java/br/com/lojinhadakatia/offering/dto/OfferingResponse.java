@@ -4,5 +4,5 @@ import java.math.BigDecimal;
 import java.util.List;
 
 public record OfferingResponse(Long id, String title, String description, OfferingType type,
-                               BigDecimal price, String imageUrl, boolean published,
+                               BigDecimal price, String imageUrl, boolean published, boolean available,
                                List<OfferingOptionResponse> options) {}
