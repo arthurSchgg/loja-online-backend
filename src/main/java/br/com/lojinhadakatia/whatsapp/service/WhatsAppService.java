@@ -2,6 +2,9 @@ package br.com.lojinhadakatia.whatsapp.service;
 
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.offering.service.OfferingService;
+import br.com.lojinhadakatia.offering.service.CandleOptionService;
+import br.com.lojinhadakatia.offering.entity.OfferingType;
+import java.util.Map;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
@@ -24,13 +27,16 @@ public class WhatsAppService {
     private final StoreInformationRepository storeRepository;
     private final CatalogService catalogService;
     private final OfferingService offeringService;
+    private final CandleOptionService candleOptions;
 
     public WhatsAppService(StoreInformationRepository storeRepository,
                            CatalogService catalogService,
-                           OfferingService offeringService) {
+                           OfferingService offeringService,
+                           CandleOptionService candleOptions) {
         this.storeRepository = storeRepository;
         this.catalogService = catalogService;
         this.offeringService = offeringService;
+        this.candleOptions = candleOptions;
     }
 
     /** Uma consulta só é permitida para produtos atualmente publicados. */
@@ -67,7 +73,17 @@ public class WhatsAppService {
                 if ((actual == null) != (expected == null) ||
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
-                return forOffering(request.id());
+                String selection = "";
+                if (offering.type() == OfferingType.CANDLE) {
+                    selection = candleOptions.validateSelection(request.id(), request.options());
+                } else if (request.options() != null && !request.options().isEmpty()) {
+                    throw new BusinessException("Personalização disponível somente para velas.");
+                }
+                if (selection.isEmpty()) return forOffering(request.id());
+                String price = actual == null ? "Valor sob consulta" :
+                    NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
+                return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() +
+                    ". " + price + ". Personalização escolhida: " + selection + ".");
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
