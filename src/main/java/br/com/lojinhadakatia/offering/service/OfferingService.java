@@ -25,12 +25,12 @@ public class OfferingService {
  @Transactional public OfferingResponse create(OfferingRequest request){
   validate(request);
   return map(repo.saveAndFlush(new ServiceOffering(request.title().trim(),request.description(),
-    request.type(),request.price(),request.imageUrl(),request.published())));
+    request.type(),request.price(),request.imageUrl(),request.published(),request.available())));
  }
  @Transactional public OfferingResponse update(Long id,OfferingRequest request){
   validate(request);
   var entity=find(id);entity.update(request.title().trim(),request.description(),request.type(),request.price(),
-    request.imageUrl(),request.published());
+    request.imageUrl(),request.published(),request.available());
   return map(repo.saveAndFlush(entity));
  }
  @Transactional public void delete(Long id){
@@ -50,6 +50,6 @@ public class OfferingService {
  }
  private OfferingResponse map(ServiceOffering o){
   return new OfferingResponse(o.getId(),o.getTitle(),o.getDescription(),o.getType(),
-    o.getPrice(),o.getImageUrl(),o.isPublished());
+    o.getPrice(),o.getImageUrl(),o.isPublished(),o.isAvailable());
  }
 }
