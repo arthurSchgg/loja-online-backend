@@ -93,7 +93,8 @@ public class SecurityConfiguration {
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm").permitAll()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm",
+                    "/api/v1/auth/email-change/confirm").permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/products", "/api/v1/products/*",
                     "/api/v1/products/*/whatsapp",
