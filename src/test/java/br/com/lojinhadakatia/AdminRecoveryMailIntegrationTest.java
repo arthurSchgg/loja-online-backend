@@ -61,6 +61,22 @@ class AdminRecoveryMailIntegrationTest {
     }
 
     @Test
+    void smtpFailureSchedulesBackoffWithoutImmediateResend() {
+        outbox.enqueue("delivery-test@example.invalid", "Recovery notice", "safe test message");
+        doThrow(new org.springframework.mail.MailSendException("Simulated SMTP failure"))
+            .when(sender).send(any(SimpleMailMessage.class));
+
+        outbox.deliverPending();
+        var message = emails.findAll().get(0);
+        assertNull(message.getSentAt());
+        assertEquals(1, message.getAttempts());
+        assertTrue(message.getNextAttemptAt().isAfter(java.time.Instant.now()));
+
+        outbox.deliverPending();
+        verify(sender, times(1)).send(any(SimpleMailMessage.class));
+    }
+
+    @Test
     void unknownEmailGetsSameAcceptanceAndNoMail() throws Exception {
         mvc.perform(post("/api/v1/auth/password-reset/request").with(csrf())
             .contentType(MediaType.APPLICATION_JSON)
