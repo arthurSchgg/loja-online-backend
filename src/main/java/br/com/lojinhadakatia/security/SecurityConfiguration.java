@@ -33,7 +33,15 @@ public class SecurityConfiguration {
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+        var algorithms = new java.util.HashMap<String, PasswordEncoder>();
+        algorithms.put("pbkdf2", org.springframework.security.crypto.password.Pbkdf2PasswordEncoder
+            .defaultsForSpringSecurity_v5_8());
+        algorithms.put("bcrypt", new BCryptPasswordEncoder());
+        var delegate = new org.springframework.security.crypto.password.DelegatingPasswordEncoder(
+            "pbkdf2", algorithms);
+        // V1-V12 environments used raw bcrypt hashes without the {bcrypt} prefix.
+        delegate.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder());
+        return delegate;
     }
 
     /**
