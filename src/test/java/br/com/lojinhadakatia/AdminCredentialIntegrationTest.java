@@ -43,6 +43,16 @@ class AdminCredentialIntegrationTest {
     }
 
     @Test
+    void longPassphraseDoesNotIgnoreCharactersAfterSeventyTwoBytes() {
+        String full = "a".repeat(80) + "x";
+        String different = "a".repeat(80) + "y";
+        credentials.changePassword("tester", "testpassword123", full, full);
+        String stored = credentials.loadUserByUsername("tester").getPassword();
+        assertTrue(encoder.matches(full, stored));
+        assertFalse(encoder.matches(different, stored));
+    }
+
+    @Test
     void changePasswordRequiresAuthenticationAndCsrf() throws Exception {
         String body = """
             {"currentPassword":"testpassword123",
