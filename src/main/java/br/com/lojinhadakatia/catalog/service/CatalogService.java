@@ -67,7 +67,10 @@ public class CatalogService {
     public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,Pageable pageable,boolean admin){
         Specification<Product> filter=(root,cq,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();
-            if(!admin)predicates.add(cb.isTrue(root.get("published")));
+            if(!admin){
+                predicates.add(cb.isTrue(root.get("published")));
+                predicates.add(cb.isFalse(root.get("archived")));
+            }
             if (query != null && !query.isBlank()) {
                 // Escapes LIKE wildcards and searches both title and description.
                 String term = query.trim().toLowerCase(Locale.ROOT)
@@ -92,7 +95,7 @@ public class CatalogService {
         return products.findAll(filter,pageable).map(this::map);
     }
     public ProductResponse published(Long id){
-        Product p=products.findById(id).filter(Product::isPublished).orElseThrow(()->new ResourceNotFoundException("Produto não encontrado."));
+        Product p=products.findById(id).filter(p -> p.isPublished() && !p.isArchived()).orElseThrow(()->new ResourceNotFoundException("Produto não encontrado."));
         return map(p);
     }
     public ProductResponse adminFind(Long id){return map(findProduct(id));}
@@ -108,14 +111,29 @@ public class CatalogService {
     @Transactional
     public ProductResponse update(Long id,ProductRequest request){
         Product product=findProduct(id);
+        if(product.isArchived())throw new BusinessException("Restaure o produto antes de editar.");
         product.update(request.name().trim(),request.description(),request.price(),activeBrand(request.brandId()),activeCategories(request.categoryIds()),request.available(),request.published());
         product.replaceImages(images(request.images()));
         return map(products.saveAndFlush(product));
     }
     @Transactional
+    public ProductResponse archive(Long id){
+        Product product=findProduct(id);
+        product.archive();
+        return map(products.saveAndFlush(product));
+    }
+
+    @Transactional
+    public ProductResponse restore(Long id){
+        Product product=findProduct(id);
+        product.restore();
+        return map(products.saveAndFlush(product));
+    }
+
+    @Transactional
     public void delete(Long id){
         Product product=findProduct(id);
-        if(product.isPublished())throw new BusinessException("Despublique o produto antes de excluir.");
+        if(product.isPublished())throw new BusinessException("Despublique ou arquive o produto antes de excluir.");
         if(stockMovements.existsByProductId(id))throw new BusinessException("Produto com histórico de estoque não pode ser excluído; arquive-o.");
         if(promotionService.hasPromotions(id))throw new BusinessException("Produto com promoções vinculadas não pode ser excluído; arquive-o.");
         products.delete(product);
@@ -142,7 +160,7 @@ public class CatalogService {
             new LookupDto(p.getBrand().getId(),p.getBrand().getName()),
             p.getCategories().stream().map(c->new LookupDto(c.getId(),c.getName())).sorted(Comparator.comparing(LookupDto::name)).toList(),
             p.getImages().stream().map(i->new ImageResponse(i.getImageUrl(),i.getPosition(),i.getAltText())).toList(),
-            promotionService.effectivePrice(p));
+            promotionService.effectivePrice(p),p.isArchived());
     }
     @Transactional
     public LookupDto addBrand(LookupRequest request){
