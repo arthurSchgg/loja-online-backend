@@ -3,6 +3,7 @@ package br.com.lojinhadakatia.security;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -33,32 +34,26 @@ public class LoginAttemptLimiter {
         Instant now = Instant.now();
         update(key("account", username), now);
         update(key("origin", remoteAddress), now);
-        trimIfNeeded(now);
-    }
-
-    /**
-     * Keep the map bounded without dropping every active block at once.
-     * Prune expired records first, then the oldest unblocked records.
-     * Active blocks are the last candidates when the map is saturated.
-     */
-    private void trimIfNeeded(Instant now) {
-        if (attempts.size() <= MAX_RECORDS) return;
-
-        attempts.entrySet().removeIf(entry ->
-            !entry.getValue().blockedUntil().isAfter(now)
-                && !entry.getValue().began().plusSeconds(WINDOW_SECONDS).isAfter(now));
-        if (attempts.size() <= MAX_RECORDS) return;
-
-        long toRemove = attempts.size() - TRIM_TO_RECORDS;
-        var keys = attempts.entrySet().stream()
-            .sorted(Comparator
-                .<Map.Entry<String, Attempts>>comparingInt(entry ->
-                    entry.getValue().blockedUntil().isAfter(now) ? 1 : 0)
-                .thenComparing(entry -> entry.getValue().began()))
-            .limit(toRemove)
-            .map(Map.Entry::getKey)
-            .toList();
-        keys.forEach(attempts::remove);
+        if (attempts.size() > MAX_RECORDS) {
+            attempts.entrySet().removeIf(x -> x.getValue().blockedUntil().isBefore(now)
+                && x.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
+        }
+        // Never clear active throttles in bulk: that would let one caller reset protection
+        // for every account by flooding the limiter with arbitrary usernames.
+        // At capacity, prefer discarding the oldest unblocked records first.
+        while (attempts.size() > MAX_RECORDS) {
+            String victim = attempts.entrySet().stream()
+                .filter(e -> !e.getValue().blockedUntil().isAfter(now))
+                .min(Comparator.comparing(e -> e.getValue().began()))
+                .map(Map.Entry::getKey)
+                // If every record is blocked, evict only the oldest record rather
+                // than clearing every account's active protection at once.
+                .orElseGet(() -> attempts.entrySet().stream()
+                    .min(Comparator.comparing(e -> e.getValue().began()))
+                    .map(Map.Entry::getKey).orElse(null));
+            if (victim == null) break;
+            attempts.remove(victim);
+        }
     }
 
     /** A valid login clears only this account/origin pair. */

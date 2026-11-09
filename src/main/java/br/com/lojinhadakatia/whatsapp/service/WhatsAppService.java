@@ -44,6 +44,7 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para serviços atualmente publicados. */
     public WhatsAppLinkResponse forOffering(Long offeringId) {
         var offering = offeringService.publicOne(offeringId);
+        if (!offering.available()) throw new BusinessException("Serviço indisponível para consulta.");
         String price = offering.price() == null ? "Valor sob consulta" :
             NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
         return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + price + ".");
@@ -64,6 +65,7 @@ public class WhatsAppService {
             }
             case OFFERING -> {
                 var offering = offeringService.publicOne(request.id());
+                if (!offering.available()) throw new BusinessException("Serviço indisponível para consulta.");
                 BigDecimal actual = offering.price();
                 BigDecimal expected = request.expectedPrice();
                 if ((actual == null) != (expected == null) ||
