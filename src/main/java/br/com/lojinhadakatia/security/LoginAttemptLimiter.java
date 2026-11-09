@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia.security;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Comparator;
 import java.util.Locale;
@@ -16,6 +17,7 @@ public class LoginAttemptLimiter {
     private static final int MAX_FAILURES = 5;
     private static final long WINDOW_SECONDS = 600;
     private static final int MAX_RECORDS = 10000;
+    private static final int TRIM_TO_RECORDS = 9000;
 
     private final Map<String, Attempts> attempts = new HashMap<>();
 
