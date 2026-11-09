@@ -41,7 +41,10 @@ as sessões devem ser compartilhadas ou fixadas de forma segura.
   Rotacionar a chave requer estratégia de recriptografia e recuperação das mensagens.
 
 ## Ainda NÃO implementado / bloqueios para produção
-- Alteração de e-mail com confirmação por link e avisos de atividades suspeitas.
+- Alteração de e-mail com confirmação por link.
+- Alertas de login suspeito são enviados quando o limitador detecta repetidas falhas
+  contra o nome da administradora, com supressão de duplicatas por 30 minutos por
+  réplica. Em implantação distribuída, a deduplicação também deve ser compartilhada.
 - Proteção distribuída contra abuso em múltiplas réplicas.
 - Verificação de senhas comuns/comprometidas, além do comprimento.
 - Testes reais de SMTP, transporte TLS e recuperação do outbox após falha;
