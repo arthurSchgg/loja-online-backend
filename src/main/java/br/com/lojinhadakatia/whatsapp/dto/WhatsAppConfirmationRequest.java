@@ -14,5 +14,8 @@ public record WhatsAppConfirmationRequest(
     @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal expectedPrice,
     @Size(max = 3) Map<@NotBlank String, @NotBlank String> customizations
 ) {
+    public WhatsAppConfirmationRequest(Type type, Long id, BigDecimal expectedPrice) {
+        this(type, id, expectedPrice, null);
+    }
     public enum Type { PRODUCT, OFFERING }
 }

@@ -2,6 +2,9 @@ package br.com.lojinhadakatia.whatsapp.service;
 
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.offering.service.OfferingService;
+import br.com.lojinhadakatia.offering.service.CandleOptionService;
+import br.com.lojinhadakatia.offering.entity.OfferingType;
+import java.util.Map;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
@@ -24,13 +27,16 @@ public class WhatsAppService {
     private final StoreInformationRepository storeRepository;
     private final CatalogService catalogService;
     private final OfferingService offeringService;
+    private final CandleOptionService candleOptions;
 
     public WhatsAppService(StoreInformationRepository storeRepository,
                            CatalogService catalogService,
-                           OfferingService offeringService) {
+                           OfferingService offeringService,
+                           CandleOptionService candleOptions) {
         this.storeRepository = storeRepository;
         this.catalogService = catalogService;
         this.offeringService = offeringService;
+        this.candleOptions = candleOptions;
     }
 
     /** Uma consulta só é permitida para produtos atualmente publicados. */
