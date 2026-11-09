@@ -65,7 +65,7 @@ public class AdminPasswordRecoveryService {
         AdminCredential account = accounts.lockAdministrator().orElseThrow();
         AdminPasswordResetToken reset = resetTokens.findByTokenHash(hash(token)).orElseThrow(this::invalid);
         Instant now = Instant.now();
-        if (!reset.valid(now)) throw invalid();
+        if (!reset.valid(now, account.getCredentialVersion())) throw invalid();
         if (encoder.matches(next, account.getPasswordHash()))
             throw new IllegalArgumentException("Escolha uma senha diferente.");
         account.changePassword(encoder.encode(next));
