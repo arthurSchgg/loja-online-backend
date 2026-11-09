@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia.security;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -15,6 +16,7 @@ public class LoginAttemptLimiter {
     private static final int MAX_FAILURES = 5;
     private static final long WINDOW_SECONDS = 600;
     private static final int MAX_RECORDS = 10000;
+    private static final int TRIM_TO_RECORDS = 9000;
 
     private final Map<String, Attempts> attempts = new HashMap<>();
 
@@ -31,12 +33,32 @@ public class LoginAttemptLimiter {
         Instant now = Instant.now();
         update(key("account", username), now);
         update(key("origin", remoteAddress), now);
-        if (attempts.size() > MAX_RECORDS) {
-            attempts.entrySet().removeIf(x -> x.getValue().blockedUntil().isBefore(now)
-                && x.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
-        }
-        // Never accept unbounded memory growth from arbitrary usernames or addresses.
-        if (attempts.size() > MAX_RECORDS) attempts.clear();
+        trimIfNeeded(now);
+    }
+
+    /**
+     * Keep the map bounded without dropping every active block at once.
+     * Prune expired records first, then the oldest unblocked records.
+     * Active blocks are the last candidates when the map is saturated.
+     */
+    private void trimIfNeeded(Instant now) {
+        if (attempts.size() <= MAX_RECORDS) return;
+
+        attempts.entrySet().removeIf(entry ->
+            !entry.getValue().blockedUntil().isAfter(now)
+                && !entry.getValue().began().plusSeconds(WINDOW_SECONDS).isAfter(now));
+        if (attempts.size() <= MAX_RECORDS) return;
+
+        long toRemove = attempts.size() - TRIM_TO_RECORDS;
+        var keys = attempts.entrySet().stream()
+            .sorted(Comparator
+                .<Map.Entry<String, Attempts>>comparingInt(entry ->
+                    entry.getValue().blockedUntil().isAfter(now) ? 1 : 0)
+                .thenComparing(entry -> entry.getValue().began()))
+            .limit(toRemove)
+            .map(Map.Entry::getKey)
+            .toList();
+        keys.forEach(attempts::remove);
     }
 
     /** A valid login clears only this account/origin pair. */
