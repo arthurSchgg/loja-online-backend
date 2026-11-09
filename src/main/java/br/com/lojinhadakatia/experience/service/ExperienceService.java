@@ -59,65 +59,55 @@ public class ExperienceService {
       .orElseThrow(()->new BusinessException("Experiência sem resultado.")).getKey();
   ExperienceResult winner=experience.getResults().stream().filter(result->result.getResultKey().equals(key))
       .findFirst().orElseThrow(()->new BusinessException("Resultado não configurado."));
-  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription(), eligibleRecommendations(winner));
+  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription(),recommend(winner));
  }
- /** Resolve only products actually published, available and with positive stock. */
- private List<ProductResponse> eligibleRecommendations(ExperienceResult winner) {
-  var configured=recommendations.findByResultIdOrderByPositionAscIdAsc(winner.getId());
-  List<ProductResponse> selected=new ArrayList<>();
-  Set<Long> seen=new HashSet<>();
-  for(var link:configured){
-   var product=link.getProduct();
-   if(!seen.add(product.getId()))continue;
-   ProductResponse published=eligible(product.getId());
-   if(published!=null)selected.add(published);
-   if(selected.size()==3)return selected;
+ /** Admin chooses up to three ordered product IDs per result profile. */
+ @Transactional
+ public ResultRecommendationsResponse updateRecommendations(Long experienceId, String key, ResultRecommendationsRequest request) {
+  Experience e=find(experienceId);
+  ExperienceResult result=e.getResults().stream().filter(r->r.getResultKey().equals(key))
+    .findFirst().orElseThrow(()->new ResourceNotFoundException("Perfil de resultado não encontrado."));
+  if(new HashSet<>(request.productIds()).size()!=request.productIds().size())
+   throw new BusinessException("Produto recomendado repetido.");
+  List<Product> selected=new ArrayList<>();
+  for(Long id:request.productIds()){
+   Product p=products.findById(id).orElseThrow(()->new BusinessException("Produto recomendado inexistente."));
+   selected.add(p);
   }
-  // Fallback stays within a configured product brand and never invents suggestions.
-  for(var link:configured){
-   if(selected.size()==3)break;
-   var brandId=link.getProduct().getBrand().getId();
-   var options=catalog.search(null, brandId, null, true,
-       PageRequest.of(0, 40, Sort.by("id").descending()), false);
-   for(var candidate:options.getContent()){
-    if(!candidate.available()||!seen.add(candidate.id()))continue;
-    selected.add(candidate);
-    if(selected.size()==3)break;
+  result.setRecommendations(selected);
+  repository.saveAndFlush(e);
+  return new ResultRecommendationsResponse(key, selected.stream().map(Product::getId).toList());
+ }
+ public ResultRecommendationsResponse recommendations(Long experienceId,String key){
+  Experience e=find(experienceId);
+  ExperienceResult result=e.getResults().stream().filter(r->r.getResultKey().equals(key))
+    .findFirst().orElseThrow(()->new ResourceNotFoundException("Perfil de resultado não encontrado."));
+  return new ResultRecommendationsResponse(key,result.getRecommendations().stream()
+    .map(r->r.getProduct().getId()).toList());
+ }
+ private boolean eligible(Product p){
+  return p.isPublished() && p.isAvailable() && p.getStockQuantity()>0;
+ }
+ /** Fallback only uses similar products from the brands/categories of curated products. */
+ private List<ProductResponse> recommend(ExperienceResult result){
+  var curated=result.getRecommendations().stream().map(ExperienceResultRecommendation::getProduct).toList();
+  LinkedHashMap<Long,Product> selected=new LinkedHashMap<>();
+  for(Product p:curated)if(eligible(p))selected.putIfAbsent(p.getId(),p);
+  if(selected.size()<3 && !curated.isEmpty()){
+   Set<Long> brandIds=new HashSet<>();
+   Set<Long> categoryIds=new HashSet<>();
+   for(Product p:curated){
+    brandIds.add(p.getBrand().getId());
+    p.getCategories().forEach(c->categoryIds.add(c.getId()));
+   }
+   for(Product candidate:products.findAll(org.springframework.data.domain.Sort.by("id").ascending())){
+    if(selected.size()>=3)break;
+    boolean similar=brandIds.contains(candidate.getBrand().getId()) ||
+      candidate.getCategories().stream().anyMatch(c->categoryIds.contains(c.getId()));
+    if(similar && eligible(candidate))selected.putIfAbsent(candidate.getId(),candidate);
    }
   }
-  return List.copyOf(selected);
- }
-
- private ProductResponse eligible(Long productId) {
-  try {
-   var candidate=catalog.published(productId);
-   return candidate.available()?candidate:null;
-  } catch(ResourceNotFoundException ignored) {
-   return null;
-  }
- }
-
- /** Replace the ordered manual links of a particular result of this experience. */
- @Transactional
- public ResultRecommendationsResponse replaceRecommendations(Long experienceId, String resultKey,
-                                                    ResultRecommendationsRequest request) {
-  Experience experience=find(experienceId);
-  ExperienceResult result=experience.getResults().stream()
-      .filter(r->r.getResultKey().equals(resultKey)).findFirst()
-      .orElseThrow(()->new ResourceNotFoundException("Resultado não encontrado."));
-  List<Long> ids=request.productIds();
-  if(new HashSet<>(ids).size()!=ids.size())
-   throw new BusinessException("Não repita produtos recomendados.");
-  List<ExperienceRecommendation> next=new ArrayList<>();
-  for(int i=0;i<ids.size();i++){
-   var product=products.findById(ids.get(i))
-       .orElseThrow(()->new ResourceNotFoundException("Produto recomendado não encontrado."));
-   next.add(new ExperienceRecommendation(result,product,i));
-  }
-  recommendations.deleteByResultId(result.getId());
-  recommendations.flush();
-  recommendations.saveAllAndFlush(next);
-  return new ResultRecommendationsResponse(resultKey,List.copyOf(ids));
+  return selected.values().stream().limit(3).map(p->catalog.published(p.getId())).toList();
  }
 
  @Transactional
