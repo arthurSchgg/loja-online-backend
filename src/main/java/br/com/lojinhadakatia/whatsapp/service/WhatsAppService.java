@@ -4,6 +4,8 @@ import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.offering.service.OfferingService;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
+import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
+import java.math.BigDecimal;
 import br.com.lojinhadakatia.shared.exception.BusinessException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -42,7 +44,33 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para serviços atualmente publicados. */
     public WhatsAppLinkResponse forOffering(Long offeringId) {
         var offering = offeringService.publicOne(offeringId);
-        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ".");
+        String price = offering.price() == null ? "Valor sob consulta" :
+            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
+        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + price + ".");
+    }
+
+    /** Revalida dados atuais para o usuário confirmar antes de abrir o WhatsApp. */
+    public WhatsAppLinkResponse confirm(WhatsAppConfirmationRequest request) {
+        switch (request.type()) {
+            case PRODUCT -> {
+                var product = catalogService.published(request.id());
+                if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+                if (request.expectedPrice() == null ||
+                    product.effectivePrice().compareTo(request.expectedPrice()) != 0)
+                    throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
+                return forProduct(request.id());
+            }
+            case OFFERING -> {
+                var offering = offeringService.publicOne(request.id());
+                BigDecimal actual = offering.price();
+                BigDecimal expected = request.expectedPrice();
+                if ((actual == null) != (expected == null) ||
+                    (actual != null && actual.compareTo(expected) != 0))
+                    throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
+                return forOffering(request.id());
+            }
+            default -> throw new BusinessException("Tipo de consulta inválido.");
+        }
     }
 
     private WhatsAppLinkResponse buildLink(String message) {
