@@ -26,9 +26,23 @@ jobs:
           sudo service postgresql start
           sudo -u postgres psql -c "ALTER ROLE postgres WITH PASSWORD 'postgres_ci_password';"
           sudo -u postgres createdb lojinha_ci
+      - name: Start isolated SMTP capture for integration tests
+        run: |
+          docker run -d --rm --name lojinha-ci-mailpit \
+            -p 127.0.0.1:1025:1025 -p 127.0.0.1:8025:8025 \
+            axllent/mailpit:v1.33.1
+          for attempt in $(seq 1 30); do
+            if curl --fail --silent --output /dev/null http://127.0.0.1:8025/api/v1/info; then
+              exit 0
+            fi
+            sleep 1
+          done
+          docker logs lojinha-ci-mailpit
+          exit 1
       - name: Run tests and package
         env:
           RUN_POSTGRES_INTEGRATION: 'true'
+          RUN_SMTP_INTEGRATION: 'true'
           POSTGRES_TEST_URL: jdbc:postgresql://localhost:5432/lojinha_ci
           POSTGRES_TEST_USER: postgres
           POSTGRES_TEST_PASSWORD: postgres_ci_password
