@@ -14,6 +14,19 @@ public class OfferingController {
  public OfferingController(OfferingService service){this.service=service;}
  @GetMapping("/api/v1/offerings") public List<OfferingResponse> publicList(@RequestParam(required=false) OfferingType type){return service.published(type);}
  @GetMapping("/api/v1/offerings/{id}") public OfferingResponse publicOne(@PathVariable Long id){return service.publicOne(id);}
+ @GetMapping("/api/v1/offerings/{id}/options")
+ public List<OfferingOptionResponse> publicOptions(@PathVariable Long id){
+  return service.publicOptions(id);
+ }
+ @GetMapping("/api/v1/admin/offerings/{id}/options")
+ public List<OfferingOptionResponse> adminOptions(@PathVariable Long id){
+  return service.adminOptions(id);
+ }
+ @PutMapping("/api/v1/admin/offerings/{id}/options")
+ public List<OfferingOptionResponse> replaceOptions(@PathVariable Long id,
+   @Valid @RequestBody OfferingOptionsUpdateRequest request){
+  return service.replaceOptions(id,request);
+ }
  @GetMapping("/api/v1/admin/offerings") public List<OfferingResponse> adminList(){return service.adminAll();}
  @GetMapping("/api/v1/admin/offerings/{id}") public OfferingResponse adminOne(@PathVariable Long id){return service.adminOne(id);}
  @PostMapping("/api/v1/admin/offerings") public ResponseEntity<OfferingResponse> create(@Valid @RequestBody OfferingRequest body){
