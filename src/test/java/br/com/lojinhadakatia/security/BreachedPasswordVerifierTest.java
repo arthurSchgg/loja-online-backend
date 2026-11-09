@@ -28,7 +28,7 @@ class BreachedPasswordVerifierTest {
             return digest.substring(5) + ":12\r\n" + "A".repeat(35) + ":0";
         });
 
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+        BreachedPasswordException error = assertThrows(BreachedPasswordException.class,
             () -> verifier.verify(secret));
         assertTrue(error.getMessage().contains("vazamentos"));
         assertEquals(1, count.get());
