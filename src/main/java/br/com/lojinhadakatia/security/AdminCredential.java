@@ -9,7 +9,7 @@ public class AdminCredential {
     @Id private Long id;
     @Column(nullable = false, unique = true, length = 120) private String username;
     @Column(length = 254) private String email;
-    @Column(name = "password_hash", nullable = false, length = 100) private String passwordHash;
+    @Column(name = "password_hash", nullable = false, length = 255) private String passwordHash;
     @Column(name = "credential_version", nullable = false) private long credentialVersion;
     @Column(name = "updated_at", nullable = false) private Instant updatedAt;
 
