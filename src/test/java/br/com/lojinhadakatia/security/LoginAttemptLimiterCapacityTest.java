@@ -9,6 +9,26 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  */
 class LoginAttemptLimiterCapacityTest {
     @Test
+    void blockedAccountCannotBeUnlockedByChangingRemoteAddress() {
+        LoginAttemptLimiter limiter = new LoginAttemptLimiter();
+        for (int i = 0; i < 5; i++) {
+            limiter.failed("admin", "198.51.100." + (i + 1));
+        }
+        assertTrue(limiter.retryAfterSeconds("admin", "203.0.113.42") > 0,
+            "Account throttle must apply independently of origin");
+    }
+
+    @Test
+    void blockedOriginCannotBeUnlockedByChangingUsername() {
+        LoginAttemptLimiter limiter = new LoginAttemptLimiter();
+        for (int i = 0; i < 5; i++) {
+            limiter.failed("unique-" + i, "198.51.100.99");
+        }
+        assertTrue(limiter.retryAfterSeconds("unseen-account", "198.51.100.99") > 0,
+            "Origin throttle must apply independently of account");
+    }
+
+    @Test
     void capacityEvictionDoesNotClearEveryActiveBlock() {
         LoginAttemptLimiter limiter = new LoginAttemptLimiter();
         for (int i = 0; i < 9990; i++) {
