@@ -6,7 +6,7 @@ bootstrap da primeira conta, à troca autenticada de senha e à recuperação.
 - Comprimento permitido: 12 a 128 caracteres.
 - Senhas comuns conhecidas presentes na lista interna são rejeitadas,
   incluindo variantes de maiúsculas e separadores.
-- Sequências com apenas um ou dois caracteres distintos são rejeitadas.
+- Sequências com apenas um caractere distinto são rejeitadas; variantes comuns de padrões repetidos são filtradas pela lista local.
 - Frases-senha longas são permitidas sem obrigatoriedade arbitrária
   de símbolos ou composição mista.
 - As senhas continuam protegidas com o encoder configurado no Spring
