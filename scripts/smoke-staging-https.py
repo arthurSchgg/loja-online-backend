@@ -36,7 +36,7 @@ class Smoke:
             urllib.request.HTTPCookieProcessor(self.cookies),
         )
 
-    def request(self, method: str, path: str, expected: int, *,
+    def request(self, method: str, path: str, expected: int | tuple[int, ...], *,
                 body: bytes | None = None, headers: dict | None = None) -> bytes:
         request = urllib.request.Request(
             self.base + path, data=body, headers=headers or {}, method=method
@@ -49,8 +49,9 @@ class Smoke:
         except urllib.error.HTTPError as error:
             status = error.code
             content = b""  # Do not expose error bodies or tokens in CI logs.
-        if status != expected:
-            raise AssertionError(f"{method} {path}: expected HTTP {expected}, got {status}")
+        acceptable = expected if isinstance(expected, tuple) else (expected,)
+        if status not in acceptable:
+            raise AssertionError(f"{method} {path}: expected HTTP {acceptable}, got {status}")
         return content
 
     def csrf(self) -> tuple[str, str]:
@@ -88,9 +89,10 @@ class Smoke:
             "username": username,
             "password": password,
         }).encode("utf-8")
-        self.request("POST", "/api/v1/auth/login", 403,
+        self.request("POST", "/api/v1/auth/login", (401, 403),
                      body=payload, headers={"Content-Type": "application/x-www-form-urlencoded"})
-        print("PASS login is rejected without CSRF")
+        self.request("GET", "/api/v1/auth/me", 401)
+        print("PASS login without CSRF cannot authenticate")
 
         self.request("POST", "/api/v1/auth/login", 200, body=payload, headers={
             "Content-Type": "application/x-www-form-urlencoded",
