@@ -3,10 +3,12 @@ package br.com.lojinhadakatia.experience.service;
 import br.com.lojinhadakatia.experience.dto.*;
 import br.com.lojinhadakatia.experience.entity.*;
 import br.com.lojinhadakatia.experience.repository.ExperienceRepository;
+import br.com.lojinhadakatia.experience.repository.ExperienceRecommendationRepository;
 import br.com.lojinhadakatia.catalog.repository.ProductRepository;
-import br.com.lojinhadakatia.catalog.entity.Product;
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.catalog.dto.ProductResponse;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import br.com.lojinhadakatia.shared.exception.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -21,10 +23,12 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @Transactional(readOnly=true)
 public class ExperienceService {
  private final ExperienceRepository repository;
+ private final ExperienceRecommendationRepository recommendations;
  private final ProductRepository products;
  private final CatalogService catalog;
- public ExperienceService(ExperienceRepository repository, ProductRepository products, CatalogService catalog){
-  this.repository=repository;this.products=products;this.catalog=catalog;
+ public ExperienceService(ExperienceRepository repository, ExperienceRecommendationRepository recommendations,
+                          ProductRepository products, CatalogService catalog) {
+  this.repository=repository;this.recommendations=recommendations;this.products=products;this.catalog=catalog;
  }
  public List<ExperienceResponse> published(){return repository.findByPublishedTrueOrderByIdDesc().stream().map(this::map).toList();}
  public ExperienceResponse publicOne(Long id){
@@ -105,6 +109,7 @@ public class ExperienceService {
   }
   return selected.values().stream().limit(3).map(p->catalog.published(p.getId())).toList();
  }
+
  @Transactional
  public ExperienceResponse create(ExperienceRequest request){
   validate(request);

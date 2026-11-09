@@ -110,6 +110,7 @@ public class SecurityConfiguration {
                     "/api/v1/brands", "/api/v1/categories", "/api/v1/store",
                     "/api/v1/experiences", "/api/v1/experiences/*",
                     "/api/v1/offerings", "/api/v1/offerings/*",
+                    "/api/v1/offerings/*/options",
                     "/api/v1/offerings/*/whatsapp",
                     "/api/v1/content-sections", "/api/v1/campaigns",
                     "/actuator/health", "/actuator/info",

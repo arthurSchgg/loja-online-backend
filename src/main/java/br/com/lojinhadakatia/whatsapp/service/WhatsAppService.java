@@ -2,6 +2,9 @@ package br.com.lojinhadakatia.whatsapp.service;
 
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.offering.service.OfferingService;
+import br.com.lojinhadakatia.offering.service.CandleOptionService;
+import br.com.lojinhadakatia.offering.entity.OfferingType;
+import java.util.Map;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
@@ -24,13 +27,16 @@ public class WhatsAppService {
     private final StoreInformationRepository storeRepository;
     private final CatalogService catalogService;
     private final OfferingService offeringService;
+    private final CandleOptionService candleOptions;
 
     public WhatsAppService(StoreInformationRepository storeRepository,
                            CatalogService catalogService,
-                           OfferingService offeringService) {
+                           OfferingService offeringService,
+                           CandleOptionService candleOptions) {
         this.storeRepository = storeRepository;
         this.catalogService = catalogService;
         this.offeringService = offeringService;
+        this.candleOptions = candleOptions;
     }
 
     /** Uma consulta só é permitida para produtos atualmente publicados. */
@@ -53,6 +59,8 @@ public class WhatsAppService {
     public WhatsAppLinkResponse confirm(WhatsAppConfirmationRequest request) {
         switch (request.type()) {
             case PRODUCT -> {
+                if (request.customizations()!=null && !request.customizations().isEmpty())
+                    throw new BusinessException("Produtos não aceitam opções de velas.");
                 var product = catalogService.published(request.id());
                 if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
                 if (request.expectedPrice() == null ||
@@ -67,7 +75,15 @@ public class WhatsAppService {
                 if ((actual == null) != (expected == null) ||
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
-                return forOffering(request.id());
+                var selections = offeringService.validateCustomizations(request.id(), request.customizations());
+                if (selections.isEmpty()) return forOffering(request.id());
+                String formatted = actual == null ? "Valor sob consulta" :
+                    NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
+                String options = selections.entrySet().stream()
+                    .map(item -> item.getKey()+": "+item.getValue())
+                    .collect(java.util.stream.Collectors.joining("; "));
+                return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() +
+                    ". " + formatted + ". Personalização: " + options + ". Preço final a confirmar no WhatsApp.");
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
