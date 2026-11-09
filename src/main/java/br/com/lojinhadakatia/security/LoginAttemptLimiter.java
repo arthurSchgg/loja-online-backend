@@ -3,7 +3,6 @@ package br.com.lojinhadakatia.security;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Comparator;
 import java.util.Locale;
 import java.util.Map;
 import org.springframework.stereotype.Component;
@@ -17,7 +16,6 @@ public class LoginAttemptLimiter {
     private static final int MAX_FAILURES = 5;
     private static final long WINDOW_SECONDS = 600;
     private static final int MAX_RECORDS = 10000;
-    private static final int TRIM_TO_RECORDS = 9000;
 
     private final Map<String, Attempts> attempts = new HashMap<>();
 
@@ -35,21 +33,19 @@ public class LoginAttemptLimiter {
         update(key("account", username), now);
         update(key("origin", remoteAddress), now);
         if (attempts.size() > MAX_RECORDS) {
-            attempts.entrySet().removeIf(x -> x.getValue().blockedUntil().isBefore(now)
-                && x.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
+            attempts.entrySet().removeIf(entry ->
+                !entry.getValue().blockedUntil().isAfter(now)
+                && entry.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
         }
-        // Never clear active throttles in bulk: that would let one caller reset protection
-        // for every account by flooding the limiter with arbitrary usernames.
-        // At capacity, prefer discarding the oldest unblocked records first.
+        // Trim incrementally rather than resetting every account's protection.
+        // Keep active blocks until all available eviction candidates are blocked.
         while (attempts.size() > MAX_RECORDS) {
             String victim = attempts.entrySet().stream()
-                .filter(e -> !e.getValue().blockedUntil().isAfter(now))
-                .min(Comparator.comparing(e -> e.getValue().began()))
+                .filter(entry -> !entry.getValue().blockedUntil().isAfter(now))
+                .min(Comparator.comparing(entry -> entry.getValue().began()))
                 .map(Map.Entry::getKey)
-                // If every record is blocked, evict only the oldest record rather
-                // than clearing every account's active protection at once.
                 .orElseGet(() -> attempts.entrySet().stream()
-                    .min(Comparator.comparing(e -> e.getValue().began()))
+                    .min(Comparator.comparing(entry -> entry.getValue().began()))
                     .map(Map.Entry::getKey).orElse(null));
             if (victim == null) break;
             attempts.remove(victim);
