@@ -20,5 +20,10 @@ public class OfferingController {
   var result=service.create(body);return ResponseEntity.created(URI.create("/api/v1/admin/offerings/"+result.id())).body(result);
  }
  @PutMapping("/api/v1/admin/offerings/{id}") public OfferingResponse update(@PathVariable Long id,@Valid @RequestBody OfferingRequest body){return service.update(id,body);}
+ @PutMapping("/api/v1/admin/offerings/{id}/options")
+ public List<OfferingOptionResponse> replaceOptions(@PathVariable Long id,
+             @Valid @RequestBody OfferingOptionsRequest request){
+  return service.replaceOptions(id, request);
+ }
  @DeleteMapping("/api/v1/admin/offerings/{id}") public ResponseEntity<Void> delete(@PathVariable Long id){service.delete(id);return ResponseEntity.noContent().build();}
 }
