@@ -79,8 +79,7 @@ public class BreachedPasswordVerifier {
                 throw unavailable();
             }
             if (suffix.equalsIgnoreCase(expectedSuffix) && occurrences > 0)
-                throw new IllegalArgumentException(
-                    "Esta senha consta em vazamentos conhecidos. Escolha outra senha.");
+                throw new BreachedPasswordException();
         }
     }
 
