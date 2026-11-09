@@ -11,14 +11,11 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.access.intercept.AuthorizationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -36,27 +33,15 @@ public class SecurityConfiguration {
 
     @Bean
     PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Credenciais injetadas do ambiente, nunca persistidas nem versionadas.
-     * Uma única conta é adequada ao escopo aprovado pela proprietária.
-     */
-    @Bean
-    UserDetailsService administrators(
-            @Value("${app.security.admin-username:}") String username,
-            @Value("${app.security.admin-password:}") String password,
-            PasswordEncoder encoder) {
-        if (username.isBlank() || password.length() < 12) {
-            throw new IllegalStateException(
-                "Configure ADMIN_USERNAME e ADMIN_PASSWORD (mínimo 12 caracteres).");
-        }
-        UserDetails admin = User.withUsername(username)
-            .password(encoder.encode(password))
-            .roles("ADMIN")
-            .build();
-        return new InMemoryUserDetailsManager(admin);
+        var algorithms = new java.util.HashMap<String, PasswordEncoder>();
+        algorithms.put("pbkdf2", org.springframework.security.crypto.password.Pbkdf2PasswordEncoder
+            .defaultsForSpringSecurity_v5_8());
+        algorithms.put("bcrypt", new BCryptPasswordEncoder());
+        var delegate = new org.springframework.security.crypto.password.DelegatingPasswordEncoder(
+            "pbkdf2", algorithms);
+        // V1-V12 environments used raw bcrypt hashes without the {bcrypt} prefix.
+        delegate.setDefaultPasswordEncoderForMatches(new BCryptPasswordEncoder());
+        return delegate;
     }
 
     /**
@@ -87,7 +72,8 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter) throws Exception {
+    SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter,
+                                   AdminCredentialService credentials, AdminSecurityNotifier notifier) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
 
@@ -102,10 +88,12 @@ public class SecurityConfiguration {
                 .sessionFixation(fixation -> fixation.changeSessionId()))
             .requestCache(AbstractHttpConfigurer::disable)
             .addFilterBefore(new LoginThrottleFilter(loginLimiter), UsernamePasswordAuthenticationFilter.class)
+            .addFilterBefore(new AdminSessionVersionFilter(credentials), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
+                .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm").permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/products", "/api/v1/products/*",
                     "/api/v1/products/*/whatsapp",
@@ -123,12 +111,19 @@ public class SecurityConfiguration {
                 .loginProcessingUrl("/api/v1/auth/login")
                 .successHandler((request, response, authentication) -> {
                     loginLimiter.succeeded(authentication.getName(), request.getRemoteAddr());
+                    request.getSession(true).setAttribute(AdminSessionVersionFilter.VERSION_ATTRIBUTE,
+                        credentials.credentialVersion(authentication.getName()));
                     response.setStatus(200);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write("{\"authenticated\":true}");
                 })
                 .failureHandler((request, response, exception) -> {
-                    loginLimiter.failed(request.getParameter("username"), request.getRemoteAddr());
+                    String attemptedUsername = request.getParameter("username");
+                    loginLimiter.failed(attemptedUsername, request.getRemoteAddr());
+                    if (loginLimiter.retryAfterSeconds(attemptedUsername, request.getRemoteAddr()) > 0) {
+                        try { notifier.suspiciousLogin(attemptedUsername); }
+                        catch (RuntimeException ignored) { /* Do not change authentication response due to email errors. */ }
+                    }
                     response.sendError(401, "Credenciais inválidas.");
                 })
                 .permitAll())
