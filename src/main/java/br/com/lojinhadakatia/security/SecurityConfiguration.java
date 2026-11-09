@@ -18,6 +18,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -86,7 +87,7 @@ public class SecurityConfiguration {
     }
 
     @Bean
-    SecurityFilterChain webSecurity(HttpSecurity http) throws Exception {
+    SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
 
@@ -100,6 +101,7 @@ public class SecurityConfiguration {
                 .sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
                 .sessionFixation(fixation -> fixation.changeSessionId()))
             .requestCache(AbstractHttpConfigurer::disable)
+            .addFilterBefore(new LoginThrottleFilter(loginLimiter), UsernamePasswordAuthenticationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
@@ -120,12 +122,15 @@ public class SecurityConfiguration {
             .formLogin(form -> form
                 .loginProcessingUrl("/api/v1/auth/login")
                 .successHandler((request, response, authentication) -> {
+                    loginLimiter.succeeded(authentication.getName(), request.getRemoteAddr());
                     response.setStatus(200);
                     response.setContentType(MediaType.APPLICATION_JSON_VALUE);
                     response.getWriter().write("{\"authenticated\":true}");
                 })
-                .failureHandler((request, response, exception) ->
-                    response.sendError(401, "Credenciais inválidas."))
+                .failureHandler((request, response, exception) -> {
+                    loginLimiter.failed(request.getParameter("username"), request.getRemoteAddr());
+                    response.sendError(401, "Credenciais inválidas.");
+                })
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/api/v1/auth/logout")
