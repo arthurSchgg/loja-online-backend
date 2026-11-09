@@ -49,7 +49,7 @@ public class AdminPasswordRecoveryService {
         byte[] bytes = new byte[32];
         random.nextBytes(bytes);
         String token = Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
-        resetTokens.save(new AdminPasswordResetToken(hash(token), Instant.now().plusSeconds(900)));
+        resetTokens.save(new AdminPasswordResetToken(hash(token), Instant.now().plusSeconds(900), account.getCredentialVersion()));
         outbox.enqueue(account.getEmail(), "Recuperação de acesso — Lojinha da Kátia",
             "Para redefinir a senha, abra este link em até 15 minutos:\n"
             + resetUrl + "?token=" + token
