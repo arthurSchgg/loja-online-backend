@@ -43,7 +43,12 @@ public class LoginAttemptLimiter {
             String victim = attempts.entrySet().stream()
                 .filter(e -> !e.getValue().blockedUntil().isAfter(now))
                 .min(Comparator.comparing(e -> e.getValue().began()))
-                .map(Map.Entry::getKey).orElse(null);
+                .map(Map.Entry::getKey)
+                // If every record is blocked, evict only the oldest record rather
+                // than clearing every account's active protection at once.
+                .orElseGet(() -> attempts.entrySet().stream()
+                    .min(Comparator.comparing(e -> e.getValue().began()))
+                    .map(Map.Entry::getKey).orElse(null));
             if (victim == null) break;
             attempts.remove(victim);
         }
