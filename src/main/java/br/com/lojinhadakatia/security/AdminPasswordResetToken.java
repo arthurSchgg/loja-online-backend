@@ -21,8 +21,9 @@ public class AdminPasswordResetToken {
         this.expiresAt = expiresAt;
         this.credentialVersion = version;
     }
-    public boolean valid(Instant now) {
-        return usedAt == null && expiresAt.isAfter(now);
+    public boolean valid(Instant now, long currentVersion) {
+        return usedAt == null && expiresAt.isAfter(now)
+            && credentialVersion == currentVersion;
     }
     public void consume(Instant now) { this.usedAt = now; }
 }
