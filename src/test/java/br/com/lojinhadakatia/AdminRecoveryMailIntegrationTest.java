@@ -36,6 +36,7 @@ class AdminRecoveryMailIntegrationTest {
     @Autowired AdminEmailOutboxService outbox;
     @Autowired AdminEmailOutboxRepository emails;
     @Autowired AdminCredentialService credentials;
+    @Autowired AdminSecurityNotifier notifier;
     @MockitoBean JavaMailSender sender;
 
     @Test
@@ -79,6 +80,14 @@ class AdminRecoveryMailIntegrationTest {
             .contentType(MediaType.APPLICATION_JSON)
             .content("{\"token\":\"x\",\"newPassword\":\"some-secure-password-123\",\"confirmPassword\":\"some-secure-password-123\"}"))
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void suspiciousLoginNotificationIsDeduplicated() {
+        notifier.suspiciousLogin("tester");
+        notifier.suspiciousLogin("tester");
+        assertEquals(1, emails.findAll().size());
+        assertFalse(emails.findAll().get(0).getEncryptedBody().contains("repetidas tentativas"));
     }
 
     @Test
