@@ -3,6 +3,10 @@ package br.com.lojinhadakatia.experience.service;
 import br.com.lojinhadakatia.experience.dto.*;
 import br.com.lojinhadakatia.experience.entity.*;
 import br.com.lojinhadakatia.experience.repository.ExperienceRepository;
+import br.com.lojinhadakatia.catalog.repository.ProductRepository;
+import br.com.lojinhadakatia.catalog.entity.Product;
+import br.com.lojinhadakatia.catalog.service.CatalogService;
+import br.com.lojinhadakatia.catalog.dto.ProductResponse;
 import br.com.lojinhadakatia.shared.exception.*;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -17,7 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service @Transactional(readOnly=true)
 public class ExperienceService {
  private final ExperienceRepository repository;
- public ExperienceService(ExperienceRepository repository){this.repository=repository;}
+ private final ProductRepository products;
+ private final CatalogService catalog;
+ public ExperienceService(ExperienceRepository repository, ProductRepository products, CatalogService catalog){
+  this.repository=repository;this.products=products;this.catalog=catalog;
+ }
  public List<ExperienceResponse> published(){return repository.findByPublishedTrueOrderByIdDesc().stream().map(this::map).toList();}
  public ExperienceResponse publicOne(Long id){
   return map(repository.findById(id).filter(Experience::isPublished)
@@ -47,7 +55,55 @@ public class ExperienceService {
       .orElseThrow(()->new BusinessException("Experiência sem resultado.")).getKey();
   ExperienceResult winner=experience.getResults().stream().filter(result->result.getResultKey().equals(key))
       .findFirst().orElseThrow(()->new BusinessException("Resultado não configurado."));
-  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription());
+  return new EvaluationResponse(winner.getResultKey(),winner.getTitle(),winner.getDescription(),recommend(winner));
+ }
+ /** Admin chooses up to three ordered product IDs per result profile. */
+ @Transactional
+ public ResultRecommendationsResponse updateRecommendations(Long experienceId, String key, ResultRecommendationsRequest request) {
+  Experience e=find(experienceId);
+  ExperienceResult result=e.getResults().stream().filter(r->r.getResultKey().equals(key))
+    .findFirst().orElseThrow(()->new ResourceNotFoundException("Perfil de resultado não encontrado."));
+  if(new HashSet<>(request.productIds()).size()!=request.productIds().size())
+   throw new BusinessException("Produto recomendado repetido.");
+  List<Product> selected=new ArrayList<>();
+  for(Long id:request.productIds()){
+   Product p=products.findById(id).orElseThrow(()->new BusinessException("Produto recomendado inexistente."));
+   selected.add(p);
+  }
+  result.setRecommendations(selected);
+  repository.saveAndFlush(e);
+  return new ResultRecommendationsResponse(key, selected.stream().map(Product::getId).toList());
+ }
+ public ResultRecommendationsResponse recommendations(Long experienceId,String key){
+  Experience e=find(experienceId);
+  ExperienceResult result=e.getResults().stream().filter(r->r.getResultKey().equals(key))
+    .findFirst().orElseThrow(()->new ResourceNotFoundException("Perfil de resultado não encontrado."));
+  return new ResultRecommendationsResponse(key,result.getRecommendations().stream()
+    .map(r->r.getProduct().getId()).toList());
+ }
+ private boolean eligible(Product p){
+  return p.isPublished() && p.isAvailable() && p.getStockQuantity()>0;
+ }
+ /** Fallback only uses similar products from the brands/categories of curated products. */
+ private List<ProductResponse> recommend(ExperienceResult result){
+  var curated=result.getRecommendations().stream().map(ExperienceResultRecommendation::getProduct).toList();
+  LinkedHashMap<Long,Product> selected=new LinkedHashMap<>();
+  for(Product p:curated)if(eligible(p))selected.putIfAbsent(p.getId(),p);
+  if(selected.size()<3 && !curated.isEmpty()){
+   Set<Long> brandIds=new HashSet<>();
+   Set<Long> categoryIds=new HashSet<>();
+   for(Product p:curated){
+    brandIds.add(p.getBrand().getId());
+    p.getCategories().forEach(c->categoryIds.add(c.getId()));
+   }
+   for(Product candidate:products.findAll(org.springframework.data.domain.Sort.by("id").ascending())){
+    if(selected.size()>=3)break;
+    boolean similar=brandIds.contains(candidate.getBrand().getId()) ||
+      candidate.getCategories().stream().anyMatch(c->categoryIds.contains(c.getId()));
+    if(similar && eligible(candidate))selected.putIfAbsent(candidate.getId(),candidate);
+   }
+  }
+  return selected.values().stream().limit(3).map(p->catalog.published(p.getId())).toList();
  }
  @Transactional
  public ExperienceResponse create(ExperienceRequest request){

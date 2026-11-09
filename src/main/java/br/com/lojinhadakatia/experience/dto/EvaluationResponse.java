@@ -1,3 +1,9 @@
 package br.com.lojinhadakatia.experience.dto;
-/** Resultado calculado para um conjunto de alternativas válidas. */
-public record EvaluationResponse(String key,String title,String description) {}
+
+import br.com.lojinhadakatia.catalog.dto.ProductResponse;
+import java.util.List;
+
+/** Perfil sempre presente; pode não haver produtos disponíveis para recomendar. */
+public record EvaluationResponse(
+    String key, String title, String description, List<ProductResponse> recommendations
+) {}

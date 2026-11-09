@@ -15,6 +15,15 @@ public class ExperienceController {
  @GetMapping("/api/v1/experiences/{id}") public ExperienceResponse one(@PathVariable Long id){return service.publicOne(id);}
  @PostMapping("/api/v1/experiences/{id}/evaluate")
  public EvaluationResponse evaluate(@PathVariable Long id,@Valid @RequestBody EvaluationRequest body){return service.evaluate(id,body);}
+ @GetMapping("/api/v1/admin/experiences/{id}/results/{key}/recommendations")
+ public ResultRecommendationsResponse recommendations(@PathVariable Long id,@PathVariable String key){
+  return service.recommendations(id,key);
+ }
+ @PutMapping("/api/v1/admin/experiences/{id}/results/{key}/recommendations")
+ public ResultRecommendationsResponse setRecommendations(@PathVariable Long id,@PathVariable String key,
+     @Valid @RequestBody ResultRecommendationsRequest request){
+  return service.updateRecommendations(id,key,request);
+ }
  @GetMapping("/api/v1/admin/experiences") public List<ExperienceResponse> adminAll(){return service.adminAll();}
  @GetMapping("/api/v1/admin/experiences/{id}") public ExperienceResponse adminOne(@PathVariable Long id){return service.adminOne(id);}
  @PostMapping("/api/v1/admin/experiences")
