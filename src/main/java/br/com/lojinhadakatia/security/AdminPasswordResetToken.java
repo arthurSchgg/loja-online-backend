@@ -16,9 +16,10 @@ public class AdminPasswordResetToken {
     @Column(name = "used_at") private Instant usedAt;
 
     protected AdminPasswordResetToken() {}
-    public AdminPasswordResetToken(String hash, Instant expiresAt) {
+    public AdminPasswordResetToken(String hash, Instant expiresAt, long version) {
         this.tokenHash = hash;
         this.expiresAt = expiresAt;
+        this.credentialVersion = version;
     }
     public boolean valid(Instant now) {
         return usedAt == null && expiresAt.isAfter(now);
