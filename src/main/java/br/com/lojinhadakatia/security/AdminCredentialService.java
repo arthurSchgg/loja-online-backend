@@ -18,10 +18,13 @@ import org.springframework.transaction.annotation.Transactional;
 public class AdminCredentialService implements UserDetailsService {
     private final AdminCredentialRepository repository;
     private final PasswordEncoder encoder;
+    private final AdminEmailOutboxService outbox;
 
-    public AdminCredentialService(AdminCredentialRepository repository, PasswordEncoder encoder) {
+    public AdminCredentialService(AdminCredentialRepository repository, PasswordEncoder encoder,
+                                  AdminEmailOutboxService outbox) {
         this.repository = repository;
         this.encoder = encoder;
+        this.outbox = outbox;
     }
 
     @Bean
@@ -73,5 +76,9 @@ public class AdminCredentialService implements UserDetailsService {
             throw new IllegalArgumentException("Escolha uma senha diferente da atual.");
         admin.changePassword(encoder.encode(next));
         repository.saveAndFlush(admin);
+        if (admin.getEmail() != null && outbox.configured()) {
+            outbox.enqueue(admin.getEmail(), "Senha alterada — Lojinha da Kátia",
+                "A senha administrativa foi alterada. Se você não reconhece esta ação, contate o suporte.");
+        }
     }
 }
