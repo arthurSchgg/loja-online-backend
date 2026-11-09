@@ -1,7 +1,7 @@
 # Credenciais persistentes do administrador (V13)
 
 A partir da V13, a senha administrativa fica armazenada em `admin_credentials`
-como hash bcrypt (não em texto puro). `ADMIN_USERNAME`, `ADMIN_PASSWORD` e
+como hash PBKDF2 (não em texto puro), com verificação compatível de hashes BCrypt existentes. `ADMIN_USERNAME`, `ADMIN_PASSWORD` e
 `ADMIN_EMAIL` servem apenas para **criar a primeira conta em banco vazio**.
 Um reinício da aplicação **não redefine** a senha já gravada. É obrigatório
 guardar um backup seguro do banco antes de migrar ou substituir a credencial do
