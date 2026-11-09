@@ -29,6 +29,12 @@ public class AdminCredential {
     public String getPasswordHash() { return passwordHash; }
     public long getCredentialVersion() { return credentialVersion; }
 
+    public void changeEmail(String newEmail) {
+        this.email = newEmail;
+        this.credentialVersion++;
+        this.updatedAt = Instant.now();
+    }
+
     public void changePassword(String hash) {
         this.passwordHash = hash;
         this.credentialVersion++;
