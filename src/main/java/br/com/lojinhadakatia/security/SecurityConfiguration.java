@@ -65,7 +65,7 @@ public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter,
-                                   AdminCredentialService credentials) throws Exception {
+                                   AdminCredentialService credentials, AdminSecurityNotifier notifier) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
 
@@ -110,7 +110,12 @@ public class SecurityConfiguration {
                     response.getWriter().write("{\"authenticated\":true}");
                 })
                 .failureHandler((request, response, exception) -> {
-                    loginLimiter.failed(request.getParameter("username"), request.getRemoteAddr());
+                    String attemptedUsername = request.getParameter("username");
+                    loginLimiter.failed(attemptedUsername, request.getRemoteAddr());
+                    if (loginLimiter.retryAfterSeconds(attemptedUsername, request.getRemoteAddr()) > 0) {
+                        try { notifier.suspiciousLogin(attemptedUsername); }
+                        catch (RuntimeException ignored) { /* Do not change authentication response due to email errors. */ }
+                    }
                     response.sendError(401, "Credenciais inválidas.");
                 })
                 .permitAll())
