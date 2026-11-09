@@ -9,5 +9,10 @@ public record OfferingRequest(
  @NotNull OfferingType type,
  @DecimalMin("0.00") @Digits(integer=10,fraction=2) BigDecimal price,
  @Size(max=2048) String imageUrl,
- boolean published
-) {}
+ boolean published,
+ Boolean available
+) {
+ public OfferingRequest(String title,String description,OfferingType type,BigDecimal price,String imageUrl,boolean published) {
+  this(title,description,type,price,imageUrl,published,null);
+ }
+}
