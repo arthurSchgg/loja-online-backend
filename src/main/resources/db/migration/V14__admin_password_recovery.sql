@@ -2,6 +2,7 @@ CREATE TABLE admin_password_reset_tokens (
     id BIGSERIAL PRIMARY KEY,
     token_hash VARCHAR(64) NOT NULL UNIQUE,
     expires_at TIMESTAMPTZ NOT NULL,
+    credential_version BIGINT NOT NULL,
     used_at TIMESTAMPTZ
 );
 CREATE INDEX idx_admin_password_reset_expires ON admin_password_reset_tokens(expires_at);
