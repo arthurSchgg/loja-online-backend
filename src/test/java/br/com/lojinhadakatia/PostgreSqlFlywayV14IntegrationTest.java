@@ -26,8 +26,8 @@ class PostgreSqlFlywayV14IntegrationTest {
             .load();
 
         var result = flyway.migrate();
-        assertTrue(result.migrationsExecuted >= 14,
-            "Expected Flyway V1 through V14 to execute in a fresh PostgreSQL schema");
+        assertTrue(result.migrationsExecuted >= 15,
+            "Expected Flyway V1 through V15 to execute in a fresh PostgreSQL schema");
         flyway.validate();
     }
 }
