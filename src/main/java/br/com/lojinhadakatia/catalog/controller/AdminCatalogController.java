@@ -50,6 +50,16 @@ public class AdminCatalogController {
         return catalog.update(id, request);
     }
 
+    @PutMapping("/products/{id}/archive")
+    public ProductResponse archive(@PathVariable Long id) {
+        return catalog.archive(id);
+    }
+
+    @PutMapping("/products/{id}/restore")
+    public ProductResponse restore(@PathVariable Long id) {
+        return catalog.restore(id);
+    }
+
     @DeleteMapping("/products/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         catalog.delete(id);
