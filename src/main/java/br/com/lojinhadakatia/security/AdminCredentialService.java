@@ -19,12 +19,14 @@ public class AdminCredentialService implements UserDetailsService {
     private final AdminCredentialRepository repository;
     private final PasswordEncoder encoder;
     private final AdminEmailOutboxService outbox;
+    private final AdminPasswordPolicy passwordPolicy;
 
     public AdminCredentialService(AdminCredentialRepository repository, PasswordEncoder encoder,
-                                  AdminEmailOutboxService outbox) {
+                                  AdminEmailOutboxService outbox, AdminPasswordPolicy passwordPolicy) {
         this.repository = repository;
         this.encoder = encoder;
         this.outbox = outbox;
+        this.passwordPolicy = passwordPolicy;
     }
 
     @Bean
@@ -42,6 +44,7 @@ public class AdminCredentialService implements UserDetailsService {
                 || password.length() < 12 || password.length() > 128) {
             throw new IllegalStateException("ADMIN_USERNAME e ADMIN_PASSWORD (12-128 caracteres) obrigatórios para bootstrap.");
         }
+        passwordPolicy.validate(password, username);
         repository.saveAndFlush(new AdminCredential(username.trim(),
             email == null || email.isBlank() ? null : email.trim().toLowerCase(java.util.Locale.ROOT),
             encoder.encode(password)));
@@ -74,6 +77,7 @@ public class AdminCredentialService implements UserDetailsService {
             throw new IllegalArgumentException("Confirmação da senha não corresponde.");
         if (encoder.matches(next, admin.getPasswordHash()))
             throw new IllegalArgumentException("Escolha uma senha diferente da atual.");
+        passwordPolicy.validate(next, username);
         admin.changePassword(encoder.encode(next));
         repository.saveAndFlush(admin);
         if (admin.getEmail() != null && outbox.configured()) {

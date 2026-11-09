@@ -20,17 +20,19 @@ public class AdminPasswordRecoveryService {
     private final AdminPasswordResetRepository resetTokens;
     private final AdminEmailOutboxService outbox;
     private final PasswordEncoder encoder;
+    private final AdminPasswordPolicy passwordPolicy;
     private final String resetUrl;
     private final SecureRandom random = new SecureRandom();
 
     public AdminPasswordRecoveryService(AdminCredentialRepository accounts,
             AdminPasswordResetRepository resetTokens, AdminEmailOutboxService outbox,
-            PasswordEncoder encoder,
+            PasswordEncoder encoder, AdminPasswordPolicy passwordPolicy,
             @Value("${app.security.password-reset-url:}") String resetUrl) {
         this.accounts = accounts;
         this.resetTokens = resetTokens;
         this.outbox = outbox;
         this.encoder = encoder;
+        this.passwordPolicy = passwordPolicy;
         this.resetUrl = resetUrl;
     }
 
@@ -68,6 +70,7 @@ public class AdminPasswordRecoveryService {
         if (!reset.valid(now, account.getCredentialVersion())) throw invalid();
         if (encoder.matches(next, account.getPasswordHash()))
             throw new IllegalArgumentException("Escolha uma senha diferente.");
+        passwordPolicy.validate(next, account.getUsername());
         account.changePassword(encoder.encode(next));
         reset.consume(now);
         accounts.saveAndFlush(account);
