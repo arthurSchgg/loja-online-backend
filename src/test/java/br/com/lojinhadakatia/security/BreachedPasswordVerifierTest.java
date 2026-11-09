@@ -25,7 +25,7 @@ class BreachedPasswordVerifierTest {
             assertEquals(5, prefix.length());
             assertFalse(prefix.contains(secret));
             count.incrementAndGet();
-            return digest.substring(5) + ":12\\r\\n" + "A".repeat(35) + ":0";
+            return digest.substring(5) + ":12\r\n" + "A".repeat(35) + ":0";
         });
 
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
@@ -39,7 +39,7 @@ class BreachedPasswordVerifierTest {
         String secret = "a-unique-long-passphrase-for-the-test";
         String suffix = sha1(secret).substring(5);
         var verifier = new BreachedPasswordVerifier(true, prefix ->
-            suffix + ":0\\r\\n" + "B".repeat(35) + ":19");
+            suffix + ":0\r\n" + "B".repeat(35) + ":19");
         assertDoesNotThrow(() -> verifier.verify(secret));
     }
 
