@@ -32,7 +32,7 @@ class AdminPasswordRecoveryIntegrationTest {
         tokens.saveAndFlush(new AdminPasswordResetToken(hash(token),
             Instant.now().plusSeconds(900), credentials.credentialVersion("tester")));
         recovery.confirm(token, "new-test-passphrase-1234", "new-test-passphrase-1234");
-        assertTrue(credentials.loadUserByUsername("tester").getPassword().startsWith("$2"));
+        assertTrue(credentials.loadUserByUsername("tester").getPassword().startsWith("{pbkdf2}"));
         assertThrows(IllegalArgumentException.class, () ->
             recovery.confirm(token, "another-test-passphrase-1234", "another-test-passphrase-1234"));
     }
