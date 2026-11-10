@@ -16,10 +16,18 @@ A sessão que efetuou a mudança é invalidada; sessões autenticadas pelo
 formLogin e portadoras da versão anterior são rejeitadas no próximo acesso.
 Não expor senhas em logs ou métricas.
 
-**Atenção:** sessões criadas antes da implantação deste mecanismo não possuem
-atributo de versão: planeje encerrá-las ao atualizar o backend (reinício
-da aplicação ou invalidação das sessões). Em implantação com várias réplicas,
-as sessões devem ser compartilhadas ou fixadas de forma segura.
+**Atenção:** sessões administrativas criadas antes da implantação do controle de
+versão, ou com atributo de versão ausente/malformado, são invalidadas com HTTP 401
+no próximo acesso. O administrador precisa fazer login novamente. Essa política
+é deliberadamente *fail-closed* para impedir que sessões legadas escapem à
+revogação de credenciais. A configuração `app.security.reject-unversioned-sessions`
+é **true** por padrão e deve permanecer ativa em ambientes reais. Somente o
+perfil de testes unitários/MVC (`application-test.yml`) a desliga para acomodar
+as sessões sintéticas criadas com `with(user())`. Os testes específicos de
+revogação reativam explicitamente a regra rigorosa. Planeje a mudança de comportamento no rollout.
+Em implantação com várias réplicas, as sessões devem ser compartilhadas ou
+fixadas de forma segura; a verificação depende da mesma versão persistida de
+credenciais em todas as instâncias.
 
 ## Recuperação de senha (V14)
 - `POST /api/v1/auth/password-reset/request` recebe `{ "email": "..." }`, responde 202

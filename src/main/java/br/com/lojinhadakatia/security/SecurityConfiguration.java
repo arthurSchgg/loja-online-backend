@@ -73,7 +73,9 @@ public class SecurityConfiguration {
 
     @Bean
     SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter,
-                                   AdminCredentialService credentials, AdminSecurityNotifier notifier) throws Exception {
+                                   AdminCredentialService credentials, AdminSecurityNotifier notifier,
+                                   @Value("${app.security.reject-unversioned-sessions:true}")
+                                   boolean rejectUnversionedSessions) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
 
@@ -88,7 +90,7 @@ public class SecurityConfiguration {
                 .sessionFixation(fixation -> fixation.changeSessionId()))
             .requestCache(AbstractHttpConfigurer::disable)
             .addFilterBefore(new LoginThrottleFilter(loginLimiter), UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(new AdminSessionVersionFilter(credentials), AuthorizationFilter.class)
+            .addFilterBefore(new AdminSessionVersionFilter(credentials, rejectUnversionedSessions), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
