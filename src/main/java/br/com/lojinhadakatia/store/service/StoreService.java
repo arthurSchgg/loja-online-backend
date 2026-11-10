@@ -31,6 +31,7 @@ public class StoreService {
         URI parsed;
         try{parsed=URI.create(url);}catch(Exception exception){throw new BusinessException("URL de rede social inválida.");}
         if(!"https".equalsIgnoreCase(parsed.getScheme()) || parsed.getHost()==null ||
+           parsed.getUserInfo()!=null || parsed.getPort()!=-1 || parsed.getRawFragment()!=null ||
            !(parsed.getHost().equalsIgnoreCase("instagram.com")||parsed.getHost().equalsIgnoreCase("www.instagram.com")))
             throw new BusinessException("Informe uma URL HTTPS válida do Instagram.");
     }
