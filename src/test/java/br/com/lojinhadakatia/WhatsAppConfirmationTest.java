@@ -70,7 +70,7 @@ class WhatsAppConfirmationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                     {"name":"Produto confirmação","price":25.90,"brandId":%d,
-                     "categoryIds":[],"available":true,"published":true,"images":[]}
+                     "categoryIds":[],"available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
                     """.formatted(brandId)))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         long id=mapper.readTree(item).get("id").asLong();
