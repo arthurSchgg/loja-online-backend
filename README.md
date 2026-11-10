@@ -59,6 +59,8 @@ docker compose --env-file .env.staging -f compose.staging.yaml up --build -d
 
 Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações, certificados, verificação dos dois Compose, logs, parada sem perda de dados e limitações de segurança. Não há deploy externo nem frontend neste repositório.
 
+**Consulta real de preços e categorias:** `GET /api/v1/products` aceita `q`, `brandId`, `categoryId`, `available`, `maxPrice`, `sort=recent|name|price-asc|price-desc`, `page` e `size`. A ordenação por preço usa a promoção vigente e pagina no banco. O preço deve ser reconfirmado no WhatsApp, pois pode mudar entre visitas.
+
 ## Endpoints públicos
 
 | Método | Rota | Função |

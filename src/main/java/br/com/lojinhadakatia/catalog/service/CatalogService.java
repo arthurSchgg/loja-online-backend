@@ -7,6 +7,7 @@ import br.com.lojinhadakatia.shared.exception.*;
 import jakarta.persistence.criteria.Join;
 import java.net.URI;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.*;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.domain.Specification;
@@ -65,6 +66,17 @@ public class CatalogService {
         category.setActive(true);
     }
     public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,Pageable pageable,boolean admin){
+        return search(query,brandId,categoryId,available,pageable,admin,"recent",null);
+    }
+
+    /** Public ordering uses a correlated active-promotion price, not just the base price.
+     * Capture one instant per request so the result and pagination use a consistent
+     * effective-price expression. Internal/admin callers retain their existing sort.
+     */
+    public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,
+                                        Pageable pageable,boolean admin,String order,BigDecimal maxPrice){
+        final boolean priceOrder=!admin&&("price-asc".equals(order)||"price-desc".equals(order));
+        final Instant now=Instant.now();
         Specification<Product> filter=(root,cq,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();
             if(!admin)predicates.add(cb.isTrue(root.get("published")));
@@ -86,6 +98,23 @@ public class CatalogService {
                 var inStock=cb.greaterThan(root.<Integer>get("stockQuantity"),0);
                 var manuallyAvailable=cb.isTrue(root.get("available"));
                 predicates.add(available?cb.and(manuallyAvailable,inStock):cb.or(cb.not(manuallyAvailable),cb.not(inStock)));
+            }
+            if(!admin&&(priceOrder||maxPrice!=null)){
+                // At most one active promotion per product is enforced when promotions
+                // are created/updated; no memory-side ordering of incomplete pages.
+                var active=cq.subquery(BigDecimal.class);
+                var promotion=active.from(ProductPromotion.class);
+                active.select(promotion.get("promotionalPrice"));
+                active.where(cb.equal(promotion.get("product"),root),
+                    cb.lessThanOrEqualTo(promotion.<Instant>get("startsAt"),now),
+                    cb.greaterThan(promotion.<Instant>get("endsAt"),now));
+                var effective=cb.coalesce(active,root.<BigDecimal>get("price"));
+                if(maxPrice!=null)predicates.add(cb.lessThanOrEqualTo(effective,maxPrice));
+                // Spring Data runs a separate COUNT query; never ORDER BY in that query.
+                if(priceOrder&&cq.getResultType()!=Long.class&&cq.getResultType()!=long.class){
+                    cq.orderBy("price-asc".equals(order)?cb.asc(effective):cb.desc(effective),
+                        cb.desc(root.get("id")));
+                }
             }
             return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
         };

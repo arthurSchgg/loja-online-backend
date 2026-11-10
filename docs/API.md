@@ -18,6 +18,14 @@ Usa `application/json`, paginação Spring Data, campos em camelCase. Erros são
 
 A URL de imagem é pública e não é carregada pelo servidor; não armazene dados secretos na URL.
 
+## Busca, preço vigente e paginação
+
+`GET /api/v1/products` aceita filtros opcionais `q` (nome/descrição), `brandId`, `categoryId`, `available`, `maxPrice` (decimal não negativo), `sort=recent|name|price-asc|price-desc`, `page` e `size` (1 a 50; padrão 12). O backend aplica filtros **antes de paginar**. A ordenação por preço utiliza `effectivePrice` com promoções ativas no instante da consulta, em vez do preço original; empates usam ID descendente para uma ordem estável. `recent` ordena pelo ID decrescente e `name` pelo nome, com desempate por ID. Parâmetros de sort inválidos e preço máximo negativo retornam 400.
+
+Exemplo: `GET /api/v1/products?categoryId=2&q=vela&sort=price-asc&maxPrice=99.90&page=0&size=12`.
+
+**Limite temporal:** promoções podem entrar/sair de vigência entre requisições de páginas diferentes, alterando a ordem; o frontend deve revalidar o preço no fluxo WhatsApp. O endpoint público não aceita campos JPA arbitrários como sort.
+
 ## Regras
 
 - Leitura pública retorna somente `published=true`; detalhes ocultos retornam 404.
