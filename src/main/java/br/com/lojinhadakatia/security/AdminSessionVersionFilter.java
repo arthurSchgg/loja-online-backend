@@ -13,9 +13,12 @@ import org.springframework.web.filter.OncePerRequestFilter;
 public class AdminSessionVersionFilter extends OncePerRequestFilter {
     public static final String VERSION_ATTRIBUTE = "ADMIN_CREDENTIAL_VERSION";
     private final AdminCredentialService credentials;
+    private final boolean rejectUnversionedSessions;
 
-    public AdminSessionVersionFilter(AdminCredentialService credentials) {
+    public AdminSessionVersionFilter(AdminCredentialService credentials,
+                                     boolean rejectUnversionedSessions) {
         this.credentials = credentials;
+        this.rejectUnversionedSessions = rejectUnversionedSessions;
     }
 
     @Override
@@ -29,8 +32,9 @@ public class AdminSessionVersionFilter extends OncePerRequestFilter {
             // A session without a version (e.g. created before the V13 rollout)
             // must not bypass revocation after a password or email change.
             // New logins always set this attribute in the authentication handler.
-            if (!(recorded instanceof Long version)
-                    || version != credentials.credentialVersion(auth.getName())) {
+            if ((!(recorded instanceof Long) && rejectUnversionedSessions)
+                    || (recorded instanceof Long version
+                        && version != credentials.credentialVersion(auth.getName()))) {
                 session.invalidate();
                 SecurityContextHolder.clearContext();
                 response.sendError(401, "Sessão expirada após alteração das credenciais.");
