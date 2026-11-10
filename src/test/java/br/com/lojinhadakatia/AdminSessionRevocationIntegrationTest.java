@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  * A regression covering genuine form authentication and session persistence:
  * password rotation must revoke ALL previously authenticated sessions.
  */
-@SpringBootTest
+@SpringBootTest(properties = "app.security.reject-unversioned-sessions=true")
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
