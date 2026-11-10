@@ -16,7 +16,7 @@ public class ExperienceController {
  @PostMapping("/api/v1/experiences/{id}/evaluate")
  public EvaluationResponse evaluate(@PathVariable Long id,@Valid @RequestBody EvaluationRequest body){return service.evaluate(id,body);}
  @GetMapping("/api/v1/admin/experiences") public List<ExperienceResponse> adminAll(){return service.adminAll();}
- @GetMapping("/api/v1/admin/experiences/{id}") public ExperienceResponse adminOne(@PathVariable Long id){return service.adminOne(id);}
+ @GetMapping("/api/v1/admin/experiences/{id}") public AdminExperienceResponse adminOne(@PathVariable Long id){return service.adminOne(id);}
  @PostMapping("/api/v1/admin/experiences")
  public ResponseEntity<ExperienceResponse> create(@Valid @RequestBody ExperienceRequest body){
   var result=service.create(body);
