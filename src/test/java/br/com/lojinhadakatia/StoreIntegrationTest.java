@@ -25,4 +25,28 @@ class StoreIntegrationTest {
         mvc.perform(get("/api/v1/store")).andExpect(status().isOk())
             .andExpect(jsonPath("$.displayName").value("Lojinha da Kátia"));
     }
+
+    @Test void instagramLinksRejectCredentialsPortsFragmentsAndUntrustedHosts() throws Exception {
+        var mapper=new com.fasterxml.jackson.databind.ObjectMapper();
+        String valid=mapper.writeValueAsString(java.util.Map.of(
+            "displayName","Loja de teste", "instagramUrl","https://www.instagram.com/lojinha.demo/"));
+        mvc.perform(put("/api/v1/admin/store").with(user("tester").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(valid))
+            .andExpect(status().isOk());
+        for(String invalid:java.util.List.of(
+            "https://user:password@instagram.com/lojinha.demo/",
+            "https://www.instagram.com:8443/lojinha.demo/",
+            "https://instagram.com/lojinha.demo/#fragment",
+            "http://instagram.com/lojinha.demo/",
+            "https://instagram.com.evil.example/lojinha.demo/"
+        )){
+            String payload=mapper.writeValueAsString(java.util.Map.of(
+                "displayName","Loja de teste", "instagramUrl",invalid));
+            mvc.perform(put("/api/v1/admin/store").with(user("tester").roles("ADMIN")).with(csrf())
+                    .contentType(MediaType.APPLICATION_JSON).content(payload))
+                .andExpect(status().isConflict());
+        }
+        mvc.perform(get("/api/v1/store")).andExpect(status().isOk())
+            .andExpect(jsonPath("$.instagramUrl").value("https://www.instagram.com/lojinha.demo/"));
+    }
 }
