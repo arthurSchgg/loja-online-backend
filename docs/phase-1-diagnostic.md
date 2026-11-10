@@ -1,46 +1,79 @@
-# Diagnóstico da Fase 1 — RASCUNHO PRELIMINAR (não aprovado)
+# Diagnóstico técnico da Fase 1 — atualização para revisão (NÃO APROVADO)
 
-> **Status:** EM PREPARAÇÃO, NÃO FORMAL. A versão aprovada da especificação e a tag documental ainda não existem. Este registro **não é** a autorização para implementar a Fase 1; sua validade deverá ser reavaliada após a aprovação técnica da especificação. O commit de referência para inspeção inicial é o HEAD anterior de `develop` (`a0959eb5488ab7e9023d66d4b3938c621fd5b7e7`) e arquivos consultados em 2026-11-07/08.
+> **Referência do código auditado:** `develop` em
+> `de93e2d14189548e57126e8a951a6d5b1086bcef` (merge PR #152,
+> 2026-11-09). **Status: DIAGNÓSTICO TÉCNICO EM REVISÃO, NÃO FORMAL.**
+> A [especificação #79](https://github.com/arthurSchgg/loja-online/issues/79)
+> ainda não está formalmente aprovada nem etiquetada na versão documental.
+> A [AUTH-001 #80](https://github.com/arthurSchgg/loja-online/issues/80)
+> permanece NÃO AUTORIZADA; a [HML-001 #112](https://github.com/arthurSchgg/loja-online/issues/112)
+> permanece NÃO HOMOLOGADA.
 
-## Metodologia
-- Inspeção de `pom.xml`, `.github/workflows/ci.yml`, `application.yml`, classes de `security`, modelos, `compose*.yaml`, migrações Flyway V1–V6 e relatórios do CI.
-- Referências técnicas contrastadas com `docs/business-rules.md`, `docs/security.md`, `docs/operations.md`, `docs/requirements.md` (todos provisórios).
-- Classificações **provisórias**: `Atendido` só por evidência direta suficiente do requisito delimitado; `Parcial` quando solução existe, mas faltam comportamentos ou validação; `Pendente` quando não há evidência de implementação suficiente.
-- **Limites:** nenhuma revisão independente de segurança, nenhuma homologação em staging externa e nenhum teste de frontend foram realizados nesta auditoria.
+A revisão anterior deste documento foi produzida em 2026-11-07/08, com base
+em `develop` anterior a PRs de integração e segurança. Naquele momento
+reportou migrações V1–V6, autenticação em memória e ausência de outbox;
+**esses itens são evidência histórica, não o estado corrente do código.**
+O histórico detalhado, critérios, links, limites e bloqueios estão no
+[registro de evidências de 2026-11-09](phase-1-evidence-review-2026-11-09.md).
 
-## Matriz preliminar
+## Metodologia e classificação
 
-| ID preliminar | Requisito da Fase 1 | Evidência observada | Estado indicativo | Lacuna / ação |
+- Inspeção do `pom.xml`, aplicação Spring/segurança, workflows, Compose,
+  testes de integração e documentações de migrações/sessões, comparados
+  aos critérios da Fase 1 em `docs/development-phases.md`.
+- Conferência dos PRs efetivamente **mesclados**: #78, #134 e #143–#152;
+  evidência de testes `verify` e `staging-https-smoke` com sucesso em
+  [CI #42726790910](https://github.com/arthurSchgg/loja-online/actions/runs/42726790910).
+- **Implementado/CI:** o contrato técnico possui implementação e evidência
+  automatizada. **Parcial:** faltam obrigações de infraestrutura, operação,
+  interface ou ambiente. **Pendente:** falta prova de atendimento documental
+  ou técnico suficiente. Nenhuma classificação é a aprovação da fase.
+- **Não executado nesta revisão:** deploy externo, auditoria independente,
+  SMTP real, acesso AWS, frontend completo ou restauro de banco autorizado.
+
+## Matriz de diagnóstico atualizada
+
+| ID | Critério da Fase 1 | Estado técnico provisório | Evidências principais | Lacunas de aceite |
 |---|---|---|---|---|
-| F1-01 | Java 21, Spring Boot, Web MVC, JPA, Maven | `pom.xml` | Atendido (configuração) | Revalidar no commit de especificação aprovado |
-| F1-02 | PostgreSQL + Flyway migrações versionadas | `pom.xml`, `application.yml`, migrações V1–V6, CI PostgreSQL | Parcial | Revisar histórico de migrações e critérios por ambiente |
-| F1-03 | Uma administradora e sessão HTTP com CSRF | `security/SecurityConfiguration.java`, `AuthenticationController.java`, testes de autenticação | Parcial | Validar todos os fluxos e recuperação/atualização de conta |
-| F1-04 | Sessão expira após 30 min; cookie seguro | `application.yml` timeout 30m e cookie Secure/HttpOnly/Lax | Parcial | Verificar runtime de staging/produção, proxy e logout |
-| F1-05 | Recuperação por link de uso único, token 15 min | Conta `InMemoryUserDetailsManager`; nenhum fluxo recuperado nos arquivos vistoriados | Pendente | [US-008 #88](https://github.com/arthurSchgg/loja-online/issues/88) |
-| F1-06 | E-mail/outbox persistente para segurança | Não identificado no inventário de classes Java/Flyway | Pendente | [TASK-BE-007 #107](https://github.com/arthurSchgg/loja-online/issues/107) |
-| F1-07 | Proteção contra abuso de autenticação | `docs/SECURITY.md` declara limites pendentes | Pendente | Reutilizar [#51](https://github.com/arthurSchgg/loja-online/issues/51); avaliar controles atuais |
-| F1-08 | DEV/STAGING/PROD isolados | Docker Compose local e staging isolado, volumes distintos | Parcial | Definir/homologar PROD, segredos, TLS, origens |
-| F1-09 | HTTPS em staging | `compose.staging.yaml` e Caddy local no loopback | Parcial | Validar ambiente real de homologação |
-| F1-10 | Pipeline CI com testes Maven e PostgreSQL | `.github/workflows/ci.yml`, histórico do GitHub Actions | Parcial | Completar gate de cobertura e verificar evidências completas |
-| F1-11 | Cobertura de linhas JaCoCo >=80% | [PR #111](https://github.com/arthurSchgg/loja-online/pull/111) e [CI aprovado](https://github.com/arthurSchgg/loja-online/actions/runs/42440101382): 491/579 linhas = 84,80% | Parcial | Gate e testes em PR draft, ainda não integrados em develop nem homologados |
-| F1-12 | Auditoria administrativa e logs | `AdminAuditInterceptor`, `AdminAuditConfiguration` | Parcial | Persistência, ator/recurso, retenção e proteção do dado |
-| F1-13 | Backup e restauração | `scripts/backup-postgres.sh`, `scripts/verify-postgres-restore.sh` | Parcial | Agendamento, retenção, cifragem externa e exercício periódico, [#52](https://github.com/arthurSchgg/loja-online/issues/52) |
-| F1-14 | OpenAPI e erros HTTP | `pom.xml`, `OpenApiConfiguration`, `ApiExceptionHandler` | Parcial | Verificar documentação/erros negativos de todos os contratos |
-| F1-15 | Documentação e rastreabilidade da fase | [PR #78](https://github.com/arthurSchgg/loja-online/pull/78), `docs/traceability.md` | Parcial | IDs RN únicos, aprovação técnica, rastreabilidade definitiva |
+| F1-01 | Plataforma Java/Spring/JPA | Implementado/CI | `pom.xml`, Dockerfile, workflow | Revisão final de arquitetura |
+| F1-02 | PostgreSQL + Flyway | Implementado/CI | Flyway V13–V15 e testes reais PostgreSQL, PR #148 | Migração de cópia de banco real autorizada |
+| F1-03 | Sessão administrativa com CSRF | Implementado/CI | `SecurityConfiguration`, PRs #143 e #150 | Integração UI e revisão de fluxos |
+| F1-04 | 30 min, cookie, logout, revogação | Implementado/CI | `application*.yml`, PRs #149/#150/#152 | Testar timeout e múltiplas réplicas |
+| F1-05 | Reset com token 15 min de uso único | Implementado/CI | PRs #143 e #151; controller/service | SMTP TLS externo e frontend |
+| F1-06 | Outbox cifrado e avisos de segurança | Parcial | PRs #143/#147/#151; Mailpit | TLS real, falhas, idempotência e chaves |
+| F1-07 | Proteção de login e senhas | Parcial | Limitador; PRs #145/#146 | Validação distribuída e serviço externo |
+| F1-08 | Ambientes isolados | Parcial | Docker Compose local/staging; profiles | Produção, segredos e operação |
+| F1-09 | Staging HTTPS | Parcial | Caddy local; PR #150 e smoke CI | Infra/domínio de staging aprovado |
+| F1-10 | CI de Maven, PostgreSQL e backup | Implementado/CI | `.github/workflows/ci.yml`; CI #42726790910 | Gates de release/branch protection |
+| F1-11 | Cobertura de linhas JaCoCo ≥80% | Implementado/CI | `pom.xml` regra mínima 0.80; `mvn verify` passa | Cobertura do candidato de release |
+| F1-12 | Auditoria persistente | Parcial | PR #134, integração de auditoria e testes | Política de retenção/acesso |
+| F1-13 | Backup e restauração | Parcial | Scripts e job PostgreSQL CI | Agenda, retenção, cópia externa cifrada, teste real |
+| F1-14 | Swagger/DTO/HTTP errors | Parcial | `OpenApiConfiguration`, `ApiExceptionHandler` | Matriz de contrato completo com frontend |
+| F1-15 | Documentos, RN, US, lotes, AUTH | Pendente | PR #78 mesclado; documentos em draft | RN duplicadas; tag; diagnóstico formal; lotes e assinatura |
 
-## Evidência JaCoCo reproduzível
-- 62 classes analisadas na primeira execução do PR #111.
-- `LINE covered=439; missed=140; total=579; ratio=75,82%`.
-- Principal cobertura faltante no relatório inicial: `CatalogService` (34 linhas), `OfferingService` (14), `ContentSectionService` (14), `CampaignService` (14) e `AdminCatalogController` (12).
-- **Nova execução validada no PR #111:** 491 linhas cobertas / 579 totais = **84,80%**; check de 80% e pipeline aprovados no commit `a85f726a58528732ce66843a0fce2e22834ce542`.
-- O CI do branch de proposta passou, mas o gate **não foi integrado a develop**; não equiparar resultado no PR com homologação ou entrega definitiva.
+## Cobertura e histórico
 
-## Condições de aprovação deste diagnóstico
-- [ ] Aprovação técnica da especificação, tag documental e commit exato de referência.
-- [ ] Auditoria de toda a Fase 1 contra os RN definitivos (não apenas itens acima).
-- [ ] Evidências por requisito (código, testes/CI, execução em staging).
-- [ ] Atualizar classificações e lacunas após testes reais.
-- [ ] Conciliar issues antigas e novas; não duplicar trabalho.
-- [ ] Aprovação técnica formal do diagnóstico antes da padronização dos sete lotes.
+- A auditoria inicial de 2026-11-07 identificou 439/579 linhas (75,82%),
+  posteriormente 491/579 (84,80%) no PR #111; **essas são medições antigas**.
+- No código atual, a regra no `pom.xml` exige `LINE COVEREDRATIO >=0.80`
+  no `mvn verify`. O CI #42726790910 passou com esse gate; obter o relatório
+  do candidato final antes de registrar uma percentagem corrente.
+- O CI de staging usa dados fictícios, TLS local e captura SMTP Mailpit;
+  **não** é homologação humana ou de provedor SMTP externo.
 
-**Decisão de início:** bloqueada em [AUTH-001](https://github.com/arthurSchgg/loja-online/issues/80). Este documento **não** a substitui.
+## Pendências para converter o diagnóstico em documento formal
+
+- [ ] Obter a aprovação técnica explícita e tag da especificação, com SHA.
+- [ ] Conferir toda a lista de RN definitiva e as RN duplicadas
+      (inclusive RN-647–650, RN-1039–1041, RN-1139–1144).
+- [ ] Reconciliar as issues e a rastreabilidade RN → US → tarefas → testes.
+- [ ] Revalidar cada classificação acima no commit congelado para homologação.
+- [ ] Documentar testes em staging externo, SMTP/TLS, backups e
+      integração frontend, com evidências sem segredos.
+- [ ] Registrar responsável técnico identificado, data, decisão e justificativa.
+- [ ] Revisar/aprovar/aplicar **cada** lote de padronização antes da
+      autorização formal AUTH-001.
+
+**Decisão atual:** não há evidência para declarar a Fase 1 AUTORIZADA nem
+HOMOLOGADA. Nenhuma tag, merge em `main`, deploy AWS ou aprovação é
+originada automaticamente por este arquivo.
