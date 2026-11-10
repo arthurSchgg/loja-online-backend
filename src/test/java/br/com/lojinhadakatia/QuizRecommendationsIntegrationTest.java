@@ -101,7 +101,7 @@ class QuizRecommendationsIntegrationTest {
             .get("id").asLong();
         long productId=adminPost("/api/v1/admin/products", """
           {"name":"Vela teste","price":25.00,"brandId":%d,
-           "categoryIds":[],"available":true,"published":true,"images":[]}
+           "categoryIds":[],"available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
           """.formatted(brandId)).get("id").asLong();
         String url="/api/v1/admin/experiences/"+quizId+"/results/floral/recommendations";
         mvc.perform(put(url).with(user("tester").roles("ADMIN")).with(csrf())
@@ -132,11 +132,11 @@ class QuizRecommendationsIntegrationTest {
 
         long unavailable=adminPost("/api/v1/admin/products", """
           {"name":"Item indisponível","price":20.00,"brandId":%d,
-           "categoryIds":[%d],"available":false,"published":true,"images":[]}
+           "categoryIds":[%d],"available":false,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
           """.formatted(brandOne, category)).get("id").asLong();
         long alternative=adminPost("/api/v1/admin/products", """
           {"name":"Item alternativo","price":25.00,"brandId":%d,
-           "categoryIds":[%d],"available":true,"published":true,"images":[]}
+           "categoryIds":[%d],"available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
           """.formatted(brandTwo, category)).get("id").asLong();
 
         adminPost("/api/v1/admin/products/" + alternative + "/stock/movements", """

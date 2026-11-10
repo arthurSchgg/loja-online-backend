@@ -91,7 +91,7 @@ class AdminExperienceReadIntegrationTest {
       .content("{\"name\":\"Marca para teste de quiz\"}"))
       .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("id").asLong();
   String product="{\"name\":\"Item para quiz\",\"price\":35.00,\"brandId\":"+brandId+
-      ",\"categoryIds\":[],\"available\":true,\"published\":true,\"images\":[]}";
+      ",\"categoryIds\":[],\"available\":true,\"published\":true,\"images\":[{\"url\":\"https://example.com/product-image.jpg\",\"position\":0}]}";
   long productId=mapper.readTree(mvc.perform(post("/api/v1/admin/products")
       .with(user(auth).roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON)
       .content(product)).andExpect(status().isCreated()).andReturn()

@@ -47,7 +47,7 @@ class PostgresCatalogPriceSortIntegrationTest {
   String categories=categoryId==null?"[]":"["+categoryId+"]";
   return createAdmin("/api/v1/admin/products","""
    {"name":"%s","price":%d,"brandId":%d,"categoryIds":%s,
-    "available":true,"published":true,"images":[]}
+    "available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
    """.formatted(name,price,brandId,categories));
  }
 

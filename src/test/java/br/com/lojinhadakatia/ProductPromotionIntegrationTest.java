@@ -44,7 +44,7 @@ class ProductPromotionIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                   {"name":"Produto promocional","price":29.90,"available":true,
-                   "brandId":%d,"categoryIds":[],"published":true,"images":[]}
+                   "brandId":%d,"categoryIds":[],"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
                   """.formatted(brandId)))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return mapper.readTree(p).get("id").asLong();
