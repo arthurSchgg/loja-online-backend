@@ -55,7 +55,7 @@ class CatalogIntegrationTest {
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         long categoryId=new com.fasterxml.jackson.databind.ObjectMapper().readTree(categoryResponse).get("id").asLong();
         String payload="{\"name\":\"Produto demonstrativo\",\"description\":\"Descrição pública\",\"price\":19.90,\"brandId\":"+brandId+
-                ",\"categoryIds\":["+categoryId+"],\"available\":true,\"published\":true,\"images\":[]}";
+                ",\"categoryIds\":["+categoryId+"],\"available\":true,\"published\":true,\"images\":[{\"url\":\"https://example.com/product-image.jpg\",\"position\":0}]}";
         mvc.perform(post("/api/v1/admin/products").with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(payload))
             .andExpect(status().isCreated())
