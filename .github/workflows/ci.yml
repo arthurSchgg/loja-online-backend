@@ -143,6 +143,19 @@ jobs:
           STAGING_TEST_BASE_URL: https://localhost:18443
           STAGING_TEST_ENV_FILE: .env.staging.ci
         run: python3 scripts/smoke-staging-security-email.py
+      - name: Checkout pinned frontend public contract (read-only)
+        uses: actions/checkout@v4
+        with:
+          repository: arthurSchgg/loja-online-frontend
+          ref: b9b8bc1a1a0a6ac80a74f091a315b75a26392a4c
+          path: frontend-public-contract
+          persist-credentials: false
+      - name: Verify frontend public API contract through trusted staging HTTPS
+        env:
+          NODE_EXTRA_CA_CERTS: ${{ env.STAGING_TEST_CA }}
+        run: |
+          node --version
+          node frontend-public-contract/scripts/public-api-smoke.mjs https://localhost:18443
       - name: Show containers on failure (no secret contents)
         if: failure()
         run: docker compose --env-file .env.staging.ci -f compose.staging.yaml ps
