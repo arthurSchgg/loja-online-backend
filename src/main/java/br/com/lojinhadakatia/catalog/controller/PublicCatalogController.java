@@ -2,6 +2,7 @@ package br.com.lojinhadakatia.catalog.controller;
 import br.com.lojinhadakatia.catalog.dto.*;
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import java.util.List;
+import java.math.BigDecimal;
 import org.springframework.data.domain.*;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.constraints.*;
@@ -18,8 +19,16 @@ public class PublicCatalogController {
         @RequestParam(required=false) Long brandId,@RequestParam(required=false) Long categoryId,
         @RequestParam(required=false) Boolean available,
         @RequestParam(defaultValue="0") @Min(0) int page,
-        @RequestParam(defaultValue="12") @Min(1) @Max(50) int size){
-        return catalog.search(q,brandId,categoryId,available,PageRequest.of(page,size,Sort.by("id").descending()),false);
+        @RequestParam(defaultValue="12") @Min(1) @Max(50) int size,
+        @RequestParam(defaultValue="recent") @Pattern(regexp="recent|name|price-asc|price-desc") String sort,
+        @RequestParam(required=false) @DecimalMin("0.00") BigDecimal maxPrice){
+        Sort ordering=switch(sort){
+            case "name" -> Sort.by(Sort.Order.asc("name"),Sort.Order.desc("id"));
+            case "price-asc","price-desc" -> Sort.unsorted();
+            default -> Sort.by("id").descending();
+        };
+        return catalog.search(q,brandId,categoryId,available,PageRequest.of(page,size,ordering),
+            false,sort,maxPrice);
     }
     @GetMapping("/products/{id}") public ProductResponse product(@PathVariable Long id){return catalog.published(id);}
 }
