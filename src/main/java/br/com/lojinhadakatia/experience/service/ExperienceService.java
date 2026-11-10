@@ -35,7 +35,7 @@ public class ExperienceService {
   return map(repository.findById(id).filter(Experience::isPublished)
       .orElseThrow(()->new ResourceNotFoundException("Experiência não encontrada.")));
  }
- public ExperienceResponse adminOne(Long id){return map(find(id));}
+ public AdminExperienceResponse adminOne(Long id){return mapAdmin(find(id));}
  public List<ExperienceResponse> adminAll(){return repository.findAll().stream().map(this::map).toList();}
  public EvaluationResponse evaluate(Long id,EvaluationRequest request){
   Experience experience=repository.findById(id).filter(Experience::isPublished)
@@ -142,8 +142,22 @@ public class ExperienceService {
  public ExperienceResponse update(Long id,ExperienceRequest request){
   validate(request);
   Experience e=find(id);
+  // Preserve manually configured recommendations for result keys that survive the edit.
+  Map<String,List<ExperienceRecommendation>> existing=new HashMap<>();
+  for(var result:e.getResults()){
+   existing.put(result.getResultKey(),recommendations.findByResultIdOrderByPositionAscIdAsc(result.getId()));
+   recommendations.deleteByResultId(result.getId());
+  }
+  recommendations.flush();
   apply(e,request);
-  return map(repository.saveAndFlush(e));
+  repository.saveAndFlush(e);
+  List<ExperienceRecommendation> restored=new ArrayList<>();
+  for(var result:e.getResults()){
+   var previous=existing.getOrDefault(result.getResultKey(),List.of());
+   for(var link:previous)restored.add(new ExperienceRecommendation(result,link.getProduct(),link.getPosition()));
+  }
+  recommendations.saveAllAndFlush(restored);
+  return map(e);
  }
  @Transactional
  public void delete(Long id){repository.delete(find(id));}
@@ -167,6 +181,14 @@ public class ExperienceService {
    for(var option:q.options())if(!keys.contains(option.resultKey().trim()))
     throw new BusinessException("Alternativa referencia resultado inexistente.");
   }
+ }
+ private AdminExperienceResponse mapAdmin(Experience e){
+  return new AdminExperienceResponse(e.getId(),e.getTitle(),e.getDescription(),e.isPublished(),
+    e.getQuestions().stream().map(q->new AdminExperienceResponse.Question(q.getId(),q.getTitle(),q.getPosition(),
+      q.getOptions().stream().map(o->new AdminExperienceResponse.Option(o.getId(),o.getLabel(),o.getPosition(),o.getResultKey())).toList())).toList(),
+    e.getResults().stream().sorted(Comparator.comparing(ExperienceResult::getResultKey))
+      .map(r->new AdminExperienceResponse.Result(r.getId(),r.getResultKey(),r.getTitle(),r.getDescription(),
+        recommendations.findByResultIdOrderByPositionAscIdAsc(r.getId()).stream().map(link->link.getProduct().getId()).toList())).toList());
  }
  private ExperienceResponse map(Experience e){
   return new ExperienceResponse(e.getId(),e.getTitle(),e.getDescription(),e.getQuestions().stream()
