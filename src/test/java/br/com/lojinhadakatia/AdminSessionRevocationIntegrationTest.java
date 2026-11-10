@@ -53,6 +53,33 @@ class AdminSessionRevocationIntegrationTest {
             .andExpect(status().isUnauthorized());
     }
 
+    @Test
+    void legacyAuthenticatedSessionWithoutVersionIsDeniedImmediately() throws Exception {
+        MockHttpSession oldSession = authenticateFrom("198.51.100.36");
+        oldSession.removeAttribute(AdminSessionVersionFilter.VERSION_ATTRIBUTE);
+
+        mvc.perform(get("/api/v1/auth/me").session(oldSession))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void malformedVersionAttributeCannotBypassSessionRevocation() throws Exception {
+        MockHttpSession oldSession = authenticateFrom("198.51.100.37");
+        oldSession.setAttribute(AdminSessionVersionFilter.VERSION_ATTRIBUTE,
+            String.valueOf(credentials.credentialVersion("tester")));
+
+        mvc.perform(get("/api/v1/auth/me").session(oldSession))
+            .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void properlyVersionedAdministratorSessionStaysAuthenticated() throws Exception {
+        MockHttpSession current = authenticateFrom("198.51.100.38");
+
+        mvc.perform(get("/api/v1/auth/me").session(current))
+            .andExpect(status().isOk());
+    }
+
     private MockHttpSession authenticateFrom(String address) throws Exception {
         MockHttpSession session = new MockHttpSession();
         mvc.perform(post("/api/v1/auth/login").session(session).with(csrf())
