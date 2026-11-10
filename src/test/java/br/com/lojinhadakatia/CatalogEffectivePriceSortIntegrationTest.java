@@ -34,27 +34,27 @@ class CatalogEffectivePriceSortIntegrationTest {
   brands.deleteAll();
  }
 
- private JsonNode post(String path,String json) throws Exception {
+ private JsonNode createAdmin(String path,String json) throws Exception {
   String response=mvc.perform(post(path).with(user("admin").roles("ADMIN")).with(csrf())
       .contentType(MediaType.APPLICATION_JSON).content(json))
       .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
   return mapper.readTree(response);
  }
  private long product(String name,int amount,long brandId) throws Exception {
-  return post("/api/v1/admin/products","""
+  return createAdmin("/api/v1/admin/products","""
     {"name":"%s","price":%d,"brandId":%d,"categoryIds":[],
      "published":true,"available":true,"images":[]}
     """.formatted(name,amount,brandId)).path("id").asLong();
  }
  private void promote(long productId,int amount) throws Exception {
-  post("/api/v1/admin/products/"+productId+"/promotions","""
+  createAdmin("/api/v1/admin/products/"+productId+"/promotions","""
     {"promotionalPrice":%d,"startsAt":"2020-01-01T00:00:00Z",
      "endsAt":"2099-01-01T00:00:00Z"}
     """.formatted(amount));
  }
 
  @Test void effectivePriceSortIsGlobalAcrossPagesAndHonorsMaxPrice() throws Exception {
-  long brand=post("/api/v1/admin/brands","{\"name\":\"Preços\"}").path("id").asLong();
+  long brand=createAdmin("/api/v1/admin/brands","{\"name\":\"Preços\"}").path("id").asLong();
   long premium=product("Premium",120,brand);
   long basic=product("Básico",50,brand);
   long seasonal=product("Sazonal",80,brand);
@@ -80,7 +80,7 @@ class CatalogEffectivePriceSortIntegrationTest {
  }
 
  @Test void nameSortIsServerSideAndInvalidSortOrPriceAreRejected() throws Exception {
-  long brand=post("/api/v1/admin/brands","{\"name\":\"Marca ordenação\"}").path("id").asLong();
+  long brand=createAdmin("/api/v1/admin/brands","{\"name\":\"Marca ordenação\"}").path("id").asLong();
   long z=product("Zeta",20,brand);
   long a=product("Alfa",40,brand);
   mvc.perform(get("/api/v1/products?sort=name&page=0&size=1"))
