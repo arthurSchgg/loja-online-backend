@@ -64,6 +64,16 @@ Para **cada** lote:
   aprovadas e registrar links e evidências de pós-verificação.
 - [ ] Registrar decisão técnica final do lote.
 
+## C.1. Conciliação de migrações concorrentes (CR-001)
+
+- [x] Confirmar as migrações V9/V10/V11 presentes em `develop` e o
+  merge de integração do PR #134. Evidências em
+  [auditoria V9–V11](flyway-v9-v11-consolidation-audit.md).
+- [ ] Conferir critérios definitivos e as alternativas das branches
+  históricas antes de encerrar [CR-001 #133](https://github.com/arthurSchgg/loja-online/issues/133).
+- [ ] Registrar aceite formal do responsável técnico e testar o upgrade
+  de base real autorizada.
+
 ## D. Autorização e homologação
 
 - [ ] Após A, B e C, registrar a decisão **AUTORIZADA** ou **NÃO AUTORIZADA**
