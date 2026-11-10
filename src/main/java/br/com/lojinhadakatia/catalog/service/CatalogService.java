@@ -133,6 +133,7 @@ public class CatalogService {
     public ProductResponse adminFind(Long id){return map(findProduct(id));}
     @Transactional
     public ProductResponse save(ProductRequest request){
+        validatePublicationImages(request);
         Brand brand=activeBrand(request.brandId());
         Set<Category> selected=activeCategories(request.categoryIds());
         Product product=new Product(request.name().trim(),request.description(),request.price(),brand);
@@ -142,6 +143,7 @@ public class CatalogService {
     }
     @Transactional
     public ProductResponse update(Long id,ProductRequest request){
+        validatePublicationImages(request);
         Product product=findProduct(id);
         product.update(request.name().trim(),request.description(),request.price(),activeBrand(request.brandId()),activeCategories(request.categoryIds()),request.available(),request.published());
         product.replaceImages(images(request.images()));
@@ -161,6 +163,11 @@ public class CatalogService {
         var found=new LinkedHashSet<>(categories.findAllById(ids));
         if(found.size()!=ids.size()||found.stream().anyMatch(c->!c.isActive()))throw new BusinessException("Categoria inexistente ou inativa.");
         return found;
+    }
+    private void validatePublicationImages(ProductRequest request) {
+        // Drafts can be incomplete, but publication requires an actual cover image.
+        if(request.published() && (request.images()==null || request.images().isEmpty()))
+            throw new BusinessException("Cadastre ao menos uma imagem antes de publicar o produto.");
     }
     private List<ProductImage> images(List<ImageRequest> requests){
         if(requests.size()>12)throw new BusinessException("Limite de 12 imagens por produto.");
