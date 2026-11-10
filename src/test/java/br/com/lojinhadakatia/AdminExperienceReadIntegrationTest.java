@@ -73,4 +73,38 @@ class AdminExperienceReadIntegrationTest {
       .andExpect(jsonPath("$.questions[0].options[1].resultKey").value("f"));
  }
 
+ @Test void updatePreservesExistingProductLinksWhenProfileKeyIsUnchanged() throws Exception {
+  String quiz="""
+   {"title":"Quiz links","published":true,
+    "questions":[{"title":"Aroma","position":0,"options":[
+      {"label":"Rosa","position":0,"resultKey":"f"},
+      {"label":"Jasmim","position":1,"resultKey":"f"}]}],
+    "results":[{"key":"f","title":"Floral"}]}
+   """;
+  String auth="admin";
+  long id=mapper.readTree(mvc.perform(post("/api/v1/admin/experiences")
+      .with(user(auth).roles("ADMIN")).with(csrf())
+      .contentType(MediaType.APPLICATION_JSON).content(quiz))
+      .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("id").asLong();
+  long brandId=mapper.readTree(mvc.perform(post("/api/v1/admin/brands")
+      .with(user(auth).roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+      .content("{\\"name\\":\\"Marca para teste de quiz\\"}"))
+      .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("id").asLong();
+  String product="{\\"name\\":\\"Item para quiz\\",\\"price\\":35.00,\\"brandId\\":"+brandId+
+      ",\\"categoryIds\\":[],\\"available\\":true,\\"published\\":true,\\"images\\":[]}";
+  long productId=mapper.readTree(mvc.perform(post("/api/v1/admin/products")
+      .with(user(auth).roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+      .content(product)).andExpect(status().isCreated()).andReturn()
+      .getResponse().getContentAsString()).path("id").asLong();
+  mvc.perform(put("/api/v1/admin/experiences/"+id+"/results/f/recommendations")
+      .with(user(auth).roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+      .content("{\\"productIds\\":["+productId+"]}")).andExpect(status().isOk());
+  mvc.perform(put("/api/v1/admin/experiences/"+id)
+      .with(user(auth).roles("ADMIN")).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+      .content(quiz.replace("Quiz links","Quiz editado"))).andExpect(status().isOk());
+  mvc.perform(get("/api/v1/admin/experiences/"+id).with(user(auth).roles("ADMIN")))
+      .andExpect(status().isOk()).andExpect(jsonPath("$.results[0].productIds[0]").value(productId))
+      .andExpect(jsonPath("$.title").value("Quiz editado"));
+ }
+
 }
