@@ -16,7 +16,7 @@
 - [x] Catálogo público: regras de busca, filtro, ordenação por preço promocional e exigência de imagem para publicação implementadas; rascunhos podem ser incompletos.
 - [x] Separação `dist/` (vitrine pública) e `dist-admin/` (administração); release pública proíbe fallback para catálogo fictício.
 - [x] Autenticação administrativa com sessão, CSRF, cookies seguros no perfil de produção; endpoints públicos não concedem permissões administrativas.
-- [ ] **Integração CI entre os repositórios:** [PR backend #169](https://github.com/arthurSchgg/loja-online-backend/pull/169) adiciona readiness do bootstrap administrativo e execução do smoke público do frontend contra staging HTTPS. Só marcar concluído após CI + merge + CI pós-merge.
+- [x] **Contrato público para integração:** [PR backend #169](https://github.com/arthurSchgg/loja-online-backend/pull/169) mesclado (`65aca5e`), CI do head [#42868708282](https://github.com/arthurSchgg/loja-online-backend/actions/runs/42868708282) aprovado. Readiness administrativa só fica UP após bootstrap; smoke público HTTPS confere paginação, preço efetivo e redaction de quizzes. A integração de navegador ainda é pendente. O frontend é privado para o CI do backend; por segurança, o backend executa um **espelho do contrato HTTP**, não faz checkout cruzado nem usa token pessoal.
 
 Essas evidências são de ambientes isolados **sem identidade visual comercial aprovada, sem DNS final e sem dados reais**.
 
@@ -44,18 +44,17 @@ Essas evidências são de ambientes isolados **sem identidade visual comercial a
 - [ ] Documentar rollback, janela de implantação, monitoração, alertas e operador responsável.
 - [ ] Registrar evidências, aprovação formal de cada HML, decisão GO/NO-GO e responsável técnico.
 
-## Atenção: divergência das branches
+## Histórico de branches — reconciliação concluída
 
-Na revisão de 10/11/2026, a comparação GitHub indicou:
+Na revisão inicial de 10/11/2026, o backend estava divergente: `develop` com 183 commits à frente e 6 atrás de `main`. **Os seis eram commits de merges históricos, com zero arquivos diferentes no sentido `develop...main`.** O [PR #171](https://github.com/arthurSchgg/loja-online-backend/pull/171) passou no CI [#42868967169](https://github.com/arthurSchgg/loja-online-backend/actions/runs/42868967169) e foi **mesclado pelo método `merge`**, preservando ancestrais sem modificar arquivos de código ou a `main`. Depois, a comparação `main...develop` indicou **194 commits à frente e zero atrás**. A publicação em `main` não ocorreu.
 
-- Backend: `develop` **183 commits à frente e 6 atrás** de `main` (`diverged`). **Não realizar merge direto/force-push** sem inspecionar os 6 commits e reconciliar o histórico com testes.
-- Frontend: `develop` 23 commits à frente, 0 atrás de `main`. Ainda exige release candidate, CI, homologação e autorização de publicação.
+O frontend permaneceu com `develop` à frente e zero commits atrás de `main`. Ambos exigem release candidate, CI da revisão final, homologação e autorização de publicação.
 - A configuração de branch protection/rulesets não pôde ser auditada com a permissão atual do GitHub App (HTTP 403). Um responsável com acesso administrativo deve conferir permissões e regras de aprovação antes da release.
 
 ## Git Flow seguro para a release
 
 1. Concluir os PRs de código na `develop`, verificar **o último SHA em CI** e registrar as evidências nas issues.
-2. Revisar e reconciliar a divergência do backend em **branch temporária** (sem alterar `main` e sem `push --force`). Fazer PRs e CI até não haver divergência não planejada.
+2. **Concluído**: reconciliação dos seis merges históricos sem diferenças de código pelo [PR #171](https://github.com/arthurSchgg/loja-online-backend/pull/171). Conferir novamente `main...develop` na data da release; não utilizar `push --force`.
 3. Criar `release/0.1.0-rc1` com escopo congelado, testar migrações/ambientes e executar homologação completa com dados fictícios.
 4. Finalizar o checklist e obter aprovação técnica/comercial e orçamento da hospedagem.
 5. Só então revisar PR `release/* -> main`, aprovar merge, criar tag SemVer e implantar em janela definida, com rollback e monitoração.
