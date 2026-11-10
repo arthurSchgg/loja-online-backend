@@ -43,7 +43,7 @@ class CatalogEffectivePriceSortIntegrationTest {
  private long product(String name,int amount,long brandId) throws Exception {
   return createAdmin("/api/v1/admin/products","""
     {"name":"%s","price":%d,"brandId":%d,"categoryIds":[],
-     "published":true,"available":true,"images":[]}
+     "published":true,"available":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
     """.formatted(name,amount,brandId)).path("id").asLong();
  }
  private void promote(long productId,int amount) throws Exception {
