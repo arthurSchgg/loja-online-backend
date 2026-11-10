@@ -58,6 +58,26 @@ class CatalogReleaseIntegrationTest {
         mvc.perform(get("/api/v1/admin/products/" + productId)
                 .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isOk()).andExpect(jsonPath("$.published").value(false));
+
+        String missingCover = draftPayload.replace("\"published\": false", "\"published\": true");
+        mvc.perform(post("/api/v1/admin/products")
+                .with(user("tester").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(missingCover))
+            .andExpect(status().isConflict());
+        mvc.perform(put("/api/v1/admin/products/" + productId)
+                .with(user("tester").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(missingCover))
+            .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/products/" + productId)).andExpect(status().isNotFound());
+
+        String withCover = missingCover.replace("\"images\": []",
+            "\"images\": [{\"url\":\"https://example.com/cover.jpg\",\"position\":0}]");
+        mvc.perform(put("/api/v1/admin/products/" + productId)
+                .with(user("tester").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content(withCover))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.published").value(true));
+        mvc.perform(get("/api/v1/products/" + productId))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.images[0].url").value("https://example.com/cover.jpg"));
     }
 
     @Test
