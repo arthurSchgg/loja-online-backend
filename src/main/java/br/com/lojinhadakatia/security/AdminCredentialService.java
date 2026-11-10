@@ -34,10 +34,16 @@ public class AdminCredentialService implements UserDetailsService {
 
     @Bean
     ApplicationRunner bootstrapAdmin(AdminCredentialService service,
+            AdminBootstrapReadiness readiness,
             @Value("${app.security.admin-username:}") String username,
             @Value("${app.security.admin-password:}") String password,
             @Value("${app.security.admin-email:}") String email) {
-        return args -> service.initialize(username, password, email);
+        return args -> {
+            // initialize is transactional: when it returns, inserts are committed
+            // or an existing administrator was found. Only then report readiness.
+            service.initialize(username, password, email);
+            readiness.markInitialized();
+        };
     }
 
     @Transactional
