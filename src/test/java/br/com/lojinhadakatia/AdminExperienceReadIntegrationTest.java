@@ -50,4 +50,27 @@ class AdminExperienceReadIntegrationTest {
       .andExpect(jsonPath("$.results").doesNotExist())
       .andExpect(jsonPath("$.questions[0].options[0].resultKey").doesNotExist());
  }
+ @Test void adminCanRoundTripEditAndPublicStaysRedacted() throws Exception {
+  String first="""
+   {"title":"Antes","published":true,
+    "questions":[{"title":"Pergunta","position":0,"options":[
+      {"label":"A","position":0,"resultKey":"f"},
+      {"label":"B","position":1,"resultKey":"f"}]}],
+    "results":[{"key":"f","title":"Perfil"}]}
+   """;
+  long id=mapper.readTree(mvc.perform(post("/api/v1/admin/experiences")
+      .with(user("admin").roles("ADMIN")).with(csrf())
+      .contentType(MediaType.APPLICATION_JSON).content(first))
+      .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString()).path("id").asLong();
+  String revised=first.replace("Antes","Depois");
+  mvc.perform(put("/api/v1/admin/experiences/"+id)
+      .with(user("admin").roles("ADMIN")).with(csrf())
+      .contentType(MediaType.APPLICATION_JSON).content(revised))
+      .andExpect(status().isOk()).andExpect(jsonPath("$.title").value("Depois"));
+  mvc.perform(get("/api/v1/admin/experiences/"+id).with(user("admin").roles("ADMIN")))
+      .andExpect(status().isOk()).andExpect(jsonPath("$.title").value("Depois"))
+      .andExpect(jsonPath("$.results[0].key").value("f"))
+      .andExpect(jsonPath("$.questions[0].options[1].resultKey").value("f"));
+ }
+
 }
