@@ -1,17 +1,53 @@
-# Segurança — consolidação documental
+# Segurança — implementação em develop x homologação
 
-**Referência técnica do código existente:** [SECURITY.md](SECURITY.md) e [ADR-001-ADMIN-SESSION.md](ADR-001-ADMIN-SESSION.md). Este documento apresenta o **alvo aprovado**, não certifica o estado da implementação.
+> **Estado: referência técnica consolidada, NÃO É APROVAÇÃO DE SEGURANÇA.**
+> Snapshot: `develop` em
+> `de93e2d14189548e57126e8a951a6d5b1086bcef`.
+> Ver [evidências da Fase 1](phase-1-evidence-review-2026-11-09.md).
 
-- Uma única administradora. Sem registro público, HTTP Basic ou JWT.
-- Spring Security com sessão HTTP, CSRF e logout por invalidação; 30 min de inatividade; cookies seguros; frontend e API administrativa na mesma origem.
-- Senhas de pelo menos 12 caracteres; políticas de passphrase, alteração segura, revisão de sessões e rejeição de credenciais comprometidas no alvo aprovado.
-- Limitação progressiva de tentativas de login; recuperação por link temporário único de 15 min, com verificação de e-mail e autorização de manutenção de emergência quando aplicável.
-- E-mail verificado para troca de endereço; notificações de eventos significativos; fila/outbox persistente com tentativas limitadas para envio.
-- Logs administrativos auditáveis (ator, data, ação, mudança), separados dos logs técnicos, sem segredos.
-- Dados de segurança/administrativos não devem ser armazenados em cache público.
-- HTTPS em staging e produção; credenciais e chaves fora do repositório; ambientes isolados.
+## Já implementado no backend com testes automatizados
 
-## Pendências documentais conhecidas
-- [ARCHITECTURE.md](ARCHITECTURE.md) é antigo e ainda fala em escolha entre Basic/JWT/sessão; não tratar essa seção como válida.
-- O backend atual usa conta configurada em memória por propriedades de ambiente. Não assumir que mudança de senha, recuperação por e-mail, rate limiting e outbox já estão implementados.
-- Nenhuma revisão formal de segurança nem homologação foi realizada por este documento.
+- Administradora única com credencial persistente em PostgreSQL a partir
+  de Flyway V13; sem cadastro público, JWT ou HTTP Basic.
+- Spring Security usando sessão HTTP com CSRF; cookie HttpOnly/Secure,
+  SameSite=Lax em staging HTTPS e timeout de 30 minutos de inatividade.
+- Login/logout e versionamento das credenciais. Sessões administrativas sem
+  versão válida, antigas ou incompatíveis são rejeitadas (PRs #149 e #152).
+- Alteração/recuperação de senha com política de 12–128 caracteres,
+  verificação local de senhas comuns e consulta de senhas comprometidas
+  via k-anonimato (prefixo de SHA-1, sem enviar senha completa).
+- Recuperação por link de 15 minutos de uso único; mudança de e-mail
+  após confirmação do novo endereço; notificações e outbox SQL cifrado.
+- Limitação de tentativas de login e avisos de atividade suspeita.
+- CI Maven/JaCoCo/PostgreSQL, Mailpit local e smoke HTTPS com Caddy,
+  incluindo e-mails de recuperação e confirmação capturados (PRs #143–#152).
+
+O perfil `test` simplifica algumas verificações externas e suporta
+usuários sintéticos do MockMvc. O staging HTTPS exercitado pelo CI aplica
+as verificações de sessão de produção. **Não** replicar exceções do perfil
+de testes nos ambientes reais.
+
+## Riscos operacionais ainda abertos
+
+- SMTP local Mailpit não comprova TLS/autenticação/entregabilidade com
+  provedor real. Validar links, segredos, rotação de chave e falhas.
+- Limites de login/deduplicação em memória e sessão local requerem
+  avaliação antes de múltiplas réplicas.
+- Backup/restauração sob demanda e CI não comprovam agenda, retenção,
+  cópia externa cifrada ou restauração em ambiente operacional.
+- Revisar política de privacidade, logs (sem segredos), auditoria,
+  retenção, segurança de rede, IAM e configuração de CORS/domínio final.
+- Testes E2E e acessibilidade com o frontend real estão pendentes.
+- Aprovação técnica da especificação, diagnóstico, sete lotes,
+  [AUTH-001](https://github.com/arthurSchgg/loja-online/issues/80) e
+  homologação HML-001–007 permanecem pendentes.
+
+**Fontes técnicas:** `docs/PERSISTENT-ADMIN-CREDENTIALS.md`,
+`docs/ADMIN-EMAIL-CHANGE.md`, `docs/ADMIN-PASSWORD-POLICY.md`,
+`docs/ADMIN-BREACHED-PASSWORD-CHECK.md`,
+`docs/STAGING-HTTPS-AUTH-GATE.md` e
+`docs/STAGING-AUTH-EMAIL-E2E.md`.
+
+Uma execução CI verde prova os cenários automatizados daquela revisão;
+**não** substitui avaliação independente, aceite comercial nem liberação
+para produção.
