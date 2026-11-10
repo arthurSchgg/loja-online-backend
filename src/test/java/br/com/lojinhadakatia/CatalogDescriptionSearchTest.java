@@ -41,7 +41,7 @@ class CatalogDescriptionSearchTest {
                      "categoryIds":[],
                      "published":true,
                      "available":true,
-                     "images":[]}
+                     "images":[{"url":"https://example.com/product-image.jpg","position":0}]}
                     """.formatted(brandId)))
             .andExpect(status().isCreated());
         mvc.perform(get("/api/v1/products").param("q", "lavanda unica"))
