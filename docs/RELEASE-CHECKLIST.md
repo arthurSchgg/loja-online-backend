@@ -2,7 +2,19 @@
 
 ## Evidências técnicas
 
-A execução anterior em `develop` foi aprovada, incluindo testes HTTP e migrações Flyway v1–v6 em PostgreSQL real no CI. A nova feature `release-hardening` acrescenta testes da fronteira de segurança, rascunhos e validação da paginação. Consultar o CI do último commit antes de aprovar qualquer release.
+O estado técnico foi atualizado em 2026-11-09, na `develop`
+(merge [PR #152](https://github.com/arthurSchgg/loja-online/pull/152),
+SHA `de93e2d14189548e57126e8a951a6d5b1086bcef`).
+O [CI #42726790910](https://github.com/arthurSchgg/loja-online/actions/runs/42726790910)
+teve sucesso nos jobs `verify` (Maven/JaCoCo, PostgreSQL, Mailpit,
+backup/restore) e `staging-https-smoke` (Caddy TLS local, login,
+CSRF e links de recuperação/confirmação).
+
+**Limitação:** essas evidências se referem a ambiente descartável de CI.
+Não representam SMTP/TLS externo, staging corporativo, frontend E2E,
+aprovação da especificação ou autorização de release. O histórico anterior
+V1–V6 não descreve mais todo o banco. Ver
+[revisão de evidências da Fase 1](phase-1-evidence-review-2026-11-09.md).
 
 ## Critérios para liberar `main`
 
