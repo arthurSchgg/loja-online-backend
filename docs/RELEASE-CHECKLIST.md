@@ -40,3 +40,16 @@ V1–V6 não descreve mais todo o banco. Ver
 5. **Somente após concluir o checklist**, aprovar PR `release/* -> main` e criar uma tag de versão.
 
 A preparação de uma release candidate **não significa** disponibilidade para produção.
+
+## Verificações específicas do frontend — 2026-11-10
+
+- [x] Build público e administrativo separados no repositório frontend; CI da implementação validado.
+- [x] Novo comando de release `API_BASE_URL=/api/v1 npm run build:release` rejeita fallback demonstrativo (PR frontend #41).
+- [x] Busca/categoria, preço promocional global e contatos oficiais implementados em `develop` (backend #160; frontend #31, #33, #35, #39).
+- [x] Script público read-only de contrato disponível: `npm run smoke:public -- https://staging.exemplo.com` (frontend #37).
+- [ ] Executar smoke de contrato **contra staging autorizado** com certificado TLS validado e dados fictícios representativos; anexar evidências à HML-FE-001.
+- [ ] Validar E2E no navegador, sessões/CSRF, redirecionamento WhatsApp, conteúdo comercial, WCAG 2.2 AA e CWV p75.
+- [ ] Verificar regras reais de branch protection GitHub (consulta pelo conector retorna 403) e reconciliar divergência do histórico de `main`/ `develop` antes de montar PR de release.
+- [ ] Registrar custos, conta, domínio, IAM, segredos e backups AWS aprovados antes de qualquer provisionamento.
+
+**A marcação das entregas de código não representa homologação comercial/técnica nem autorização de produção.**
