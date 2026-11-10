@@ -93,7 +93,13 @@ public class CatalogService {
                 ));
             }
             if(brandId!=null)predicates.add(cb.equal(root.get("brand").get("id"),brandId));
-            if(categoryId!=null){Join<Product,Category> cat=root.join("categories");predicates.add(cb.equal(cat.get("id"),categoryId));cq.distinct(true);}
+            if(categoryId!=null){
+                // product_categories has PRIMARY KEY (product_id, category_id), so
+                // matching one category produces at most one row per product.
+                // DISTINCT would break PostgreSQL ordering by effective-price subquery.
+                Join<Product,Category> cat=root.join("categories");
+                predicates.add(cb.equal(cat.get("id"),categoryId));
+            }
             if(available!=null){
                 var inStock=cb.greaterThan(root.<Integer>get("stockQuantity"),0);
                 var manuallyAvailable=cb.isTrue(root.get("available"));
