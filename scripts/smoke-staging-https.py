@@ -10,6 +10,7 @@ import os
 import pathlib
 import ssl
 import sys
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -22,6 +23,30 @@ def fixture_password(filename: str) -> str:
             if len(password) >= 12:
                 return password
     raise RuntimeError("Staging CI fixture lacks an administrative password")
+
+
+class UnexpectedHttpStatus(AssertionError):
+    def __init__(self, method: str, path: str, expected: tuple[int, ...], actual: int):
+        super().__init__(f"{method} {path}: expected HTTP {expected}, got {actual}")
+        self.actual = actual
+
+
+def login_after_admin_bootstrap(refresh_csrf, submit_login, sleep=time.sleep) -> None:
+    """Bounded readiness retry on HTTP 401 ONLY, never bypass 403/429 or invalid credentials.
+
+    Actuator health can become UP before an ApplicationRunner finishes seeding
+    the staging-only administrator. Three attempts are below the five-failure
+    login-throttle threshold; permanently invalid credentials still fail closed.
+    """
+    for attempt in range(3):
+        header, token = refresh_csrf()
+        try:
+            submit_login(header, token)
+            return
+        except UnexpectedHttpStatus as error:
+            if error.actual != 401 or attempt == 2:
+                raise
+            sleep(attempt + 1)
 
 
 class Smoke:
@@ -51,7 +76,7 @@ class Smoke:
             content = b""  # Do not expose error bodies or tokens in CI logs.
         acceptable = expected if isinstance(expected, tuple) else (expected,)
         if status not in acceptable:
-            raise AssertionError(f"{method} {path}: expected HTTP {acceptable}, got {status}")
+            raise UnexpectedHttpStatus(method, path, acceptable, status)
         return content
 
     def csrf(self) -> tuple[str, str]:
@@ -94,10 +119,15 @@ class Smoke:
         self.request("GET", "/api/v1/auth/me", 401)
         print("PASS login without CSRF cannot authenticate")
 
-        self.request("POST", "/api/v1/auth/login", 200, body=payload, headers={
-            "Content-Type": "application/x-www-form-urlencoded",
-            header_name: token,
-        })
+        login_after_admin_bootstrap(
+            self.csrf,
+            lambda fresh_header, fresh_token: self.request(
+                "POST", "/api/v1/auth/login", 200, body=payload, headers={
+                    "Content-Type": "application/x-www-form-urlencoded",
+                    fresh_header: fresh_token,
+                }
+            ),
+        )
         self.assert_cookies()
         identity = json.loads(self.request("GET", "/api/v1/auth/me", 200))
         if identity.get("username") != username or identity.get("authenticated") is not True:
