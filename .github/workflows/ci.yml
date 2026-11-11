@@ -114,9 +114,15 @@ jobs:
             # This isolated test does not rely on third-party network availability.
             echo 'BREACHED_PASSWORD_CHECK_ENABLED=false'
           } > .env.staging.ci
-          docker compose --env-file .env.staging.ci -f compose.staging.yaml config --quiet
+          # This job validates actual same-origin frontend routing using harmless
+          # synthetic static files; real private frontend stays in its own repo.
+          mkdir -p .hml-ci-site
+          printf '%s\n' '<!doctype html><html><body>HML-CI-STATIC-HOME</body></html>' > .hml-ci-site/index.html
+          printf '%s\n' '<!doctype html><html><body>HML-CI-STATIC-ADMIN</body></html>' > .hml-ci-site/admin.html
+          echo 'HML_FRONTEND_DIST=./.hml-ci-site' >> .env.staging.ci
+          docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml config --quiet
       - name: Build and start HTTPS staging stack with isolated PostgreSQL and Mailpit
-        run: docker compose --env-file .env.staging.ci -f compose.staging.yaml up -d --build
+        run: docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml up -d --build
       - name: Verify local Caddy CA certificate and readiness
         shell: bash
         run: |
@@ -124,7 +130,7 @@ jobs:
           ca_file="$RUNNER_TEMP/lojinha-staging-root-ca.crt"
           ready=false
           for attempt in $(seq 1 90); do
-            docker compose --env-file .env.staging.ci -f compose.staging.yaml \
+            docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml \
               exec -T proxy cat /data/caddy/pki/authorities/local/root.crt \
               > "$ca_file" 2>/dev/null || true
             if [ -s "$ca_file" ] && \
@@ -140,6 +146,16 @@ jobs:
             exit 1
           fi
           echo "STAGING_TEST_CA=$ca_file" >> "$GITHUB_ENV"
+      - name: Smoke test same-origin static frontend and real backend API
+        shell: bash
+        run: |
+          set -euo pipefail
+          curl --silent --show-error --fail --cacert "$STAGING_TEST_CA" \
+            https://localhost:18443/ | grep -q 'HML-CI-STATIC-HOME'
+          curl --silent --show-error --fail --cacert "$STAGING_TEST_CA" \
+            https://localhost:18443/admin.html | grep -q 'HML-CI-STATIC-ADMIN'
+          curl --silent --show-error --fail --cacert "$STAGING_TEST_CA" \
+            https://localhost:18443/api/v1/store | grep -q 'displayName'
       - name: Smoke test through the actual HTTPS reverse proxy
         env:
           STAGING_TEST_BASE_URL: https://localhost:18443
@@ -156,9 +172,10 @@ jobs:
         run: python3 scripts/smoke-public-contract.py
       - name: Show containers on failure (no secret contents)
         if: failure()
-        run: docker compose --env-file .env.staging.ci -f compose.staging.yaml ps
+        run: docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml ps
       - name: Tear down disposable staging and test volumes
         if: always()
         run: |
-          docker compose --env-file .env.staging.ci -f compose.staging.yaml down -v --remove-orphans || true
+          docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml down -v --remove-orphans || true
           rm -f .env.staging.ci
+          rm -rf .hml-ci-site
