@@ -1,0 +1,16 @@
+# Local-only full-stack HML override. Run WITH compose.staging.yaml; never publish.
+# Place backend and frontend repositories side-by-side, or set HML_FRONTEND_DIST.
+name: lojinha-homologation
+services:
+  proxy:
+    volumes:
+      - type: bind
+        source: ./deploy/Caddyfile.homologation
+        target: /etc/caddy/Caddyfile
+        read_only: true
+      - type: bind
+        source: ${HML_FRONTEND_DIST:-../loja-online-frontend/dist-hml}
+        target: /srv/site
+        read_only: true
+        bind:
+          create_host_path: false
