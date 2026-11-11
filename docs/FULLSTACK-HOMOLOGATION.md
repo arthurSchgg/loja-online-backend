@@ -87,7 +87,7 @@ certutil -user -addstore Root .\staging-local-ca.crt
 Instale somente se tiver certeza de que a CA veio do seu contêiner de teste. Feche e reabra o navegador depois. **Ao terminar os testes**, remova essa CA da loja de confiança do usuário:
 
 ```powershell
-certutil -user -delstore Root $cert.Thumbprint
+certutil -user -delstore Root $($cert.Thumbprint)
 ```
 
 Não clique para ignorar avisos de certificado e não exponha o proxy para sua rede ou internet. Não compartilhe a chave privada da CA.
