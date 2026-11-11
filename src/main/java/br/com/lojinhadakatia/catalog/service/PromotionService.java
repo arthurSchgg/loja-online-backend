@@ -38,18 +38,43 @@ public class PromotionService {
         ProductPromotion promotion=promotions.findById(promotionId)
             .filter(x->x.getProduct().getId().equals(productId))
             .orElseThrow(()->new ResourceNotFoundException("Promoção não encontrada."));
+        if(promotion.getClosedAt()!=null || !promotion.getStartsAt().isAfter(Instant.now()))
+            throw new BusinessException("Somente promoções futuras e não encerradas podem ser editadas.");
         validate(product,request,promotionId);
         promotion.update(request.promotionalPrice(),request.startsAt(),request.endsAt());
         return response(promotions.saveAndFlush(promotion));
     }
 
+    /** Physical deletion would destroy commercial history: use close for active campaigns. */
     @Transactional
     public void delete(Long productId,Long promotionId){
         lockProduct(productId);
-        ProductPromotion promotion=promotions.findById(promotionId)
+        findPromotion(productId,promotionId);
+        throw new BusinessException("Exclusão de promoções não permitida. O histórico deve ser preservado.");
+    }
+
+    @Transactional
+    public PromotionResponse close(Long productId,Long promotionId,PromotionCloseRequest request,String actor){
+        lockProduct(productId);
+        ProductPromotion promotion=findPromotion(productId,promotionId);
+        Instant now=Instant.now();
+        if(promotion.getClosedAt()!=null)
+            throw new BusinessException("Esta promoção já foi encerrada.");
+        if(now.isBefore(promotion.getStartsAt()) || !now.isBefore(promotion.getEndsAt()))
+            throw new BusinessException("Somente promoções ativas podem ser encerradas.");
+        String reason=request.reason().trim();
+        if(reason.isBlank() || reason.length()>500)
+            throw new BusinessException("Informe a justificativa do encerramento.");
+        if(actor==null || actor.isBlank() || actor.length()>180)
+            throw new BusinessException("Administrador inválido.");
+        promotion.close(now,reason,actor);
+        return response(promotions.saveAndFlush(promotion));
+    }
+
+    private ProductPromotion findPromotion(Long productId,Long promotionId){
+        return promotions.findById(promotionId)
             .filter(x->x.getProduct().getId().equals(productId))
             .orElseThrow(()->new ResourceNotFoundException("Promoção não encontrada."));
-        promotions.delete(promotion);
     }
 
     public boolean hasPromotions(Long productId){return promotions.existsByProductId(productId);}
@@ -77,6 +102,7 @@ public class PromotionService {
     }
     private PromotionResponse response(ProductPromotion p){
         return new PromotionResponse(p.getId(),p.getProduct().getId(),
-            p.getPromotionalPrice(),p.getStartsAt(),p.getEndsAt());
+            p.getPromotionalPrice(),p.getStartsAt(),p.getEndsAt(),
+            p.getClosedAt(),p.getClosedReason(),p.getClosedBy());
     }
 }
