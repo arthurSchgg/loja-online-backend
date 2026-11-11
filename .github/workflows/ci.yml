@@ -24,6 +24,11 @@ jobs:
         run: |
           docker compose --env-file .env.example -f compose.yaml config --quiet
           docker compose --env-file .env.staging.example -f compose.staging.yaml config --quiet
+          docker compose --env-file .env.staging.example -f compose.staging.yaml -f compose.homologation.yaml config --quiet
+          python3 -m py_compile scripts/smoke-homologation.py
+          # Validate Caddy full-stack routing without accessing the private frontend repo.
+          docker run --rm -v "${PWD}/deploy/Caddyfile.homologation:/etc/caddy/Caddyfile:ro" \
+            caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
           bash -n scripts/*.sh
       - name: Install and start PostgreSQL for integration tests
         run: |
