@@ -82,7 +82,21 @@ class ProductPromotionIntegrationTest {
           .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
         mvc.perform(delete("/api/v1/admin/products/"+id+"/promotions/"+promoId)
             .with(user("tester").roles("ADMIN")).with(csrf()))
-          .andExpect(status().isNoContent());
+          .andExpect(status().isConflict());
+        mvc.perform(post("/api/v1/admin/products/"+id+"/promotions/"+promoId+"/close")
+            .with(user("tester").roles("ADMIN")).with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Fim da campanha\"}"))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.closedReason").value("Fim da campanha"))
+          .andExpect(jsonPath("$.closedBy").value("tester"))
+          .andExpect(jsonPath("$.closedAt").isNotEmpty());
+        mvc.perform(get("/api/v1/admin/products/"+id+"/promotions")
+            .with(user("tester").roles("ADMIN")))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        mvc.perform(post("/api/v1/admin/products/"+id+"/promotions/"+promoId+"/close")
+            .with(user("tester").roles("ADMIN")).with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Novamente\"}"))
+          .andExpect(status().isConflict());
         mvc.perform(get("/api/v1/products/"+id))
           .andExpect(status().isOk()).andExpect(jsonPath("$.effectivePrice").value(29.90));
     }
@@ -109,4 +123,22 @@ class ProductPromotionIntegrationTest {
            "endsAt":"2031-01-01T00:00:00Z"}
           """,400);
     }
+    @Test void closureRequiresReasonAndActivePeriod() throws Exception {
+        long id=product();
+        String future=postPromotion(id,"""
+          {"promotionalPrice":15.90,"startsAt":"2090-01-01T00:00:00Z",
+           "endsAt":"2091-01-01T00:00:00Z"}
+          """,201);
+        long promotionId=mapper.readTree(future).get("id").asLong();
+        String url="/api/v1/admin/products/"+id+"/promotions/"+promotionId+"/close";
+        mvc.perform(post(url).with(user("tester").roles("ADMIN")).with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content("{\\"reason\\":\\" \\"}"))
+          .andExpect(status().isBadRequest());
+        mvc.perform(post(url).with(user("tester").roles("ADMIN")).with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content("{\\"reason\\":\\"Cancelar antes de começar\\"}"))
+          .andExpect(status().isConflict());
+        mvc.perform(get("/api/v1/admin/products/"+id+"/promotions").with(user("tester").roles("ADMIN")))
+          .andExpect(status().isOk()).andExpect(jsonPath("$[0].closedAt").isEmpty());
+    }
+
 }
