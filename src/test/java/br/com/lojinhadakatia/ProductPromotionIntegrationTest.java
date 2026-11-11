@@ -132,10 +132,10 @@ class ProductPromotionIntegrationTest {
         long promotionId=mapper.readTree(future).get("id").asLong();
         String url="/api/v1/admin/products/"+id+"/promotions/"+promotionId+"/close";
         mvc.perform(post(url).with(user("tester").roles("ADMIN")).with(csrf())
-            .contentType(MediaType.APPLICATION_JSON).content("{\\"reason\\":\\" \\"}"))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\" \"}"))
           .andExpect(status().isBadRequest());
         mvc.perform(post(url).with(user("tester").roles("ADMIN")).with(csrf())
-            .contentType(MediaType.APPLICATION_JSON).content("{\\"reason\\":\\"Cancelar antes de começar\\"}"))
+            .contentType(MediaType.APPLICATION_JSON).content("{\"reason\":\"Cancelar antes de começar\"}"))
           .andExpect(status().isConflict());
         mvc.perform(get("/api/v1/admin/products/"+id+"/promotions").with(user("tester").roles("ADMIN")))
           .andExpect(status().isOk()).andExpect(jsonPath("$[0].closedAt").isEmpty());
