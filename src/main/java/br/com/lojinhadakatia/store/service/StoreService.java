@@ -15,7 +15,7 @@ public class StoreService {
     public StoreService(StoreInformationRepository repository){this.repository=repository;}
     public StoreResponse publicInfo(){
         return repository.findById(1L).map(this::map)
-            .orElse(new StoreResponse("Lojinha da Kátia","Mais do que comprar, é viver uma experiência!",null,null,null,null));
+            .orElse(new StoreResponse("Lojinha da Kátia","Mais do que comprar, é viver uma experiência!",null,null,null,null,null,null,null));
     }
     @Transactional
     public StoreResponse update(StoreRequest request){
@@ -23,9 +23,11 @@ public class StoreService {
         StoreInformation info=repository.findById(1L).orElseGet(
             ()->new StoreInformation(request.displayName().trim(),request.slogan(),request.description(),
                                       request.whatsapp(),request.instagramUrl(),request.email()));
-        info.update(request.displayName().trim(),request.slogan(),request.description(),request.whatsapp(),request.instagramUrl(),request.email());
+        info.update(request.displayName().trim(),request.slogan(),request.description(),request.whatsapp(),request.instagramUrl(),request.email(),
+                    optional(request.openingHours()),optional(request.address()),optional(request.region()));
         return map(repository.save(info));
     }
+    private String optional(String value){return value==null||value.isBlank()?null:value.trim();}
     private void validateInstagram(String url){
         if(url==null || url.isBlank())return;
         URI parsed;
@@ -37,6 +39,7 @@ public class StoreService {
     }
     private StoreResponse map(StoreInformation info){
         return new StoreResponse(info.getDisplayName(),info.getSlogan(),info.getDescription(),
-                                 info.getWhatsapp(),info.getInstagramUrl(),info.getEmail());
+                                 info.getWhatsapp(),info.getInstagramUrl(),info.getEmail(),
+                                 info.getOpeningHours(),info.getAddress(),info.getRegion());
     }
 }
