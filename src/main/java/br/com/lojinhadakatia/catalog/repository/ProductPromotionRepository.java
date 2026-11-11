@@ -12,7 +12,7 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
 
     @Query("""
         select count(p) from ProductPromotion p where p.product.id=:productId
-        and p.startsAt<:endAt and p.endsAt>:startAt
+        and p.closedAt is null and p.startsAt<:endAt and p.endsAt>:startAt
         and (:excludeId is null or p.id<>:excludeId)
         """)
     long countOverlaps(@Param("productId") Long productId,
@@ -21,7 +21,7 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
 
     @Query("""
         select p from ProductPromotion p where p.product.id=:productId
-        and p.startsAt<=:now and p.endsAt>:now
+        and p.closedAt is null and p.startsAt<=:now and p.endsAt>:now
         """)
     List<ProductPromotion> findEffective(@Param("productId") Long productId,@Param("now") Instant now);
 }
