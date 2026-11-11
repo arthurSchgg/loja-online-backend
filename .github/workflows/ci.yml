@@ -166,6 +166,11 @@ jobs:
           STAGING_TEST_BASE_URL: https://localhost:18443
           STAGING_TEST_ENV_FILE: .env.staging.ci
         run: python3 scripts/smoke-staging-https.py
+      - name: Smoke real login and PostgreSQL CRUD behind homologation HTTPS gateway
+        env:
+          HML_BASE_URL: https://localhost:18443
+          STAGING_TEST_ENV_FILE: .env.staging.ci
+        run: python3 scripts/smoke-homologation.py
       - name: Exercise recovery and email confirmation through HTTPS and Mailpit
         env:
           STAGING_TEST_BASE_URL: https://localhost:18443
@@ -175,11 +180,6 @@ jobs:
         env:
           STAGING_TEST_BASE_URL: https://localhost:18443
         run: python3 scripts/smoke-public-contract.py
-      - name: Smoke real login and PostgreSQL CRUD behind homologation HTTPS gateway
-        env:
-          HML_BASE_URL: https://localhost:18443
-          STAGING_TEST_ENV_FILE: .env.staging.ci
-        run: python3 scripts/smoke-homologation.py
       - name: Show containers on failure (no secret contents)
         if: failure()
         run: docker compose --env-file .env.staging.ci -f compose.staging.yaml -f compose.homologation.yaml ps
