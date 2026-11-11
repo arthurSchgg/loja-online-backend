@@ -17,6 +17,9 @@ public class ProductPromotion {
     @Column(name="starts_at",nullable=false) private Instant startsAt;
     @Column(name="ends_at",nullable=false) private Instant endsAt;
     @Column(name="created_at",nullable=false,updatable=false) private Instant createdAt;
+    @Column(name="closed_at") private Instant closedAt;
+    @Column(name="closed_reason",length=500) private String closedReason;
+    @Column(name="closed_by",length=180) private String closedBy;
     protected ProductPromotion(){}
     public ProductPromotion(Product product,BigDecimal price,Instant starts,Instant ends){
         this.product=product; update(price,starts,ends);
@@ -25,6 +28,12 @@ public class ProductPromotion {
     public void update(BigDecimal price,Instant starts,Instant ends){
         promotionalPrice=price;startsAt=starts;endsAt=ends;
     }
+    public void close(Instant when,String reason,String actor){
+        closedAt=when;closedReason=reason;closedBy=actor;
+    }
+    public Instant getClosedAt(){return closedAt;}
+    public String getClosedReason(){return closedReason;}
+    public String getClosedBy(){return closedBy;}
     public Long getId(){return id;}
     public Product getProduct(){return product;}
     public BigDecimal getPromotionalPrice(){return promotionalPrice;}
