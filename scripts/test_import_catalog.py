@@ -53,6 +53,16 @@ class CatalogImportTests(unittest.TestCase):
             with self.subTest(changed=changed), self.assertRaises(ValueError):
                 check_manifest(self.write(data))
 
+    def test_relative_catalog_webp_is_accepted_and_path_traversal_is_rejected(self):
+        valid = "assets/images/catalogo/skelt/maquiagem-corporal.webp"
+        self.assertEqual(validate_image(valid), valid)
+        for invalid in ("assets/images/catalogo/../secret.webp",
+                        "/assets/images/catalogo/skelt/a.webp",
+                        "assets/images/catalogo/skelt/a.svg",
+                        "assets/images/catalogo/skelt/a.webp?hack=1"):
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                validate_image(invalid)
+
     def test_rejects_private_image_ips(self):
         for uri in ("https://127.0.0.1/a.jpg", "https://192.168.0.2/a.jpg",
                     "https://user:pass@example.org/photo.jpg"):
