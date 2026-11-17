@@ -1,29 +1,28 @@
-# Catálogo WhatsApp — captura parcial para revisão (17/11/2026)
+# Catálogo WhatsApp — revisão da gravação (17/11/2026)
 
-**Status: levantamento parcial, NÃO importado.** O link original de catálogo WhatsApp não retornou fichas públicas legíveis; os dados abaixo foram transcritos exclusivamente de **duas capturas fornecidas pelo proprietário**. Não usar este documento como autorização de publicação.
+**Status:** 8 fichas conferidas no vídeo de aproximadamente 81 segundos. Dados ainda não inseridos no PostgreSQL, e o site não foi atualizado com fotos oficiais.
 
-| # | Nome visível no catálogo | Preço visível | Preço riscado | Descrição legível |
-|---|---|---:|---:|---|
-| 1 | Maquiagem Corporal Bronzeado Instantâneo | R$ 99,90 | — | Truncada: “O Bronzeado Instantâneo é uma ma...” |
-| 2 | Kit Miniaturas Sellers Set | R$ 99,90 | — | 3 fragrâncias de 15ml cada |
-| 3 | Kit miniaturas Exótic Set | R$ 99,90 | — | Truncada: “Seus destinos favoritos em 15ml. O...” |
-| 4 | Kit Miniaturas Trends Set | R$ 99,90 | — | 3 fragrâncias de 15ml cada |
-| 5 | Mousse Autobronzeador Dark | R$ 130,00 | — | Truncada |
-| 6 | Luva aplicadora de autobronzeador | R$ 35,00 | — | Truncada |
-| 7 | Autobronzeador Bifásico | R$ 104,00 | R$ 119,90 | Truncada |
-| 8 | Maquiagem Corporal Iluminador | R$ 99,90 | — | “Iluminador Corporal Skelt” |
+A marca Skelt está visível nas embalagens e no agrupamento do catálogo. Os textos abaixo são **resumos reescritos**, não transcrições literais integrais das fichas. Os tempos permitem localizar a informação na gravação original fornecida pelo proprietário.
 
-## Dados que ainda faltam para importar via API
+| Produto | Preço no vídeo | Descrição resumida | Tempo |
+|---|---:|---|---:|
+| Maquiagem Corporal Bronzeado Instantâneo | R$ 99,90 | Maquiagem corporal para efeito bronzeado imediato; duração anunciada de 12 a 24 horas, removível no banho. | 26 s |
+| Kit Miniaturas Sellers Set | R$ 99,90 | Três body splashes de 15 ml da Skelt; também descrito como Best Sellers Set. | 36 s |
+| Kit miniaturas Exótic Set | R$ 99,90 | Três fragrâncias miniatura de 15 ml inspiradas em destinos exóticos, Milos e Bahamas. | 44 s |
+| Kit Miniaturas Trends Set | R$ 99,90 | Três body splashes de 15 ml para diferentes momentos, em embalagens miniatura. | 51 s |
+| Mousse Autobronzeador Dark | R$ 130,00 | Mousse de bronzeado intenso, com nano-resveratrol; o anúncio informa 7 a 12 dias e de 5 a 8 aplicações; luva não inclusa. | 60 s |
+| Luva aplicadora de autobronzeador | R$ 35,00 | Luva lavável e reutilizável para aplicação uniforme de autobronzeador e maquiagem corporal. | 67 s |
+| Autobronzeador Bifásico | R$ 104,00 | Com fragrância Grand Bahama, intensidade média e duração anunciada de 7 a 12 dias; notas de abacaxi, bergamota, água de coco, lírio-do-vale, flores solares, limão, baunilha, musk e musgo de carvalho. | 76 s |
+| Maquiagem Corporal Iluminador | R$ 99,90 | Iluminador corporal para brilho na pele, indicado no catálogo para braços, pernas, colo e ombros. | 5 s |
 
-- **Marcas confirmadas** por produto: as miniaturas sugerem Skelt em alguns itens, mas não permitir inferência automática sem conferência.
-- **Imagens originais**, com permissão de uso, e seu endereço HTTPS estável. Não reutilizar miniaturas da captura ou links temporários do WhatsApp como fotos finais.
-- **Descrições completas**: algumas estão truncadas. Não completar por suposição.
-- **Categorias validadas**, **quantidade em estoque** e estado disponível/indisponível.
-- **Regras promocionais** do Autobronzeador Bifásico: há preço antigo riscado, mas não há datas de validade. Não criar promoção programada sem vigência confirmada.
-- Outros produtos do catálogo, caso haja páginas além das duas capturas.
+**Preço anterior:** Autobronzeador Bifásico aparece com R$ 119,90 riscado; faltam datas de vigência e autorização para criar uma promoção.
 
-## Próxima ação técnica
+## A confirmar antes da importação
 
-Quando as informações restantes estiverem confirmadas, preencher um manifesto baseado em `docs/catalog-import-template.json` e validar com `python scripts/import_catalog.py catalogo-local.json`. Depois de revisar, executar `--apply` **apenas no banco local**, criando rascunhos não publicados. O frontend live já consome o endpoint público, então não é necessário editar produtos individuais no HTML.
+- Categorias para cada item são apenas sugestões, não confirmadas pela proprietária.
+- Estoque, disponibilidade e informações de publicação não aparecem no vídeo.
+- Fotos do vídeo são prévias de tela, de resolução limitada; precisam ser substituídas por arquivos originais com direitos de uso e hospedagem HTTPS estável.
+- Validar grafia comercial de Sellers/Best Sellers e Exótic Set, além das alegações de duração de autobronzeadores.
+- O importador `scripts/import_catalog.py` trabalha por API autenticada, exige URL HTTPS e cria rascunhos não publicados; não acessa diretamente o PostgreSQL do computador do usuário.
 
-**Nada deste documento deve ser interpretado como migração de dados já realizada.**
+Nenhuma imagem binária foi commitada neste PR. O pacote ZIP de revisão visual foi entregue ao usuário no chat; **não se trata de publicação em produção**.
