@@ -1,3 +1,5 @@
+> **HISTÓRICO / NÃO UTILIZAR:** a hospedagem AWS foi descartada para a Lojinha da Kátia em 16/11/2026. O plano atual é [Cloudflare Pages + Render + Neon](FREE-HOSTING-NEON-CLOUDFLARE.md). Nenhum serviço AWS deve ser criado ou publicado com base neste arquivo.
+
 # AWS — arquitetura e roteiro de implantação
 
 > **Estado:** preparado tecnicamente para implantação, **não publicado**. A conta AWS, domínio e detalhes comerciais permanecem a definir. Nenhum recurso com cobrança foi criado.
