@@ -20,6 +20,10 @@ jobs:
         run: python3 -m unittest discover -s scripts -p 'test_staging_smoke_login.py'
       - name: Validate public storefront JSON contract and redaction helpers
         run: python3 -m unittest discover -s scripts -p 'test_public_contract_smoke.py'
+      - name: Test safe catalog import parsing and local-only guards
+        run: |
+          python3 -m py_compile scripts/import_catalog.py
+          python3 -m unittest discover -s scripts -p 'test_import_catalog.py'
       - name: Validate Docker Compose definitions without starting containers
         run: |
           docker compose --env-file .env.example -f compose.yaml config --quiet
