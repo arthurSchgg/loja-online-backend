@@ -6,7 +6,7 @@
 
 Envie capturas ou uma exportação autorizada com **nome, preço, marca, categoria, descrição (quando houver), disponibilidade** e arquivos originais das imagens. Imagens privadas do WhatsApp não são URLs permanentes; **não colocar URLs temporárias do WhatsApp no banco**. A publicação exigirá imagens hospedadas em HTTPS estável e com direito de uso.
 
-O importador cria **somente rascunhos não publicados**, com as URLs HTTPS informadas e revisadas, e **não altera imagens/estoque sem confirmação**.
+O importador cria **rascunhos não publicados por padrão**, com URLs HTTPS ou arquivos WebP locais estritamente validados, e **não altera estoque**. A opção explícita `--preview-local` permite mostrar os registros novos no navegador **apenas na API localhost:8080**, sempre como indisponíveis.
 
 ### Manifesto JSON
 
@@ -30,7 +30,7 @@ Copie `docs/catalog-import-template.json` para uma pasta não versionada (ex.: `
 }
 ```
 
-O exemplo acima é apenas esquema: não usar a URL `.example` para um produto real. Até 12 imagens por produto; a primeira fica na posição 0. O script rejeita HTTP, URLs privadas e produtos duplicados no mesmo arquivo. Os dados podem ser importados antes de decidir domínio, mas as imagens precisam de URLs HTTPS duráveis, ou deve-se aguardar sua hospedagem.
+O exemplo acima é apenas esquema: não usar a URL `.example` para um produto real. Até 12 imagens por produto; a primeira fica na posição 0. O script rejeita HTTP, URLs privadas e produtos duplicados no mesmo arquivo. Também aceita **somente** imagens relativas no formato `assets/images/catalogo/<marca>/<arquivo>.webp`, desde que os arquivos estejam realmente presentes no frontend servido. Os dados podem ser importados antes de decidir domínio, mas as imagens precisam de URLs HTTPS duráveis, ou deve-se aguardar sua hospedagem.
 
 ## Conferir sem modificar o banco
 
@@ -77,3 +77,31 @@ A atualização é por **nome normalizado + marca**; nomes iguais de produtos di
 - Não faz upload de arquivos de imagem: recebe **URLs HTTPS estáveis**; armazenamento e distribuição das fotos devem ser definidos separadamente.
 - Não é uma operação de produção, nem instala Docker, nem acessa seu PostgreSQL local a partir do ChatGPT.
 - Nenhuma senha deve ser colocada no manifesto ou no GitHub.
+
+## Lote real Skelt — 8 produtos da gravação
+
+O arquivo revisável `docs/catalogo-skelt-2026-11-17.json` contém **oito produtos** transcritos da gravação WhatsApp com preço, descrição resumida e imagem local. O frontend da PR **arthurSchgg/loja-online-frontend#80** contém as oito miniaturas provisórias já versionadas em `assets/images/catalogo/skelt/`.
+
+Estas imagens são de **256 × 256 px**, para testes visuais; fotos oficiais deverão ser substituídas antes da produção. As categorias são sugestões e precisam de revisão comercial. O preço anterior riscado de R$ 119,90 do Autobronzeador Bifásico não gerou promoção agendada.
+
+Para conferir sem gravar:
+
+```powershell
+python .\scripts\import_catalog.py .\docs\catalogo-skelt-2026-11-17.json
+```
+
+Para cadastrar os oito produtos **na API local do IntelliJ**, em rascunho:
+
+```powershell
+python .\scripts\import_catalog.py .\docs\catalogo-skelt-2026-11-17.json --apply
+```
+
+Para criar **prévia pública apenas no localhost**, com `published=true`, `available=false`, estoque 0:
+
+```powershell
+python .\scripts\import_catalog.py .\docs\catalogo-skelt-2026-11-17.json --apply --preview-local
+```
+
+**Atenção:** o importador pula produtos já existentes por padrão. Para atualizar dados de registros de teste existentes, conferir o banco e usar `--update-existing` intencionalmente; a atualização substitui a galeria. Essa funcionalidade exige a integração de PR backend #183, e a CI ainda precisa ser aprovada antes do merge. Para teste imediato do computador, há também o pacote local fornecido no chat; ele é separado do pipeline de produção.
+
+Não confiar no acesso remoto à API com HTTPS de outro host; o comando restringe o destino ao localhost. Não compartilhar credenciais ou `.env` no GitHub.
