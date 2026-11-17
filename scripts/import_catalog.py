@@ -204,7 +204,7 @@ def admin_products(api):
             raise RuntimeError("Paginação administrativa inesperada")
 
 
-def apply(api, records, update_existing=False):
+def apply(api, records, update_existing=False, local_preview=False):
     import os
     user = os.environ.get("CATALOG_ADMIN_USERNAME") or input("Usuário administrador local: ").strip()
     pwd = getpass.getpass("Senha do administrador local (não aparece): ")
@@ -233,6 +233,8 @@ def apply(api, records, update_existing=False):
             cat_ids.append(categories[key])
         payload = {k: record[k] for k in
                    ("name", "description", "price", "available", "published", "images")}
+        payload["published"] = local_preview
+        payload["available"] = False  # Never declare items available before stock verification
         payload["brandId"] = brands[brand_name]
         payload["categoryIds"] = cat_ids
         key = (brands[brand_name], clean(record["name"]))
@@ -246,8 +248,9 @@ def apply(api, records, update_existing=False):
         result = api.request("POST", "/admin/products", payload, headers)
         existing[key] = result["id"]
         created += 1
-    print(f"Concluído: {created} rascunho(s) criado(s), {updated} atualizado(s), "
-          f"{skipped} já existente(s) ignorado(s). Nenhum produto publicado.")
+    label = "visíveis no catálogo LOCAL, indisponíveis" if local_preview else "em rascunho (não publicados)"
+    print(f"Concluído: {created} criado(s), {updated} atualizado(s), "
+          f"{skipped} existente(s) ignorado(s). Itens novos {label}.")
 
 
 def main():
@@ -256,10 +259,16 @@ def main():
     parser.add_argument("--apply", action="store_true", help="Cadastrar via API (padrão é conferência sem escrita)")
     parser.add_argument("--update-existing", action="store_true", help="Atualizar produtos existentes por nome+marca")
     parser.add_argument("--base-url", default="http://localhost:8080")
+    parser.add_argument("--preview-local", action="store_true",
+                        help="Mostrar na vitrine local como INDISPONÍVEIS (somente http://localhost:8080)")
     parser.add_argument("--ca", help="CA local do proxy Caddy para URLs HTTPS")
     args = parser.parse_args()
     if args.update_existing and not args.apply:
         parser.error("--update-existing requer --apply")
+    if args.preview_local and not args.apply:
+        parser.error("--preview-local requer --apply")
+    if args.preview_local and args.base_url != "http://localhost:8080":
+        parser.error("--preview-local só pode publicar prévias na API do IntelliJ em http://localhost:8080")
     products = check_manifest(args.manifest)
     print(f"Manifesto validado: {len(products)} produto(s), sem publicação automática.")
     if not args.apply:
@@ -267,7 +276,7 @@ def main():
         return
     if not products:
         raise ValueError("Manifesto vazio: nada para importar")
-    apply(API(args.base_url, args.ca), products, args.update_existing)
+    apply(API(args.base_url, args.ca), products, args.update_existing, args.preview_local)
 
 
 if __name__ == "__main__":
