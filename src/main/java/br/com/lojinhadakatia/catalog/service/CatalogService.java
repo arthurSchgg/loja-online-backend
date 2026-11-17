@@ -177,7 +177,7 @@ public class CatalogService {
             // Local, bundled product photos are served by the same public frontend.
             // Strict allowlist rejects traversal, query parameters and remote schemes.
             boolean bundled=item.url().matches(
-                "assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\\\.webp");
+                "assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\.webp");
             boolean external="https".equalsIgnoreCase(uri.getScheme())&&uri.getHost()!=null
                 &&uri.getUserInfo()==null&&uri.getPort()==-1;
             if(!bundled&&!external)
