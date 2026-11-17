@@ -1,3 +1,5 @@
+> **HISTÓRICO / NÃO UTILIZAR:** a hospedagem AWS foi descartada para a Lojinha da Kátia em 16/11/2026. O plano atual é [Cloudflare Pages + Render + Neon](FREE-HOSTING-NEON-CLOUDFLARE.md). Nenhum serviço AWS deve ser criado ou publicado com base neste arquivo.
+
 # PostgreSQL e AWS Free Tier — Lojinha da Kátia
 
 **Decisão técnica:** não provisionar serviços com cobrança antes de homologação, orçamento, responsabilidade pelo faturamento e aceite explícito. Este documento descreve opções, não autoriza o deploy.
