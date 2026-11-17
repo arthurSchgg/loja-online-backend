@@ -1,0 +1,39 @@
+# Prévia gratuita com Spring Boot + Neon; NÃO é aprovação de produção.
+# Apenas código de infraestrutura: nenhum recurso é criado no GitHub.
+# Para criar no Render: New > Blueprint, conectar este repositório e
+# informar os valores `sync: false` pelo painel (nunca no Git).
+services:
+  - type: web
+    name: lojinha-da-katia-api-preview
+    runtime: docker
+    plan: free
+    region: virginia
+    branch: develop
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeployTrigger: off
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: JAVA_TOOL_OPTIONS
+        value: "-XX:MaxRAMPercentage=65.0 -XX:ActiveProcessorCount=2 -Dfile.encoding=UTF-8"
+      # Preencher em Render > Environment (nunca comitar valores).
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+      - key: ADMIN_USERNAME
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
