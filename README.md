@@ -169,6 +169,10 @@ Os documentos abaixo são a **especificação normativa ainda não aprovada**. P
 As funcionalidades principais e os testes automáticos estão integrados em `develop` (PRs #134 e #143–#152). **Não há homologação formal nem aprovação de produção**: faltam revisão integral da especificação e seus IDs RN, aprovação das sete fases, SMTP/TLS externo, E2E do frontend, restauração operacional e validação de dados comerciais. Consultar [diagnóstico atualizado da Fase 1](docs/phase-1-diagnostic.md), [evidências verificadas](docs/phase-1-evidence-review-2026-11-09.md), [AUTH-001 #80](https://github.com/arthurSchgg/loja-online/issues/80) e [HML-001 #112](https://github.com/arthurSchgg/loja-online/issues/112).
 
 
-## AWS (proposta de implantação)
+## Hospedagem escolhida (Cloudflare Pages + Render Free + Neon Free)
 
-A implantação planejada em ECS Express Mode, RDS PostgreSQL privado e Amplify Hosting para o frontend separado está documentada em [docs/AWS-DEPLOYMENT.md](docs/AWS-DEPLOYMENT.md). O workflow manual [aws-ecr-publish.yml](.github/workflows/aws-ecr-publish.yml) publica apenas uma imagem ECR aprovada, sem provisionar infraestrutura nem executar deploy. Nenhum recurso AWS foi criado; consultar orçamento e gates de homologação antes de ativar.
+A opção AWS foi **descartada** para este projeto. A arquitetura de prévia escolhida é **Cloudflare Pages** para a vitrine pública, **Render Free** para a API Java/Spring Boot e **Neon Free** para o PostgreSQL. O [Blueprint Render](render.yaml) e o [guia completo](docs/FREE-HOSTING-NEON-CLOUDFLARE.md) foram preparados para configurar a infraestrutura posteriormente, sem armazenar senhas no GitHub nem criar recursos automaticamente.
+
+O frontend administrativo requer **mesma origem HTTPS da API** para cookies de sessão e CSRF, não podendo ser colocado como site estático independente na Cloudflare Pages. O acesso remoto ao painel e o envio real de e-mail permanecem dependências a resolver antes da publicação comercial.
+
+Os antigos documentos AWS continuam no histórico do projeto para referência, mas **não são instruções vigentes de deploy**. Não executar `aws-ecr-publish`.
