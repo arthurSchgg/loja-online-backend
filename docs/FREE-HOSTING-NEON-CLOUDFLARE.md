@@ -31,7 +31,7 @@ A conexão PostgreSQL exibida pelo Neon normalmente começa com `postgresql://`;
 1. Conectar o repositório do backend no [Render](https://dashboard.render.com/) como Web Service Docker, ou usar o [render.yaml](../render.yaml) em `New > Blueprint`.
 2. Escolher plano `Free`, branch `develop` **para prévia**, sem auto-deploy. Usar o Dockerfile existente e `/actuator/health` como health check.
 3. Definir no painel Render as variáveis abaixo, sem escrever credenciais em `.env` versionado. O Blueprint já reserva as principais:
-   - `SPRING_PROFILES_ACTIVE=prod` (perfil com cookies Secure, Swagger desativado e Flyway habilitado)
+   - `SPRING_PROFILES_ACTIVE=prod,preview` (perfil com cookies Secure, Swagger desativado e Flyway habilitado)
    - `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` (Neon)
    - `ADMIN_USERNAME` e `ADMIN_PASSWORD` (conta inicial somente de **prévia**; senha forte e exclusiva de 12–128 caracteres)
    - `ADMIN_EMAIL` (e-mail de teste que não é conta pessoal)
