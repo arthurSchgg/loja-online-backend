@@ -93,6 +93,16 @@ public class SecurityConfiguration {
             .addFilterBefore(new AdminSessionVersionFilter(credentials, rejectUnversionedSessions), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                // Admin HTML/JS/CSS are publicly downloadable UI resources on the API origin.
+                // Only the backend's ADMIN endpoints hold protected data; never authorize
+                // /api/v1/admin/** as static resources or disable CSRF for login.
+                .requestMatchers(HttpMethod.GET,
+                    "/admin.html", "/admin-experiences.html",
+                    "/reset-password.html", "/confirm-email.html",
+                    "/admin/*.js", "/admin/*.css",
+                    "/assets/css/tokens.css", "/assets/css/base.css",
+                    "/assets/css/components.css",
+                    "/assets/images/brand/logo-katia.svg").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm",
