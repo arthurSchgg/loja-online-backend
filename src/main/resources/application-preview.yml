@@ -1,0 +1,11 @@
+# Free preview overlay — activate WITH prod: SPRING_PROFILES_ACTIVE=prod,preview
+# This does not disable HTTPS session cookies, CSRF or production Flyway settings.
+spring:
+  datasource:
+    hikari:
+      maximum-pool-size: 3
+      minimum-idle: 0
+      idle-timeout: 60000
+      max-lifetime: 600000
+      keepalive-time: 0
+      connection-timeout: 30000
