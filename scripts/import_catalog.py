@@ -42,6 +42,8 @@ def price(value):
 def validate_image(url):
     if not isinstance(url, str) or not 1 <= len(url) <= 2048:
         raise ValueError("URL da imagem ausente ou longa demais")
+    if re.fullmatch(r"assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\.webp", url):
+        return url
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.port:
         raise ValueError("Imagens exigem URLs HTTPS públicas sem credenciais ou porta personalizada")
