@@ -11,7 +11,7 @@ services:
     branch: develop
     dockerfilePath: ./Dockerfile
     dockerContext: .
-    autoDeployTrigger: off
+    autoDeployTrigger: 'off'
     healthCheckPath: /actuator/health
     envVars:
       - key: SPRING_PROFILES_ACTIVE
