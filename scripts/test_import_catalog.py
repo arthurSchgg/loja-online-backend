@@ -2,7 +2,7 @@ import json
 from pathlib import Path
 import tempfile
 import unittest
-from import_catalog import API, check_manifest, clean, price, validate_image
+from import_catalog import API, apply, check_manifest, clean, price, validate_image
 
 
 class CatalogImportTests(unittest.TestCase):
@@ -75,6 +75,53 @@ class CatalogImportTests(unittest.TestCase):
             with self.subTest(target=target), self.assertRaises(ValueError):
                 API(target)
         self.assertIsInstance(API("http://localhost:8080"), API)
+
+    def test_import_uses_admin_api_not_sql_and_prevents_automatic_availability(self):
+        from unittest.mock import patch
+
+        class FakeApi:
+            def __init__(self):
+                self.rows = []
+                self.created = []
+            def auth(self, user, password):
+                self.created.append(("auth", user))
+                return {"X-CSRF-TOKEN": "dummy"}
+            def request(self, method, path, payload=None, csrf=None):
+                if method == "GET":
+                    if path == "/admin/brands" or path == "/admin/categories":
+                        return []
+                    if path.startswith("/admin/products?"):
+                        return {"content": self.rows, "totalPages": 1, "last": True}
+                if method == "POST":
+                    if path == "/admin/brands":
+                        return {"id": 1, "name": payload["name"]}
+                    if path == "/admin/categories":
+                        return {"id": 2, "name": payload["name"]}
+                    if path == "/admin/products":
+                        self.created.append((path, payload.copy()))
+                        self.rows.append({"id": 3, "name": payload["name"], "brand": {"id": 1}})
+                        return {"id": 3}
+                raise AssertionError(f"Unexpected API operation {method} {path}")
+
+        record = check_manifest(self.write(self.valid()))[0]
+        api = FakeApi()
+        with patch("builtins.input", return_value="admin"), patch("getpass.getpass", return_value="private"):
+            apply(api, [record], local_preview=False)
+        payload = api.created[-1][1]
+        self.assertFalse(payload["published"])
+        self.assertFalse(payload["available"])
+        self.assertEqual(payload["images"][0]["url"], "https://example.org/teste.webp")
+
+        with patch("builtins.input", return_value="admin"), patch("getpass.getpass", return_value="private"):
+            apply(api, [record], local_preview=True)
+        self.assertEqual(len([x for x in api.created if x[0] == "/admin/products"]), 1)
+
+        another = FakeApi()
+        with patch("builtins.input", return_value="admin"), patch("getpass.getpass", return_value="private"):
+            apply(another, [record], local_preview=True)
+        visible = another.created[-1][1]
+        self.assertTrue(visible["published"])
+        self.assertFalse(visible["available"])
 
     def test_name_normalization(self):
         self.assertEqual(clean("  PERFUME   Floral "), "perfume floral")
