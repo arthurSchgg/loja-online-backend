@@ -174,8 +174,14 @@ public class CatalogService {
         return requests.stream().map(item->{
             URI uri;
             try {uri=URI.create(item.url());}catch(Exception e){throw new BusinessException("URL de imagem inválida.");}
-            if(!"https".equalsIgnoreCase(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)
-                throw new BusinessException("A imagem precisa ser uma URL pública HTTPS.");
+            // Local, bundled product photos are served by the same public frontend.
+            // Strict allowlist rejects traversal, query parameters and remote schemes.
+            boolean bundled=item.url().matches(
+                "assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\\\.webp");
+            boolean external="https".equalsIgnoreCase(uri.getScheme())&&uri.getHost()!=null
+                &&uri.getUserInfo()==null&&uri.getPort()==-1;
+            if(!bundled&&!external)
+                throw new BusinessException("Imagem deve ser HTTPS ou um arquivo local do catálogo.");
             return new ProductImage(item.url(),item.position(),item.altText());
         }).toList();
     }
