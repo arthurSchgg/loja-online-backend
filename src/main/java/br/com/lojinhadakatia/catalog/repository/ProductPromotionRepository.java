@@ -24,4 +24,11 @@ public interface ProductPromotionRepository extends JpaRepository<ProductPromoti
         and p.closedAt is null and p.startsAt<=:now and p.endsAt>:now
         """)
     List<ProductPromotion> findEffective(@Param("productId") Long productId,@Param("now") Instant now);
+
+    @Query("""
+        select p from ProductPromotion p where p.product.id in :productIds
+        and p.closedAt is null and p.startsAt<=:now and p.endsAt>:now
+        """)
+    List<ProductPromotion> findEffectiveForProducts(@Param("productIds") Collection<Long> productIds,
+                                                    @Param("now") Instant now);
 }

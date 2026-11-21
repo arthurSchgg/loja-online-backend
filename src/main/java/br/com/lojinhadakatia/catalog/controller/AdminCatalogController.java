@@ -58,10 +58,10 @@ public class AdminCatalogController {
 
 
     @GetMapping("/brands")
-    public List<LookupDto> brands() { return catalog.adminBrands(); }
+    public List<AdminLookupDto> brands() { return catalog.adminBrands(); }
 
     @GetMapping("/brands/{id}")
-    public LookupDto brand(@PathVariable Long id) { return catalog.adminBrand(id); }
+    public AdminLookupDto brand(@PathVariable Long id) { return catalog.adminBrand(id); }
 
     @PutMapping("/brands/{id}/activate")
     public ResponseEntity<Void> activateBrand(@PathVariable Long id) {
@@ -70,13 +70,13 @@ public class AdminCatalogController {
     }
 
     @PostMapping("/brands")
-    public ResponseEntity<LookupDto> createBrand(@Valid @RequestBody LookupRequest request) {
-        LookupDto result = catalog.addBrand(request);
+    public ResponseEntity<AdminLookupDto> createBrand(@Valid @RequestBody LookupRequest request) {
+        AdminLookupDto result = catalog.addBrand(request);
         return ResponseEntity.created(URI.create("/api/v1/admin/brands/" + result.id())).body(result);
     }
 
     @PutMapping("/brands/{id}")
-    public LookupDto updateBrand(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
+    public AdminLookupDto updateBrand(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
         return catalog.renameBrand(id, request);
     }
 
@@ -88,10 +88,10 @@ public class AdminCatalogController {
 
 
     @GetMapping("/categories")
-    public List<LookupDto> categories() { return catalog.adminCategories(); }
+    public List<AdminLookupDto> categories() { return catalog.adminCategories(); }
 
     @GetMapping("/categories/{id}")
-    public LookupDto category(@PathVariable Long id) { return catalog.adminCategory(id); }
+    public AdminLookupDto category(@PathVariable Long id) { return catalog.adminCategory(id); }
 
     @PutMapping("/categories/{id}/activate")
     public ResponseEntity<Void> activateCategory(@PathVariable Long id) {
@@ -100,13 +100,13 @@ public class AdminCatalogController {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity<LookupDto> createCategory(@Valid @RequestBody LookupRequest request) {
-        LookupDto result = catalog.addCategory(request);
+    public ResponseEntity<AdminLookupDto> createCategory(@Valid @RequestBody LookupRequest request) {
+        AdminLookupDto result = catalog.addCategory(request);
         return ResponseEntity.created(URI.create("/api/v1/admin/categories/" + result.id())).body(result);
     }
 
     @PutMapping("/categories/{id}")
-    public LookupDto updateCategory(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
+    public AdminLookupDto updateCategory(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
         return catalog.renameCategory(id, request);
     }
 

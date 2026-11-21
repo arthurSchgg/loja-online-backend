@@ -28,7 +28,7 @@ class PublicContractTest(unittest.TestCase):
             module.verify_products([{"id": 2, "effectivePrice": 9}, {"id": 3, "effectivePrice": 9}])
 
     def test_invalid_prices_ids_and_pagination_fail_closed(self):
-        for price in ["NaN", "Infinity", -1, None, "not-a-price"]:
+        for price in ["NaN", "Infinity", -1, 0, None, "not-a-price"]:
             with self.subTest(price=price), self.assertRaises(AssertionError):
                 module.verify_products([{"id": 1, "effectivePrice": price}])
         for id_value in [0, -1, "1", True]:
@@ -37,6 +37,14 @@ class PublicContractTest(unittest.TestCase):
         for page in [[], {}, {"content": [], "last": 0}]:
             with self.assertRaises(AssertionError):
                 module.verify_page(page)
+
+    def test_explicit_unknown_prices_are_last_and_not_available(self):
+        unknown={"id": 9, "price": None, "effectivePrice": None, "priceStatus": "ON_REQUEST", "available": False}
+        module.verify_products([{"id":1, "effectivePrice":8},unknown])
+        with self.assertRaises(AssertionError):
+            module.verify_products([unknown,{"id":1,"effectivePrice":8}])
+        with self.assertRaises(AssertionError):
+            module.verify_products([{**unknown,"available":True}])
 
     def test_public_experience_cannot_leak_result_keys(self):
         module.verify_experience_detail({"questions": [{"options": [{"id": 3, "label": "Floral"}]}]})

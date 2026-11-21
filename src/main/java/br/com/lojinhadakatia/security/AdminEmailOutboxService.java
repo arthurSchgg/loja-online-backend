@@ -15,6 +15,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import org.springframework.data.domain.PageRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Encrypts email bodies before persisting; no plaintext reset links in SQL.
@@ -22,6 +24,7 @@ import org.springframework.data.domain.PageRequest;
  */
 @Service
 public class AdminEmailOutboxService {
+    private static final Logger LOGGER=LoggerFactory.getLogger(AdminEmailOutboxService.class);
     private final AdminEmailOutboxRepository repository;
     private final ObjectProvider<JavaMailSender> mail;
     private final String sender;
@@ -88,9 +91,11 @@ public class AdminEmailOutboxService {
                 message.setText(decrypt(email.getEncryptedBody()));
                 mail.getObject().send(message);
                 email.sent();
-            } catch (org.springframework.mail.MailException ex) {
+            } catch (org.springframework.mail.MailException | IllegalStateException ex) {
                 // Do not log email contents or links. Retry with capped backoff.
+                // A damaged encrypted message must not prevent the rest of the queue.
                 email.failed();
+                LOGGER.warn("admin_email_delivery_failed id={} attempts={}",email.getId(),email.getAttempts());
             }
         }
     }

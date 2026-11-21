@@ -61,6 +61,10 @@ class PostgresCatalogPriceSortIntegrationTest {
     """.formatted(tag));
   long promoted=product("Produto promocional "+tag,brand,category,130);
   long regular=product("Produto regular "+tag,brand,category,40);
+  long pending=createAdmin("/api/v1/admin/products","""
+   {"name":"Sem preço %s","price":null,"priceStatus":"ON_REQUEST","brandId":%d,"categoryIds":[%d],
+    "available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
+   """.formatted(tag,brand,category));
   product("Fora categoria "+tag,brand,null,5);
   createAdmin("/api/v1/admin/products/"+promoted+"/promotions","""
     {"promotionalPrice":30,"startsAt":"2020-01-01T00:00:00Z",
@@ -83,5 +87,9 @@ class PostgresCatalogPriceSortIntegrationTest {
       .andExpect(jsonPath("$.totalElements").value(2))
       .andExpect(jsonPath("$.content[0].id").value(regular))
       .andExpect(jsonPath("$.content[0].effectivePrice").value(40));
+  mvc.perform(get("/api/v1/products").param("categoryId",String.valueOf(category))
+      .param("sort","price-desc").param("page","2").param("size","1"))
+      .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].id").value(pending))
+      .andExpect(jsonPath("$.content[0].priceStatus").value("ON_REQUEST"));
  }
 }

@@ -31,4 +31,9 @@ public class PublicCatalogController {
             false,sort,maxPrice);
     }
     @GetMapping("/products/{id}") public ProductResponse product(@PathVariable Long id){return catalog.published(id);}
+    @GetMapping("/products/{id}/related")
+    public List<ProductResponse> related(@PathVariable @Positive Long id,
+        @RequestParam(defaultValue="4") @Min(1) @Max(8) int limit){
+        return catalog.related(id,limit);
+    }
 }

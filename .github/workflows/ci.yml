@@ -16,6 +16,8 @@ jobs:
           cache: maven
       - name: Validate Java package layout and internal source imports
         run: python3 scripts/check_java_references.py
+      - name: Verify the same-origin admin bundle manifest and public separation
+        run: python3 scripts/verify_admin_bundle.py
       - name: Test staging login bootstrap readiness safeguards
         run: python3 -m unittest discover -s scripts -p 'test_staging_smoke_login.py'
       - name: Validate public storefront JSON contract and redaction helpers

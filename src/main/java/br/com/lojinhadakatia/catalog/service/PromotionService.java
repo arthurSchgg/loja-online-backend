@@ -7,6 +7,9 @@ import br.com.lojinhadakatia.shared.exception.*;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.List;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -80,14 +83,49 @@ public class PromotionService {
     public boolean hasPromotions(Long productId){return promotions.existsByProductId(productId);}
 
     public BigDecimal effectivePrice(Product product){
-        List<ProductPromotion> active=promotions.findEffective(product.getId(),Instant.now());
-        if(active.size()>1)throw new IllegalStateException("Promoções concorrentes para o produto.");
-        return active.isEmpty()?product.getPrice():active.get(0).getPromotionalPrice();
+        return effectivePrice(product,Instant.now());
+    }
+
+    public BigDecimal effectivePrice(Product product,Instant now){
+        if(!product.hasConfirmedPrice())return null;
+        return resolveEffectivePrice(product,activePrices(List.of(product.getId()),now));
+    }
+
+    /** Resolve every visible row with one promotion query and the same instant as the SQL filter. */
+    public Map<Long,BigDecimal> activePrices(Collection<Long> productIds,Instant now){
+        if(productIds.isEmpty())return Map.of();
+        Map<Long,BigDecimal> active=new HashMap<>();
+        for(ProductPromotion promotion:promotions.findEffectiveForProducts(productIds,now)){
+            if(active.putIfAbsent(promotion.getProduct().getId(),promotion.getPromotionalPrice())!=null)
+                throw new IllegalStateException("Promoções concorrentes para o produto.");
+        }
+        return active;
+    }
+
+    public BigDecimal resolveEffectivePrice(Product product,Map<Long,BigDecimal> activePrices){
+        if(!product.hasConfirmedPrice())return null;
+        BigDecimal discount=activePrices.get(product.getId());
+        // Do not display a legacy inconsistent promotion above the base price.
+        return discount!=null && discount.signum()>0 && discount.compareTo(product.getPrice())<0
+            ? discount : product.getPrice();
+    }
+
+    /** The caller holds the same product write lock used by promotion and stock operations. */
+    public void validateBasePriceChange(Product product,BigDecimal nextPrice,Instant now){
+        BigDecimal previous=product.getPrice();
+        if(previous==null ? nextPrice==null : nextPrice!=null && previous.compareTo(nextPrice)==0)return;
+        boolean incompatible=promotions.findByProductIdOrderByStartsAtAsc(product.getId()).stream()
+            .anyMatch(promotion->promotion.getClosedAt()==null && promotion.getEndsAt().isAfter(now) &&
+                (nextPrice==null || promotion.getPromotionalPrice().compareTo(nextPrice)>=0));
+        if(incompatible)
+            throw new BusinessException("Revise as promoções ativas ou futuras antes de alterar o preço base.");
     }
 
     private void validate(Product product,PromotionRequest r,Long except){
         if(!r.endsAt().isAfter(r.startsAt()))
             throw new BusinessException("O fim da promoção deve ser posterior ao início.");
+        if(!product.hasConfirmedPrice())
+            throw new BusinessException("Informe um preço confirmado para cadastrar uma promoção.");
         if(r.promotionalPrice().compareTo(product.getPrice())>=0)
             throw new BusinessException("Preço promocional deve ser inferior ao preço base.");
         if(promotions.countOverlaps(product.getId(),r.startsAt(),r.endsAt(),except)>0)

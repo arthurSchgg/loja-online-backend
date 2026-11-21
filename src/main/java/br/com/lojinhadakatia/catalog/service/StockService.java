@@ -23,7 +23,7 @@ public class StockService {
         var product = products.findById(productId)
             .orElseThrow(() -> new ResourceNotFoundException("Produto não encontrado."));
         return new StockBalanceResponse(productId, product.getStockQuantity(),
-            product.isAvailable() && product.getStockQuantity() > 0);
+            product.isAvailableForConsultation());
     }
 
     public Page<StockMovementResponse> history(Long productId, Pageable pageable) {

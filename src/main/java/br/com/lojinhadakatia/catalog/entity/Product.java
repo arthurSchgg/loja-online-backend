@@ -9,7 +9,8 @@ public class Product {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY) private Long id;
     @Column(nullable=false,length=180) private String name;
     @Column(length=4000) private String description;
-    @Column(nullable=false,precision=12,scale=2) private BigDecimal price;
+    // Null is the native representation of a price awaiting confirmation.
+    @Column(precision=12,scale=2) private BigDecimal price;
     @Column(nullable=false) private boolean available=true;
     @Column(nullable=false) private boolean published=false;
     @Column(name="stock_quantity", nullable=false) private int stockQuantity=0;
@@ -29,6 +30,8 @@ public class Product {
     @PreUpdate void updated(){updatedAt=Instant.now();}
     public Long getId(){return id;} public String getName(){return name;} public String getDescription(){return description;}
     public BigDecimal getPrice(){return price;} public int getStockQuantity(){return stockQuantity;}
+    public boolean hasConfirmedPrice(){return price!=null && price.signum()>0;}
+    public boolean isAvailableForConsultation(){return available && stockQuantity>0 && hasConfirmedPrice();}
     public void setStockQuantity(int quantity){if(quantity<0)throw new IllegalArgumentException("Estoque negativo.");this.stockQuantity=quantity;} public boolean isAvailable(){return available;} public boolean isPublished(){return published;}
     public Brand getBrand(){return brand;} public Set<Category> getCategories(){return categories;} public List<ProductImage> getImages(){return images;}
     public Instant getCreatedAt(){return createdAt;} public Instant getUpdatedAt(){return updatedAt;}
