@@ -106,12 +106,13 @@ public class CatalogService {
                 predicates.add(available?cb.and(manuallyAvailable,inStock):cb.or(cb.not(manuallyAvailable),cb.not(inStock)));
             }
             if(!admin&&(priceOrder||maxPrice!=null)){
-                // At most one active promotion per product is enforced when promotions
+                // Closed promotions are excluded from public price filters/sorting, just as\n                // promotionService.effectivePrice excludes them when building each DTO.\n                // At most one active promotion per product is enforced when promotions
                 // are created/updated; no memory-side ordering of incomplete pages.
                 var active=cq.subquery(BigDecimal.class);
                 var promotion=active.from(ProductPromotion.class);
                 active.select(promotion.get("promotionalPrice"));
                 active.where(cb.equal(promotion.get("product"),root),
+                    cb.isNull(promotion.get("closedAt")),
                     cb.lessThanOrEqualTo(promotion.<Instant>get("startsAt"),now),
                     cb.greaterThan(promotion.<Instant>get("endsAt"),now));
                 var effective=cb.coalesce(active,root.<BigDecimal>get("price"));

@@ -80,6 +80,11 @@ class ProductPromotionIntegrationTest {
         mvc.perform(get("/api/v1/admin/products/"+id+"/promotions")
             .with(user("tester").roles("ADMIN")))
           .andExpect(status().isOk()).andExpect(jsonPath("$.length()").value(1));
+        // Public max-price must use the same active promotional price as product details.
+        mvc.perform(get("/api/v1/products").param("maxPrice","20.00").param("sort","price-asc"))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(1))
+          .andExpect(jsonPath("$.content[0].id").value(id))
+          .andExpect(jsonPath("$.content[0].effectivePrice").value(19.90));
         mvc.perform(delete("/api/v1/admin/products/"+id+"/promotions/"+promoId)
             .with(user("tester").roles("ADMIN")).with(csrf()))
           .andExpect(status().isConflict());
@@ -99,6 +104,13 @@ class ProductPromotionIntegrationTest {
           .andExpect(status().isConflict());
         mvc.perform(get("/api/v1/products/"+id))
           .andExpect(status().isOk()).andExpect(jsonPath("$.effectivePrice").value(29.90));
+        // Closing a promotion removes the discount from ALL public price operations.
+        // Without closedAt in the correlated query this incorrectly returns the product.
+        mvc.perform(get("/api/v1/products").param("maxPrice","20.00").param("sort","price-asc"))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(0));
+        mvc.perform(get("/api/v1/products").param("sort","price-desc"))
+          .andExpect(status().isOk()).andExpect(jsonPath("$.content[0].id").value(id))
+          .andExpect(jsonPath("$.content[0].effectivePrice").value(29.90));
     }
 
     @Test void rejectsInvalidPricePeriodAndAnonymousCreation() throws Exception {
