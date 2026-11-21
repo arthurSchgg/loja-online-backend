@@ -57,7 +57,7 @@ docker compose --env-file .env.staging -f compose.staging.yaml up --build -d
 - HTTPS usa autoridade certificadora local do Caddy; confie explicitamente no certificado antes de acessar no navegador. Consulte o guia para exportar o certificado e verificar com `curl --cacert`.
 - Porta publicada somente em `127.0.0.1`; backend/PostgreSQL não ficam expostos e o Swagger está desativado.
 
-Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações, certificados, verificação dos dois Compose, logs, parada sem perda de dados e limitações de segurança. Não há deploy externo nem frontend neste repositório.
+Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para os ambientes locais. A implantação de revisão no Render usa Neon e uma branch de deploy separada; o bundle administrativo versionado é construído a partir do repositório frontend e servido na mesma origem da API. Veja [docs/ADMIN-SAME-ORIGIN.md](docs/ADMIN-SAME-ORIGIN.md).
 
 **Consulta real de preços e categorias:** `GET /api/v1/products` aceita `q`, `brandId`, `categoryId`, `available`, `maxPrice`, `sort=recent|name|price-asc|price-desc`, `page` e `size`. A ordenação por preço usa a promoção vigente e pagina no banco. O preço deve ser reconfirmado no WhatsApp, pois pode mudar entre visitas.
 
@@ -67,6 +67,7 @@ Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações
 |---|---|---|
 | GET | `/api/v1/products` | Produtos publicados, busca e filtros |
 | GET | `/api/v1/products/{id}` | Detalhes do produto publicado |
+| GET | `/api/v1/products/{id}/related` | Produtos publicados relacionados por marca/categoria |
 | GET | `/api/v1/products/{id}/whatsapp` | Link contextualizado para WhatsApp |
 | GET | `/api/v1/brands` | Marcas ativas |
 | GET | `/api/v1/categories` | Categorias ativas |
@@ -81,6 +82,8 @@ Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações
 | GET | `/api/v1/campaigns` | Banners ativos |
 
 Filtros de produtos: `q`, `brandId`, `categoryId`, `available`, `page`, `size` (máximo 50). Ofertas aceitam `type=CANDLE|WORKSHOP|RENTAL`.
+
+**Preço a confirmar:** a revisão da issue #190 usa `priceStatus=ON_REQUEST` e preço nulo em vez do antigo zero técnico. Esses itens podem ficar na vitrine, mas não podem liberar WhatsApp de produto; não participam de teto de preço e ficam após preços conhecidos na ordenação. A migração V18 precisa ser homologada e aplicada somente em release autorizada. V19 acrescenta índice de busca por categoria.
 
 ## Endpoints de administração
 
