@@ -61,7 +61,11 @@ public class WhatsAppService {
                 if (request.expectedPrice() == null ||
                     product.effectivePrice().compareTo(request.expectedPrice()) != 0)
                     throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
-                return forProduct(request.id());
+                // Use the same validated snapshot for the link. Re-querying here could
+                // observe a newer price/availability between validation and response.
+                return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() +
+                    ". Preço atual: " +
+                    NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(product.effectivePrice()) + ".");
             }
             case OFFERING -> {
                 var offering = offeringService.publicOne(request.id());
@@ -72,7 +76,12 @@ public class WhatsAppService {
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
                 var selections = offeringService.validateCustomizations(request.id(), request.customizations());
-                if (selections.isEmpty()) return forOffering(request.id());
+                if (selections.isEmpty()) {
+                    String formatted = actual == null ? "Valor sob consulta" :
+                        NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
+                    return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() +
+                        ". " + formatted + ".");
+                }
                 String formatted = actual == null ? "Valor sob consulta" :
                     NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
                 String options = selections.entrySet().stream()
