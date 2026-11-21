@@ -55,12 +55,15 @@ class AdminLookupRegressionTest {
         mvc.perform(get("/api/v1/brands")).andExpect(jsonPath("$").isEmpty());
         mvc.perform(get("/api/v1/admin/brands")
                 .with(user("tester").roles("ADMIN")).with(csrf()))
-            .andExpect(jsonPath("$[0].name").value("Marca Temporaria"));
+            .andExpect(jsonPath("$[0].name").value("Marca Temporaria"))
+            .andExpect(jsonPath("$[0].active").value(false));
         mvc.perform(put("/api/v1/admin/brands/" + id + "/activate")
                 .with(user("tester").roles("ADMIN")).with(csrf()))
             .andExpect(status().isNoContent());
         mvc.perform(get("/api/v1/brands"))
             .andExpect(jsonPath("$[0].name").value("Marca Temporaria"));
+        mvc.perform(get("/api/v1/admin/brands/"+id).with(user("tester").roles("ADMIN")))
+            .andExpect(jsonPath("$.active").value(true));
     }
 
     @Test

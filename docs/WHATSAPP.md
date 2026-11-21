@@ -8,9 +8,10 @@ O sistema não cria vendas nem processa pagamentos. Ele pode preparar links de c
 
 - `GET /api/v1/products/{id}/whatsapp`: retorna mensagem sobre o produto publicado.
 - `GET /api/v1/offerings/{id}/whatsapp`: retorna mensagem sobre a oferta publicada.
+- `POST /api/v1/whatsapp/confirm`: rota usada pela vitrine, com `type`, `id`, `expectedPrice` e `customizations`. Valida a seleção atual antes de retornar o link.
 
 As respostas possuem `url` (formato `https://wa.me/<telefone>?text=<mensagem codificada>`) e `message`.
 
-**Condições:** o produto ou serviço precisa estar publicado, e `whatsapp` precisa ter sido cadastrado no endpoint administrativo de contato. Sem contato, a API retorna conflito (409), explicitando configuração ausente. Objetos ocultos ou inexistentes retornam 404.
+**Condições:** o produto ou serviço precisa estar publicado e disponível, e `whatsapp` precisa ter sido cadastrado no endpoint administrativo de contato. Produtos precisam de preço positivo confirmado; serviços podem ter valor sob consulta. A confirmação rejeita divergência de preço ou opção de vela indisponível usando um único conjunto validado de preço, disponibilidade e opções. Sem contato ou condição comercial válida, a API retorna conflito (409). Objetos ocultos ou inexistentes retornam 404.
 
 A API apenas fornece o link; o navegador/cliente decide quando abri-lo. O backend não armazena mensagens e não confirma se alguma conversa ou venda ocorreu.

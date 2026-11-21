@@ -17,10 +17,12 @@ public class AdminRecoveryLimiter {
         Instant now = Instant.now();
         String ip = "ip:" + normalize(remoteIp);
         String account = "email:" + normalize(email);
-        if (entries.size() >= MAX_KEYS) {
+        int additional=(entries.containsKey(ip)?0:1)+(entries.containsKey(account)?0:1);
+        if (entries.size()+additional > MAX_KEYS) {
             entries.entrySet().removeIf(e -> e.getValue().windowStart.plusSeconds(900).isBefore(now));
             // Fail closed when under deliberate key exhaustion rather than permit spam.
-            if (entries.size() >= MAX_KEYS && (!entries.containsKey(ip) || !entries.containsKey(account)))
+            additional=(entries.containsKey(ip)?0:1)+(entries.containsKey(account)?0:1);
+            if (entries.size()+additional > MAX_KEYS)
                 return false;
         }
         if (tooMany(ip, now) || tooMany(account, now)) return false;

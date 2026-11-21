@@ -1,5 +1,7 @@
 # Checklist de entrega técnica e liberação — Lojinha da Kátia
 
+> **Atualização 21/11/2026:** ver [NATIVE-PRICE-RELEASE.md](NATIVE-PRICE-RELEASE.md) para a revisão de produção, as novas migrations V18/V19, os 131 testes locais aprovados e o plano de release. Este checklist preserva os gates históricos de homologação.
+
 > **Status: NO-GO para produção** (revisão em 10/11/2026). A implementação pode estar pronta para homologação sem estar autorizada a receber visitantes reais. Nenhuma conta AWS, domínio, SMTP comercial ou aprovação da proprietária pode ser presumida.
 
 ## Fontes oficiais

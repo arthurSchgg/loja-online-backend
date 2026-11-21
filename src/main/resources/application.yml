@@ -11,12 +11,22 @@ spring:
       ddl-auto: validate
     properties:
       hibernate:
+        default_batch_fetch_size: 32
         jdbc:
           time_zone: UTC
   flyway:
     enabled: true
+  mail:
+    properties:
+      "[mail.smtp.connectiontimeout]": 5000
+      "[mail.smtp.timeout]": 5000
+      "[mail.smtp.writetimeout]": 5000
 server:
-  port: ${SERVER_PORT:8080}
+  port: ${SERVER_PORT:${PORT:8080}}
+  compression:
+    enabled: true
+    min-response-size: 1024
+    mime-types: application/json,application/problem+json,text/plain,text/html,text/css,application/javascript
   error:
     include-message: never
   servlet:

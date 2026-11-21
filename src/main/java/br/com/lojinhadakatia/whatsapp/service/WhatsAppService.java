@@ -2,6 +2,7 @@ package br.com.lojinhadakatia.whatsapp.service;
 
 import br.com.lojinhadakatia.catalog.service.CatalogService;
 import br.com.lojinhadakatia.catalog.dto.ProductResponse;
+import br.com.lojinhadakatia.catalog.dto.ProductPriceStatus;
 import br.com.lojinhadakatia.offering.dto.OfferingResponse;
 import br.com.lojinhadakatia.offering.service.OfferingService;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
@@ -38,7 +39,7 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para produtos atualmente publicados. */
     public WhatsAppLinkResponse forProduct(Long productId) {
         var product = catalogService.published(productId);
-        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+        requireConfirmedProduct(product);
         return productLink(product);
     }
 
@@ -56,7 +57,7 @@ public class WhatsAppService {
                 if (request.customizations()!=null && !request.customizations().isEmpty())
                     throw new BusinessException("Produtos não aceitam opções de velas.");
                 var product = catalogService.published(request.id());
-                if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+                requireConfirmedProduct(product);
                 if (request.expectedPrice() == null ||
                     product.effectivePrice().compareTo(request.expectedPrice()) != 0)
                     throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
@@ -71,7 +72,7 @@ public class WhatsAppService {
                 if ((actual == null) != (expected == null) ||
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
-                var selections = offeringService.validateCustomizations(request.id(), request.customizations());
+                var selections = offeringService.validateCustomizations(offering, request.customizations());
                 if (selections.isEmpty()) return offeringLink(offering);
                 String formatted = actual == null ? "Valor sob consulta" :
                     NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
@@ -83,6 +84,13 @@ public class WhatsAppService {
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
+    }
+
+    private void requireConfirmedProduct(ProductResponse product) {
+        if (product.priceStatus()==ProductPriceStatus.ON_REQUEST ||
+            product.effectivePrice()==null || product.effectivePrice().signum()<=0)
+            throw new BusinessException("O preço deste produto ainda não foi confirmado.");
+        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
     }
 
     private WhatsAppLinkResponse productLink(ProductResponse product) {

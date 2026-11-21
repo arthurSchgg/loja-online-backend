@@ -15,10 +15,10 @@ public class AdminEmailChangeController {
     }
 
     public record RequestEmailChange(
-        @NotBlank String currentPassword,
+        @NotBlank @Size(max=128) String currentPassword,
         @NotBlank @Email @Size(max = 254) String newEmail
     ) {}
-    public record ConfirmEmailChange(@NotBlank String token) {}
+    public record ConfirmEmailChange(@NotBlank @Size(max=256) String token) {}
 
     @PostMapping("/api/v1/admin/security/change-email")
     public ResponseEntity<Void> request(@Valid @RequestBody RequestEmailChange body, Principal principal) {
