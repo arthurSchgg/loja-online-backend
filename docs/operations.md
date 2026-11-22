@@ -10,7 +10,7 @@
 ## Backups aprovados
 - Backups PostgreSQL diários com retenção de sete diários e quatro semanais; armazenamento fora do volume principal.
 - Cópias externas cifradas semanais com quatro retenções, chave separada; testes mensais de restauração isolada.
-- Os scripts existentes executam backup e restore sob demanda: **não comprovam agendamento, retenção, cópia externa nem operação em produção**.
+- Os scripts de backup e restore sob demanda e a rotina diária/semanal com retenção estão implementados e testados localmente. **O agendamento real depende do equipamento, disco externo e chave pública autorizados**. Ativação e verificação em [BACKUP-RECOVERY.md](BACKUP-RECOVERY.md). A janela de recuperação e o snapshot pré-release do Neon não substituem uma cópia independente.
 
 ## Log e incidentes
 - Logs técnicos com rotação e retenção de até 30 dias, acesso restrito, sem segredos.
