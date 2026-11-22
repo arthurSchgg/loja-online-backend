@@ -10,6 +10,7 @@ import br.com.lojinhadakatia.store.entity.StoreInformation;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppConfirmationRequest;
 import br.com.lojinhadakatia.whatsapp.service.WhatsAppService;
+import br.com.lojinhadakatia.whatsapp.service.MessageTemplateService;
 import br.com.lojinhadakatia.shared.exception.BusinessException;
 import java.math.BigDecimal;
 import java.util.List;
@@ -32,7 +33,11 @@ class WhatsAppSingleSnapshotTest {
         var offerings = mock(OfferingService.class);
         when(store.findById(1L)).thenReturn(Optional.of(
             new StoreInformation("Lojinha da Kátia", null, null, "5547999999999", null, null)));
-        return new Fixture(new WhatsAppService(store,catalog,offerings),store,catalog,offerings);
+        var templates=mock(MessageTemplateService.class);
+        when(templates.render(any(),anyString(),anyString(),anyString())).thenAnswer(call->
+            MessageTemplateService.expand(MessageTemplateService.defaultTemplate(call.getArgument(0)),
+                call.getArgument(1),call.getArgument(2),call.getArgument(3)));
+        return new Fixture(new WhatsAppService(store,catalog,offerings,templates),store,catalog,offerings);
     }
 
     @Test

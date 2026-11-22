@@ -27,13 +27,15 @@ public class WhatsAppService {
     private final StoreInformationRepository storeRepository;
     private final CatalogService catalogService;
     private final OfferingService offeringService;
+    private final MessageTemplateService templates;
 
     public WhatsAppService(StoreInformationRepository storeRepository,
                            CatalogService catalogService,
-                           OfferingService offeringService) {
+                           OfferingService offeringService,MessageTemplateService templates) {
         this.storeRepository = storeRepository;
         this.catalogService = catalogService;
         this.offeringService = offeringService;
+        this.templates = templates;
     }
 
     /** Uma consulta só é permitida para produtos atualmente publicados. */
@@ -79,8 +81,8 @@ public class WhatsAppService {
                 String options = selections.entrySet().stream()
                     .map(item -> item.getKey()+": "+item.getValue())
                     .collect(java.util.stream.Collectors.joining("; "));
-                return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() +
-                    ". " + formatted + ". Personalização: " + options + ". Preço final a confirmar no WhatsApp.");
+                return buildLink(templates.render(MessageTemplateService.Kind.CANDLE,offering.title(),formatted,
+                    " Personalização: " + options + ". Preço final a confirmar no WhatsApp."));
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
@@ -94,15 +96,15 @@ public class WhatsAppService {
     }
 
     private WhatsAppLinkResponse productLink(ProductResponse product) {
-        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name()
-            + ". Preço atual: " + NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
-            .format(product.effectivePrice()) + ".");
+        return buildLink(templates.render(MessageTemplateService.Kind.PRODUCT,product.name(),
+            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(product.effectivePrice()),""));
     }
 
     private WhatsAppLinkResponse offeringLink(OfferingResponse offering) {
         String formatted = offering.price() == null ? "Valor sob consulta" :
             NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
-        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + formatted + ".");
+        return buildLink(templates.render(MessageTemplateService.Kind.valueOf(offering.type().name()),
+            offering.title(),formatted,""));
     }
 
     private WhatsAppLinkResponse buildLink(String message) {

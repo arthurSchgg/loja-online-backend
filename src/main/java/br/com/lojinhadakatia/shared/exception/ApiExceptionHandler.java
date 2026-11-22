@@ -15,6 +15,10 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 /** Padroniza as respostas HTTP sem divulgar detalhes da infraestrutura. */
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    ResponseEntity<ProblemDetail> oversizedPhoto(RuntimeException ex) {
+        return problem(HttpStatus.PAYLOAD_TOO_LARGE,"Foto muito grande","Escolha uma foto de até 8 MB.");
+    }
 
     @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
     ResponseEntity<ProblemDetail> invalidCurrentPassword(Exception ex) {
