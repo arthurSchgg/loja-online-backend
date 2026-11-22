@@ -21,6 +21,8 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    # Temporary rollback-compatible bridge: deploy before enabling V18/V19.
+    target: '17'
 springdoc:
   api-docs:
     enabled: false
