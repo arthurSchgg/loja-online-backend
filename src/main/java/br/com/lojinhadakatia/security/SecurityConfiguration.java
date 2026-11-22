@@ -112,6 +112,7 @@ public class SecurityConfiguration {
                     "/api/v1/offerings", "/api/v1/offerings/*",
                     "/api/v1/offerings/*/whatsapp",
                     "/api/v1/content-sections", "/api/v1/campaigns",
+                    "/api/v1/media/*", "/api/v1/storefront/featured",
                     "/actuator/health", "/actuator/info",
                     "/v3/api-docs", "/v3/api-docs/**",
                     "/swagger-ui/**", "/swagger-ui.html").permitAll()
