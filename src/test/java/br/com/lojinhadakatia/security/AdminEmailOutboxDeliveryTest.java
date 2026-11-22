@@ -21,8 +21,10 @@ class AdminEmailOutboxDeliveryTest {
         when(provider.getIfAvailable()).thenReturn(sender);
         when(provider.getObject()).thenReturn(sender);
         // A deterministic test-only key, never a deployment credential.
-        var service=new AdminEmailOutboxService(repository,provider,
-            Base64.getEncoder().encodeToString(new byte[32]),"no-reply@example.invalid");
+        var transport=new AdminMailTransport(provider,new com.fasterxml.jackson.databind.ObjectMapper(),
+            "smtp","no-reply@example.invalid","",null);
+        var service=new AdminEmailOutboxService(repository,transport,
+            Base64.getEncoder().encodeToString(new byte[32]));
         service.enqueue("recipient@example.invalid","Notificação fictícia","Mensagem de teste");
         var captured=ArgumentCaptor.forClass(AdminEmailOutbox.class);
         verify(repository).save(captured.capture());

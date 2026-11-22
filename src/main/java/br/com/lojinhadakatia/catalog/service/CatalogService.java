@@ -23,8 +23,9 @@ public class CatalogService {
     private final CategoryRepository categories;
     private final ProductStockMovementRepository stockMovements;
     private final PromotionService promotionService;
-    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService){
-        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;
+    private final CatalogPriceStorage priceStorage;
+    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService,CatalogPriceStorage priceStorage){
+        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;this.priceStorage=priceStorage;
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
@@ -192,10 +193,11 @@ public class CatalogService {
     public ProductResponse save(ProductRequest request){
         validatePublicationImages(request);
         validatePricing(request);
+        BigDecimal storedPrice=priceStorage.toStoredPrice(request.price());
         Brand brand=activeBrand(request.brandId());
         Set<Category> selected=activeCategories(request.categoryIds());
-        Product product=new Product(request.name().trim(),request.description(),request.price(),brand);
-        product.update(request.name().trim(),request.description(),request.price(),brand,selected,request.available(),request.published());
+        Product product=new Product(request.name().trim(),request.description(),storedPrice,brand);
+        product.update(request.name().trim(),request.description(),storedPrice,brand,selected,request.available(),request.published());
         product.replaceImages(images(request.images()));
         Product saved=products.saveAndFlush(product);
         return map(saved,true,promotionService.effectivePrice(saved));
@@ -204,10 +206,12 @@ public class CatalogService {
     public ProductResponse update(Long id,ProductRequest request){
         validatePublicationImages(request);
         validatePricing(request);
+        // Acquire a compatible table lock before locking an existing row.
+        BigDecimal storedPrice=priceStorage.toStoredPrice(request.price());
         // Serialize product edits with stock and promotion changes on the same row.
         Product product=lockProduct(id);
         promotionService.validateBasePriceChange(product,request.price(),Instant.now());
-        product.update(request.name().trim(),request.description(),request.price(),activeBrand(request.brandId()),activeCategories(request.categoryIds()),request.available(),request.published());
+        product.update(request.name().trim(),request.description(),storedPrice,activeBrand(request.brandId()),activeCategories(request.categoryIds()),request.available(),request.published());
         product.replaceImages(images(request.images()));
         Product saved=products.saveAndFlush(product);
         return map(saved,true,promotionService.effectivePrice(saved));
@@ -243,8 +247,14 @@ public class CatalogService {
         return requests.stream().map(item->{
             URI uri;
             try {uri=URI.create(item.url());}catch(Exception e){throw new BusinessException("URL de imagem inválida.");}
-            if(!"https".equalsIgnoreCase(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)
-                throw new BusinessException("A imagem precisa ser uma URL pública HTTPS.");
+            // Local, bundled product photos are served by the same public frontend.
+            // Strict allowlist rejects traversal, query parameters and remote schemes.
+            boolean bundled=item.url().matches(
+                "assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\.webp");
+            boolean external="https".equalsIgnoreCase(uri.getScheme())&&uri.getHost()!=null
+                &&uri.getUserInfo()==null&&uri.getPort()==-1;
+            if(!bundled&&!external)
+                throw new BusinessException("Imagem deve ser HTTPS ou um arquivo local do catálogo.");
             return new ProductImage(item.url(),item.position(),item.altText());
         }).toList();
     }

@@ -6,10 +6,7 @@ import java.util.Base64;
 import javax.crypto.Cipher;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,18 +23,15 @@ import org.slf4j.LoggerFactory;
 public class AdminEmailOutboxService {
     private static final Logger LOGGER=LoggerFactory.getLogger(AdminEmailOutboxService.class);
     private final AdminEmailOutboxRepository repository;
-    private final ObjectProvider<JavaMailSender> mail;
-    private final String sender;
+    private final AdminMailTransport transport;
     private final byte[] key;
     private final SecureRandom random = new SecureRandom();
 
     public AdminEmailOutboxService(AdminEmailOutboxRepository repository,
-            ObjectProvider<JavaMailSender> mail,
-            @Value("${app.security.email-outbox-key:}") String configuredKey,
-            @Value("${app.security.mail-from:}") String sender) {
+            AdminMailTransport transport,
+            @Value("${app.security.email-outbox-key:}") String configuredKey) {
         this.repository = repository;
-        this.mail = mail;
-        this.sender = sender;
+        this.transport = transport;
         byte[] decoded;
         try { decoded = Base64.getDecoder().decode(configuredKey); }
         catch (IllegalArgumentException ex) { decoded = new byte[0]; }
@@ -45,7 +39,7 @@ public class AdminEmailOutboxService {
     }
 
     public boolean configured() {
-        return key.length == 32 && !sender.isBlank() && mail.getIfAvailable() != null;
+        return key.length == 32 && transport.configured();
     }
 
     @Transactional
@@ -84,12 +78,7 @@ public class AdminEmailOutboxService {
         if (!configured()) return;
         for (AdminEmailOutbox email : repository.pending(Instant.now(), PageRequest.of(0, 10))) {
             try {
-                SimpleMailMessage message = new SimpleMailMessage();
-                message.setFrom(sender);
-                message.setTo(email.getRecipient());
-                message.setSubject(email.getSubject());
-                message.setText(decrypt(email.getEncryptedBody()));
-                mail.getObject().send(message);
+                transport.send(email,decrypt(email.getEncryptedBody()));
                 email.sent();
             } catch (org.springframework.mail.MailException | IllegalStateException ex) {
                 // Do not log email contents or links. Retry with capped backoff.

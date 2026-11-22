@@ -14,9 +14,9 @@ Usa `application/json`, paginação Spring Data, campos em camelCase. Erros são
 - `categoryIds`: conjunto de IDs de categorias ativas (pode ser vazio).
 - `available`: disponibilidade **manual** configurada pela administradora no cadastro.
 - `published`: publicação.
-- `images`: rascunhos podem ter galeria vazia; **produtos publicados exigem 1 a 12 imagens**. Cada item inclui `url` HTTPS, `position` >= 0 e `altText` opcional. O backend responde `409 Conflict` se a administradora tentar criar ou publicar um produto sem imagem.
+- `images`: rascunhos podem ter galeria vazia; **produtos publicados exigem 1 a 12 imagens**. Cada item inclui `url` HTTPS ou caminho relativo permitido `assets/images/catalogo/<marca>/<arquivo>.webp`, `position` >= 0 e `altText` opcional. O backend responde `409 Conflict` se a administradora tentar criar ou publicar um produto sem imagem.
 
-A URL de imagem é pública e não é carregada pelo servidor; não armazene dados secretos na URL.
+A URL de imagem é pública e não é carregada pelo servidor; não armazene dados secretos na URL. Caminhos relativos devem apontar para arquivos WebP incluídos no build público do frontend na **mesma origem**; não permitem `..`, query ou extensões arbitrárias.
 
 ### Resposta e disponibilidade
 
