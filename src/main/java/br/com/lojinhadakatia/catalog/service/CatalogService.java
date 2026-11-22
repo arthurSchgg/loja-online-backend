@@ -4,8 +4,8 @@ import br.com.lojinhadakatia.catalog.dto.*;
 import br.com.lojinhadakatia.catalog.entity.*;
 import br.com.lojinhadakatia.catalog.repository.*;
 import br.com.lojinhadakatia.shared.exception.*;
+import br.com.lojinhadakatia.media.ImageReferenceValidator;
 import jakarta.persistence.criteria.Join;
-import java.net.URI;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.*;
@@ -24,8 +24,9 @@ public class CatalogService {
     private final ProductStockMovementRepository stockMovements;
     private final PromotionService promotionService;
     private final CatalogPriceStorage priceStorage;
-    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService,CatalogPriceStorage priceStorage){
-        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;this.priceStorage=priceStorage;
+    private final ImageReferenceValidator imageReferences;
+    public CatalogService(ProductRepository products,BrandRepository brands,CategoryRepository categories,ProductStockMovementRepository stockMovements,PromotionService promotionService,CatalogPriceStorage priceStorage,ImageReferenceValidator imageReferences){
+        this.products=products;this.brands=brands;this.categories=categories;this.stockMovements=stockMovements;this.promotionService=promotionService;this.priceStorage=priceStorage;this.imageReferences=imageReferences;
     }
     public List<LookupDto> brands(){return brands.findByActiveTrueOrderByNameAsc().stream().map(b->new LookupDto(b.getId(),b.getName())).toList();}
     public List<LookupDto> categories(){return categories.findByActiveTrueOrderByNameAsc().stream().map(c->new LookupDto(c.getId(),c.getName())).toList();}
@@ -83,11 +84,16 @@ public class CatalogService {
      */
     public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,
                                         Pageable pageable,boolean admin,String order,BigDecimal maxPrice){
+        return search(query,brandId,categoryId,available,pageable,admin,order,maxPrice,null);
+    }
+    public Page<ProductResponse> search(String query,Long brandId,Long categoryId,Boolean available,
+                                        Pageable pageable,boolean admin,String order,BigDecimal maxPrice,Boolean published){
         final boolean priceOrder=!admin&&("price-asc".equals(order)||"price-desc".equals(order));
         final Instant now=Instant.now();
         Specification<Product> filter=(root,cq,cb)->{
             var predicates=new ArrayList<jakarta.persistence.criteria.Predicate>();
             if(!admin)predicates.add(cb.isTrue(root.get("published")));
+            else if(published!=null)predicates.add(cb.equal(root.get("published"),published));
             if (query != null && !query.isBlank()) {
                 // Escapes LIKE wildcards and searches both title and description.
                 String term = query.trim().toLowerCase(Locale.ROOT)
@@ -153,6 +159,14 @@ public class CatalogService {
     public ProductResponse adminFind(Long id){
         Product product=findProduct(id);
         return map(product,true,promotionService.effectivePrice(product));
+    }
+    public List<ProductResponse> selectedProducts(List<Long> ids,boolean admin){
+        var byId=new HashMap<Long,Product>();
+        for(Product product:products.findAllById(ids))byId.put(product.getId(),product);
+        var selected=ids.stream().map(byId::get).filter(Objects::nonNull)
+            .filter(p->admin||p.isPublished()).toList();
+        Map<Long,BigDecimal> prices=activePrices(selected,Instant.now());
+        return selected.stream().map(p->map(p,admin,promotionService.resolveEffectivePrice(p,prices))).toList();
     }
 
     /** Search the whole published catalog, not just the first page shown in the browser. */
@@ -243,20 +257,8 @@ public class CatalogService {
             throw new BusinessException("Cadastre ao menos uma imagem antes de publicar o produto.");
     }
     private List<ProductImage> images(List<ImageRequest> requests){
-        if(requests.size()>12)throw new BusinessException("Limite de 12 imagens por produto.");
-        return requests.stream().map(item->{
-            URI uri;
-            try {uri=URI.create(item.url());}catch(Exception e){throw new BusinessException("URL de imagem inválida.");}
-            // Local, bundled product photos are served by the same public frontend.
-            // Strict allowlist rejects traversal, query parameters and remote schemes.
-            boolean bundled=item.url().matches(
-                "assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\.webp");
-            boolean external="https".equalsIgnoreCase(uri.getScheme())&&uri.getHost()!=null
-                &&uri.getUserInfo()==null&&uri.getPort()==-1;
-            if(!bundled&&!external)
-                throw new BusinessException("Imagem deve ser HTTPS ou um arquivo local do catálogo.");
-            return new ProductImage(item.url(),item.position(),item.altText());
-        }).toList();
+        return imageReferences.ordered(requests,true).stream()
+            .map(item->new ProductImage(item.url(),item.position(),item.altText())).toList();
     }
     private ProductResponse map(Product p,boolean admin,BigDecimal effectivePrice){
         boolean available=p.isAvailableForConsultation();

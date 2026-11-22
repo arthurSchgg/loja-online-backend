@@ -36,12 +36,16 @@ class PostgresNativePriceMigrationIntegrationTest {
             statement.executeUpdate("INSERT INTO "+schema+".brands(id,name) VALUES (1,'Marca fictícia')");
             statement.executeUpdate("INSERT INTO "+schema+".products(name,price,brand_id,available,published,stock_quantity) VALUES "+
                 "('Pendente',0,1,TRUE,TRUE,7),('Confirmado',29.90,1,TRUE,TRUE,4)");
+            statement.executeUpdate("INSERT INTO "+schema+".service_offerings(title,type,image_url,published,available) VALUES "+
+                "('Vela anterior','CANDLE','https://example.invalid/old.jpg',TRUE,TRUE)");
         }
         var upgraded=Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
             .locations("classpath:db/migration").load();
-        assertEquals(2,upgraded.migrate().migrationsExecuted);
+        assertEquals(3,upgraded.migrate().migrationsExecuted);
         upgraded.validate();
         assertNull(tx.execute(s->storage.toStoredPrice(null)));
+        assertEquals("https://example.invalid/old.jpg",jdbc.queryForObject(
+            "SELECT image_url FROM offering_images WHERE position=0",String.class));
         // A rollback artifact with the bridge target must still validate a
         // database after V18/V19, without undoing the migrations.
         var bridge=Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
