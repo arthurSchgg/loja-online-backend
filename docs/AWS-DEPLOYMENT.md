@@ -51,7 +51,7 @@ Links AWS oficiais:
 | `SERVER_PORT=8080` | ECS config | porta do Spring |
 | `SESSION_COOKIE_SECURE=true` | ECS config | cookie somente via HTTPS |
 
-**Importante:** o backend atual recebe usuário/senha por ambiente, mas ainda não implementa integralmente recuperação por e-mail/outbox. Não colocar painel administrativo em produção até essas lacunas de segurança serem revisadas.
+**Importante:** fluxos de recuperação de senha, confirmação de e-mail e outbox já possuem implementação e testes automatizados no backend. Isso **não** confirma integração com SMTP/TLS real, configuração do provedor, entregabilidade, segredos, cookies e origem de produção. O painel continua bloqueado para publicação até testes E2E e aprovação da homologação.
 
 ## Build local
 ```bash
@@ -71,17 +71,18 @@ Pré-configuração GitHub Actions (variables/secrets não versionados):
 - A action deve usar somente OIDC e não credenciais AWS long-lived.
 
 ## Frontend (repositório GitHub separado)
-- Frontend entregue como projeto independente em ZIP, com `index.html`, `admin.html`, CSS/JS, `scripts/build-public.mjs`, `.github/workflows/ci.yml` e `amplify.yml`. O ZIP deverá ser publicado em um repositório GitHub **separado**, porque o conector atual não disponibiliza a criação de novos repositórios.
-- Escolher Amplify Hosting > Deploy from Git provider > repo frontend > branch `main`.
+- Frontend já versionado em repositório GitHub privado separado: [`arthurSchgg/loja-online-frontend`](https://github.com/arthurSchgg/loja-online-frontend), com `main`, `develop`, páginas públicas, painel administrativo e CI. O código de trabalho está em `develop`; **não** publicar a branch sem homologação.
+- Depois de aprovar HML-FE-001 e a release, escolher Amplify Hosting > Deploy from Git provider > `arthurSchgg/loja-online-frontend` > branch `main`. Não usar `develop` como origem pública.
 - Não colocar número real WhatsApp, preços, fotos ou dados da loja sem aprovação comercial.
-- Definir `API_BASE_URL` público HTTPS nas variáveis de ambiente de build do Amplify (ex.: `https://api.dominio.com/api/v1`, sem segredos). O build gera `dist/config.js` com essa URL e **falha na branch main** se estiver ausente.
-- `amplify.yml` publica somente `dist/`: vitrine e arquivos públicos; **não inclui `admin.html` nem `assets/admin.js`**. O painel deve ser servido na mesma origem HTTPS da API após configuração do roteamento.
+- O build de release seguro exige `API_BASE_URL=/api/v1 npm run build:release` (frontend PR #41). O comando força `SITE_MODE=live`, rejeita API ausente e valida URL externa HTTPS; nenhuma credencial no artefato público. Configurar caminho real na mesma origem HTTPS via proxy ou URL de API pública externa permitida explicitamente. O `npm run build` padrão permanece **apenas para demonstração**.
+- Publicar somente a saída `dist/` do comando `npm run build:release`; validar que não contenha `admin.html`, `admin-experiences.html`, `reset-password.html`, `confirm-email.html` ou `admin/`. O painel usa build separado `npm run build:admin` (`dist-admin/`) e deve ser servido na **mesma origem HTTPS** da API; definir acesso, autenticação, CSRF e roteamento antes de disponibilizá-lo.
 - A vitrine consulta API GET por CORS estrito; ações administrativas exigem **mesmo domínio**. Configurar roteamento antes de ativá-las.
 - Habilitar cache longo apenas para assets versionados; `index.html` com cache curto e API sem cache.
 
 ## Checklist de publicação (não atendido)
 - [ ] Criar/autorizar conta AWS e orçamento.
-- [ ] Criar repo frontend independente e hospedar no Amplify.
+- [x] Criar repositório frontend independente (privado: `arthurSchgg/loja-online-frontend`).
+- [ ] Homologar o frontend e publicar no Amplify **somente após** GO/NO-GO favorável.
 - [ ] RDS privado, Secrets Manager, ECS Express Mode e ECR revisados.
 - [ ] Testar CloudFront/caminhos/HTTPS/cookies/CSRF da origem unificada.
 - [ ] Especificação aprovada e tag `spec-vX.Y.Z`.
@@ -93,9 +94,16 @@ Pré-configuração GitHub Actions (variables/secrets não versionados):
 
 **Nenhum valor comercial, domínio, serviço pago ou assinatura de aprovação foi presumido.**
 
-## Entrega frontend para repositório separado (2026-11-08)
-- O pacote `lojinha-da-katia-frontend-repositorio-aws.zip` foi gerado como artefato da conversa. Não há URL GitHub frontend até o usuário criar ou disponibilizar o repositório de destino.
-- Validação local realizada com Node 22: `node --check assets/app.js`, `node --check assets/admin.js`, `node scripts/build-public.mjs` e `node --test tests/*.test.mjs` (3 testes passaram).
-- Build de produção sem `API_BASE_URL` foi testado e falhou como esperado; build com URL HTTPS válida passou.
-- A página de política de privacidade é provisória e **não pode ser tratada como aprovada para produção**.
-- A autenticação administrativa continua exigindo mesma origem; não liberar painel em domínio Amplify separado.
+## Estado verificado em 2026-11-10
+
+- Backend: [`arthurSchgg/loja-online-backend`](https://github.com/arthurSchgg/loja-online-backend), branch `develop` com CI [#42818529538](https://github.com/arthurSchgg/loja-online-backend/actions/runs/42818529538) aprovado em PostgreSQL/JaCoCo, backup/restauração e smoke HTTPS **descartável**.
+- Frontend: [`arthurSchgg/loja-online-frontend`](https://github.com/arthurSchgg/loja-online-frontend), branch `develop` com CI [#42818921394](https://github.com/arthurSchgg/loja-online-frontend/actions/runs/42818921394) aprovado. As funcionalidades de quizzes foram integradas em backend PR #156 e frontend PR #28; README atualizado no PR #29.
+- **Não existem evidências de deploy AWS, E2E com domínio e serviços externos reais, aprovação comercial ou homologações HML-001–007/HML-FE-001.** Não confundir smoke local de CI com operação em ambiente real.
+- Git Flow: backend `main` e `develop` possuem histórico divergente (167 commits à frente e 6 atrás em 2026-11-10); preparar a release reconciliando o histórico. O estado das proteções `main`/`develop` não pôde ser consultado pela conexão (403), exigindo verificação com permissão administrativa.
+- Revisão e autorização final são acompanhadas em [RELEASE-001 #135](https://github.com/arthurSchgg/loja-online-backend/issues/135); **nenhum recurso pago AWS deve ser criado apenas por este documento**.
+
+## Atualização técnica adicional — 2026-11-10
+
+- Backend [PR #160](https://github.com/arthurSchgg/loja-online-backend/pull/160): ordenação por preço vigente/promocional e limite de preço paginado, CI de integração [#42829696970](https://github.com/arthurSchgg/loja-online-backend/actions/runs/42829696970) aprovado.
+- Frontend PRs [#31](https://github.com/arthurSchgg/loja-online-frontend/pull/31), [#33](https://github.com/arthurSchgg/loja-online-frontend/pull/33), [#35](https://github.com/arthurSchgg/loja-online-frontend/pull/35), [#37](https://github.com/arthurSchgg/loja-online-frontend/pull/37), [#39](https://github.com/arthurSchgg/loja-online-frontend/pull/39), [#41](https://github.com/arthurSchgg/loja-online-frontend/pull/41): catálogo real, contatos institucionais, smoke de contrato, home sem produtos fictícios em live e build de release explícito.
+- Ainda não há dados comerciais aprovados, deploy, domínio unificado, homologação full stack, orçamento ou aprovação GO/NO-GO. Não executar provisionamento por conta destas entregas técnicas.

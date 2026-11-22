@@ -55,7 +55,7 @@ class CatalogIntegrationTest {
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         long categoryId=new com.fasterxml.jackson.databind.ObjectMapper().readTree(categoryResponse).get("id").asLong();
         String payload="{\"name\":\"Produto demonstrativo\",\"description\":\"Descrição pública\",\"price\":19.90,\"brandId\":"+brandId+
-                ",\"categoryIds\":["+categoryId+"],\"available\":true,\"published\":true,\"images\":[]}";
+                ",\"categoryIds\":["+categoryId+"],\"available\":true,\"published\":true,\"images\":[{\"url\":\"https://example.com/product-image.jpg\",\"position\":0}]}";
         mvc.perform(post("/api/v1/admin/products").with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content(payload))
             .andExpect(status().isCreated())
@@ -69,5 +69,23 @@ class CatalogIntegrationTest {
         mvc.perform(post("/api/v1/admin/products").with(user("tester").roles("ADMIN")).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"\",\"price\":-1}"))
             .andExpect(status().isBadRequest()).andExpect(jsonPath("$.title").value("Dados inválidos"));
+    }
+
+    @Test void publicCatalogRejectsOversizedOrInvalidSearchFilters() throws Exception {
+        mvc.perform(get("/api/v1/products").param("q", "a".repeat(181)))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("brandId", "-1"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("categoryId", "0"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("maxPrice", "12.345"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("page", "10001"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("size", "51"))
+            .andExpect(status().isBadRequest());
+        mvc.perform(get("/api/v1/products").param("page", "0").param("size", "12")
+                .param("q", "floral"))
+            .andExpect(status().isOk());
     }
 }

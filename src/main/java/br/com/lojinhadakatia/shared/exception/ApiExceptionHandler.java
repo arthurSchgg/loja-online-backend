@@ -16,6 +16,17 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 @RestControllerAdvice
 public class ApiExceptionHandler {
 
+    @ExceptionHandler(org.springframework.security.authentication.BadCredentialsException.class)
+    ResponseEntity<ProblemDetail> invalidCurrentPassword(Exception ex) {
+        return problem(HttpStatus.UNAUTHORIZED, "Credenciais inválidas", "Senha atual inválida.");
+    }
+
+    @ExceptionHandler(br.com.lojinhadakatia.security.BreachedPasswordException.class)
+    ResponseEntity<ProblemDetail> breachedPassword(RuntimeException ex) {
+        return problem(HttpStatus.UNPROCESSABLE_ENTITY, "Senha comprometida",
+            "Esta senha consta em vazamentos conhecidos. Escolha outra senha.");
+    }
+
     @ExceptionHandler(ResourceNotFoundException.class)
     ResponseEntity<ProblemDetail> notFound(ResourceNotFoundException ex) {
         return problem(HttpStatus.NOT_FOUND, "Recurso não encontrado", ex.getMessage());

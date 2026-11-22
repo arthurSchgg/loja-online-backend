@@ -101,7 +101,7 @@ class QuizRecommendationsIntegrationTest {
             .get("id").asLong();
         long productId=adminPost("/api/v1/admin/products", """
           {"name":"Vela teste","price":25.00,"brandId":%d,
-           "categoryIds":[],"available":true,"published":true,"images":[]}
+           "categoryIds":[],"available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
           """.formatted(brandId)).get("id").asLong();
         String url="/api/v1/admin/experiences/"+quizId+"/results/floral/recommendations";
         mvc.perform(put(url).with(user("tester").roles("ADMIN")).with(csrf())
@@ -121,5 +121,38 @@ class QuizRecommendationsIntegrationTest {
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.recommendations[0].id").value(productId))
             .andExpect(jsonPath("$.recommendations[0].available").value(true));
+    }
+
+    @Test void unavailableRecommendationFallsBackToSharedCategoryAcrossBrands() throws Exception {
+        var q=quiz();
+        long quizId=q.get("id").asLong();
+        long brandOne=adminPost("/api/v1/admin/brands", "{\"name\":\"Marca original\"}").get("id").asLong();
+        long brandTwo=adminPost("/api/v1/admin/brands", "{\"name\":\"Marca alternativa\"}").get("id").asLong();
+        long category=adminPost("/api/v1/admin/categories", "{\"name\":\"Categoria comum\"}").get("id").asLong();
+
+        long unavailable=adminPost("/api/v1/admin/products", """
+          {"name":"Item indisponível","price":20.00,"brandId":%d,
+           "categoryIds":[%d],"available":false,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
+          """.formatted(brandOne, category)).get("id").asLong();
+        long alternative=adminPost("/api/v1/admin/products", """
+          {"name":"Item alternativo","price":25.00,"brandId":%d,
+           "categoryIds":[%d],"available":true,"published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
+          """.formatted(brandTwo, category)).get("id").asLong();
+
+        adminPost("/api/v1/admin/products/" + alternative + "/stock/movements", """
+          {"type":"ENTRY","quantity":3,"reason":"Inventário de teste"}
+          """);
+
+        mvc.perform(put("/api/v1/admin/experiences/" + quizId + "/results/floral/recommendations")
+                .with(user("tester").roles("ADMIN")).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"productIds\":[" + unavailable + "]}"))
+            .andExpect(status().isOk());
+
+        mvc.perform(post("/api/v1/experiences/" + quizId + "/evaluate")
+                .contentType(MediaType.APPLICATION_JSON).content(answers(q)))
+            .andExpect(status().isOk())
+            .andExpect(jsonPath("$.recommendations.length()").value(1))
+            .andExpect(jsonPath("$.recommendations[0].id").value(alternative));
     }
 }

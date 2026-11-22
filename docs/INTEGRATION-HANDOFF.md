@@ -57,3 +57,12 @@
 - [ ] Homologações de sete fases e release antes de produção.
 
 **Nota de integridade:** a disponibilidade deste PR demonstra implementação e validação de CI de módulos específicos, não significa que a totalidade da especificação tenha sido atendida ou que o site esteja pronto para vender.
+
+## Complemento de revisão — 2026-11-09 (PR #139, ainda sem homologação)
+
+- PR [#139](https://github.com/arthurSchgg/loja-online/pull/139) empilhado sobre #134: acrescenta a migration única `V12__add_offering_availability.sql`, o campo `available` para serviços e testes de visibilidade/WhatsApp.
+- `published` e `available` permanecem independentes. Serviço público indisponível fica visível e não gera link de WhatsApp; requests antigos sem `available` preservam a compatibilidade.
+- Proteção do login: a limpeza global `attempts.clear()` foi substituída por descarte pontual para impedir o reset simultâneo de todos os bloqueios. A implementação continua **em memória**, com limitações de proteção sob sobrecarga e inadequada para múltiplas réplicas AWS sem armazenamento compartilhado.
+- **Validação necessária:** CI do commit final do PR #139, migrações Flyway V1–V12, testes com dados pré-existentes, cenários de ofertas e revisão de segurança. Não considerar os 89,12% da branch anterior como prova para #139.
+- **Lacunas de escopo além deste PR:** recuperação/alteração de senha, notificações e e-mail seguro, galeria completa, editor de experiências, política de privacidade, disponibilidade de itens adicionais e políticas operacionais. Não declarar backend integralmente concluído enquanto estiverem pendentes.
+- **Decisão:** branch para revisão, sem merge em `develop`/`main`, sem AWS, sem AUTORIZADA na AUTH-001 e sem homologações presumidas.

@@ -4,6 +4,7 @@ import br.com.lojinhadakatia.catalog.dto.*;
 import br.com.lojinhadakatia.catalog.service.PromotionService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import java.security.Principal;
 import java.util.List;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +27,11 @@ public class PromotionController {
     public PromotionResponse update(@PathVariable Long productId,@PathVariable Long promotionId,
         @Valid @RequestBody PromotionRequest request){
         return service.update(productId,promotionId,request);
+    }
+    @PostMapping("/{promotionId}/close")
+    public PromotionResponse close(@PathVariable Long productId,@PathVariable Long promotionId,
+        @Valid @RequestBody PromotionCloseRequest request,Principal principal){
+        return service.close(productId,promotionId,request,principal.getName());
     }
     @DeleteMapping("/{promotionId}")
     public ResponseEntity<Void> delete(@PathVariable Long productId,@PathVariable Long promotionId){

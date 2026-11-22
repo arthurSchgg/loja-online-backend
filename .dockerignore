@@ -6,7 +6,9 @@
 **/target
 **/backups
 **/*.dump
+**/*.dump.gpg
 **/*.sha256
+!docs/ADMIN-BUNDLE-MANIFEST.sha256
 **/*.log
 **/.DS_Store
 **/staging-local-ca.crt

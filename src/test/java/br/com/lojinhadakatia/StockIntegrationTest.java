@@ -47,7 +47,7 @@ class StockIntegrationTest {
                 .content("""
                     {"name":"Produto com estoque","price":19.90,
                      "brandId":%d,"categoryIds":[],"available":true,
-                     "published":true,"images":[]}
+                     "published":true,"images":[{"url":"https://example.com/product-image.jpg","position":0}]}
                     """.formatted(brandId)))
             .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
         return mapper.readTree(product).get("id").asLong();

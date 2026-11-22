@@ -11,11 +11,14 @@ responde `429` com `Retry-After` sem autenticar nem revelar se o usuário existe
 - Em AWS, executar atrás de controle de IP/limites na borda (AWS WAF ou equivalente)
   e rever tratamento seguro de cabeçalhos encaminhados; não confiar automaticamente
   em X-Forwarded-For fornecido pelo cliente.
-- Limite de 10.000 chaves impede expansão indefinida da memória; para produção robusta,
-  substituir por Redis/DB compartilhado com TTL e limites atômicos.
+- Limite de 10.000 chaves contém o uso de memória; entradas expiradas e desbloqueadas são descartadas primeiro.
+  Quando todas as entradas estiverem bloqueadas, o algoritmo de contenção pode descartar
+  o bloqueio mais antigo para manter o limite. Isso **não** é garantia completa contra abuso em massa.
+  Para produção com múltiplas réplicas, usar armazenamento compartilhado com TTL e operações atômicas
+  (por exemplo, Redis), além de proteção na borda.
 - Não registra senha ou payload; erros de segurança agregados devem ser auditados
   sem expor informações pessoais.
 - Proteção contra abuso não substitui recuperação e alteração de senha, notificações,
   bloqueios por conta persistidos ou homologação de segurança.
 
-**Estado:** implementação em PR para revisão, não integrada à produção.
+**Estado (2026-11-09):** implementação presente na develop, sob revisão adicional de segurança; não homologada nem publicada em produção.

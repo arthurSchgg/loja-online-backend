@@ -2,6 +2,36 @@
 
 **Resultado:** **NÃO APROVÁVEL AINDA**. Esta é uma triagem documental baseada na revisão recuperável e no estado do repositório `develop` consultado em 2026-11-07. Não afirma ter auditado o texto completo de todas as ~mil decisões. Aprovação formal depende da conferência integral das fontes.
 
+## Atualização de situação do código (2026-11-09)
+
+A tabela histórica abaixo registra inconsistências identificadas antes
+dos merges #134 e #143–#152. Alguns achados passaram a ter **correção
+técnica no código**, mas isso não equivale à resolução documental de
+todos os requisitos:
+
+- **A-05 (estoque no README):** a `develop` contém estoque e
+  movimentações; o README foi corrigido neste PR documental.
+  O aceite comercial do módulo permanece em HML-002.
+- **A-07 (WhatsApp):** o backend agora possui fluxo de confirmação
+  e revalidação com testes; o contrato documental legado deve ser
+  revisado contra a implementação e frontend antes de HML-003.
+- **A-08 (JaCoCo):** o `pom.xml` atual contém gate de 80% de linhas
+  executado por `mvn verify`; houve CI aprovado no PR #152.
+- **A-06 (Basic/JWT):** a arquitetura vigente é sessão HTTP+CSRF.
+  Documentações legadas com alternativas Basic/JWT devem ser
+  marcadas como históricas; não reutilizá-las para decisões atuais.
+- **A-01–A-03 (RN duplicadas):** **não resolvidas** só pela
+  implementação técnica. É obrigatório conciliar textos e fontes
+  originais, preservando mapeamento anterior → novo.
+- **A-09 (issues potencialmente duplicadas):** a padronização dos
+  sete lotes continua não aplicada. Exige aprovação individual.
+- Nenhum item desta atualização marca `AUTH-001`, `HML-001–007`
+  ou [especificação #79](https://github.com/arthurSchgg/loja-online/issues/79)
+  como aprovadas.
+
+Referência técnica:
+[revisão da Fase 1](phase-1-evidence-review-2026-11-09.md).
+
 ## Achados confirmados na revisão e nos arquivos consultados
 
 | Código | Achado | Evidência | Ação necessária |

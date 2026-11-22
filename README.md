@@ -1,6 +1,6 @@
 # Lojinha da Kátia — Backend
 
-Backend REST do site **Lojinha da Kátia**: vitrine digital, experiências interativas, espaço das velas e administração de conteúdo. O objetivo é apresentar ofertas e estimular conversas pelo WhatsApp. **Não existe carrinho, checkout, pedido, cobrança, agendamento automático ou gestão de estoque transacional.**
+Backend REST do site **Lojinha da Kátia**: vitrine digital, experiências interativas, espaço das velas e administração de conteúdo. O objetivo é apresentar ofertas e estimular conversas pelo WhatsApp. **Não existe carrinho, checkout, cobrança, pedido persistido nem agendamento automático no MVP. Há controle de estoque quantitativo e movimentações com histórico no backend; disponibilidade de produtos precisa ser confirmada em cada solicitação.**
 
 ## Tecnologias
 
@@ -17,12 +17,12 @@ src/main/java/br/com/lojinhadakatia/
 ├── offering/      # Velas artesanais, oficinas e locações
 ├── content/       # Blocos e seções institucionais publicáveis
 ├── campaign/      # Banners e destaques com período de publicação
-├── security/      # ADMIN, CORS e auditoria mínima
+├── security/      # Sessão, CSRF, recuperação de senha/e-mail e notificações
 └── shared/        # OpenAPI e respostas de erro ProblemDetail
 
 src/main/resources/
 ├── application.yml
-└── db/migration/  # Migrações Flyway V1 a V6
+└── db/migration/  # Migrações Flyway versionadas (incluem V13–V15)
 
 src/test/          # Testes MockMvc/JPA/H2 e PostgreSQL real em CI
 docs/              # Contratos, operações, segurança, testes e Git Flow
@@ -57,7 +57,9 @@ docker compose --env-file .env.staging -f compose.staging.yaml up --build -d
 - HTTPS usa autoridade certificadora local do Caddy; confie explicitamente no certificado antes de acessar no navegador. Consulte o guia para exportar o certificado e verificar com `curl --cacert`.
 - Porta publicada somente em `127.0.0.1`; backend/PostgreSQL não ficam expostos e o Swagger está desativado.
 
-Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações, certificados, verificação dos dois Compose, logs, parada sem perda de dados e limitações de segurança. Não há deploy externo nem frontend neste repositório.
+Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para os ambientes locais. A implantação de revisão no Render usa Neon e uma branch de deploy separada; o bundle administrativo versionado é construído a partir do repositório frontend e servido na mesma origem da API. Veja [docs/ADMIN-SAME-ORIGIN.md](docs/ADMIN-SAME-ORIGIN.md).
+
+**Consulta real de preços e categorias:** `GET /api/v1/products` aceita `q`, `brandId`, `categoryId`, `available`, `maxPrice`, `sort=recent|name|price-asc|price-desc`, `page` e `size`. A ordenação por preço usa a promoção vigente e pagina no banco. O preço deve ser reconfirmado no WhatsApp, pois pode mudar entre visitas.
 
 ## Endpoints públicos
 
@@ -65,6 +67,7 @@ Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações
 |---|---|---|
 | GET | `/api/v1/products` | Produtos publicados, busca e filtros |
 | GET | `/api/v1/products/{id}` | Detalhes do produto publicado |
+| GET | `/api/v1/products/{id}/related` | Produtos publicados relacionados por marca/categoria |
 | GET | `/api/v1/products/{id}/whatsapp` | Link contextualizado para WhatsApp |
 | GET | `/api/v1/brands` | Marcas ativas |
 | GET | `/api/v1/categories` | Categorias ativas |
@@ -79,6 +82,8 @@ Consulte **[docs/LOCAL-STAGING.md](docs/LOCAL-STAGING.md)** para configurações
 | GET | `/api/v1/campaigns` | Banners ativos |
 
 Filtros de produtos: `q`, `brandId`, `categoryId`, `available`, `page`, `size` (máximo 50). Ofertas aceitam `type=CANDLE|WORKSHOP|RENTAL`.
+
+**Preço a confirmar:** a revisão da issue #190 usa `priceStatus=ON_REQUEST` e preço nulo em vez do antigo zero técnico. Esses itens podem ficar na vitrine, mas não podem liberar WhatsApp de produto; não participam de teto de preço e ficam após preços conhecidos na ordenação. A migração V18 precisa ser homologada e aplicada somente em release autorizada. V19 acrescenta índice de busca por categoria.
 
 ## Endpoints de administração
 
@@ -102,11 +107,11 @@ Para integrar o formulário HTML/JavaScript, consulte [docs/SECURITY.md](docs/SE
 mvn clean verify
 ```
 
-Os testes locais rápidos usam H2. O workflow GitHub Actions instala PostgreSQL real e executa um teste de integração com Flyway/Hibernate no banco-alvo, sem depender de Docker. Veja [docs/TESTING.md](docs/TESTING.md).
+Os testes locais rápidos usam H2. O workflow GitHub Actions executa Maven/JaCoCo (gate de cobertura >=80%), integração com PostgreSQL real, testes com Mailpit SMTP, backup/restauração em banco descartável e staging HTTPS via Docker/Caddy, incluindo autenticação, CSRF, recuperação e alteração de e-mail. Veja [docs/TESTING.md](docs/TESTING.md) e [docs/phase-1-evidence-review-2026-11-09.md](docs/phase-1-evidence-review-2026-11-09.md).
 
 ## Especificação em consolidação (não aprovada)
 
-Os documentos abaixo representam **requisitos planejados**, não funcionalidades já implementadas nem homologadas. A consolidação está em revisão e ainda depende da auditoria de identificadores e da aprovação técnica formal.
+Os documentos abaixo são a **especificação normativa ainda não aprovada**. Parte dos recursos já está implementada e testada em `develop`, mas requisitos, IDs RN e decisões formais continuam sujeitos à auditoria. Não tratar ausência de homologação como ausência de implementação.
 
 - [Inventário das regras de negócio](docs/business-rules.md)
 - [Requisitos funcionais e não funcionais](docs/requirements.md)
@@ -132,9 +137,11 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 - [Contrato REST existente e evolução proposta](docs/api-contract-proposal.md)
 - [Design System e Motion Design provisórios](docs/ui-design-system.md)
 - [Plano de testes e homologação](docs/test-plan.md)
-- [Diagnóstico preliminar da Fase 1 (NÃO APROVADO)](docs/phase-1-diagnostic.md)
+- [Diagnóstico técnico atualizado da Fase 1 (NÃO APROVADO)](docs/phase-1-diagnostic.md)
+- [Matriz atualizada de evidências — 2026-11-09](docs/phase-1-evidence-review-2026-11-09.md)
+- [Checklist de transição, aprovação e sete lotes](docs/authorization-handoff-checklist.md)
 - [Autorização AUTH-001 — NÃO AUTORIZADA](https://github.com/arthurSchgg/loja-online/issues/80)
-- [PR #111 — JaCoCo 80%, testes complementares, sem merge](https://github.com/arthurSchgg/loja-online/pull/111)
+- [Gate atual de qualidade e evidências de CI](docs/phase-1-evidence-review-2026-11-09.md)
 - [Plano de preenchimento dos campos GitHub Projects](docs/project-board-plan.md)
 - [Relatório final de preparação para revisão](docs/review-handoff.md)
 - [Equivalência e preservação da documentação inicial](docs/legacy-baseline-crosswalk.md)
@@ -162,7 +169,7 @@ Os documentos abaixo representam **requisitos planejados**, não funcionalidades
 
 ## Situação do projeto
 
-As funcionalidades principais estão implementadas em `develop`, organizadas em branches `feature/*` e integradas por PRs. **A implementação não significa que a plataforma esteja aprovada para produção.** Ainda são necessários homologação comercial, endurecimento de segurança, revisão de privacidade, configuração de backups reais e aprovação de imagens/contatos/preços.
+As funcionalidades principais e os testes automáticos estão integrados em `develop` (PRs #134 e #143–#152). **Não há homologação formal nem aprovação de produção**: faltam revisão integral da especificação e seus IDs RN, aprovação das sete fases, SMTP/TLS externo, E2E do frontend, restauração operacional e validação de dados comerciais. Consultar [diagnóstico atualizado da Fase 1](docs/phase-1-diagnostic.md), [evidências verificadas](docs/phase-1-evidence-review-2026-11-09.md), [AUTH-001 #80](https://github.com/arthurSchgg/loja-online/issues/80) e [HML-001 #112](https://github.com/arthurSchgg/loja-online/issues/112).
 
 
 ## AWS (proposta de implantação)

@@ -1,6 +1,7 @@
 package br.com.lojinhadakatia.security;
 
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -32,11 +33,23 @@ public class LoginAttemptLimiter {
         update(key("account", username), now);
         update(key("origin", remoteAddress), now);
         if (attempts.size() > MAX_RECORDS) {
-            attempts.entrySet().removeIf(x -> x.getValue().blockedUntil().isBefore(now)
-                && x.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
+            attempts.entrySet().removeIf(entry ->
+                !entry.getValue().blockedUntil().isAfter(now)
+                && entry.getValue().began().plusSeconds(WINDOW_SECONDS).isBefore(now));
         }
-        // Never accept unbounded memory growth from arbitrary usernames or addresses.
-        if (attempts.size() > MAX_RECORDS) attempts.clear();
+        // Trim incrementally rather than resetting every account's protection.
+        // Keep active blocks until all available eviction candidates are blocked.
+        while (attempts.size() > MAX_RECORDS) {
+            String victim = attempts.entrySet().stream()
+                .filter(entry -> !entry.getValue().blockedUntil().isAfter(now))
+                .min(Comparator.comparing(entry -> entry.getValue().began()))
+                .map(Map.Entry::getKey)
+                .orElseGet(() -> attempts.entrySet().stream()
+                    .min(Comparator.comparing(entry -> entry.getValue().began()))
+                    .map(Map.Entry::getKey).orElse(null));
+            if (victim == null) break;
+            attempts.remove(victim);
+        }
     }
 
     /** A valid login clears only this account/origin pair. */

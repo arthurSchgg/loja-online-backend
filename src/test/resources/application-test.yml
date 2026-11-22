@@ -18,5 +18,9 @@ app:
   security:
     admin-username: tester
     admin-password: testpassword123
+    breached-password-check-enabled: false
+    # Most MVC tests authenticate via with(user()) rather than a real login.
+    # Dedicated admin-session tests explicitly re-enable strict enforcement.
+    reject-unversioned-sessions: false
   cors:
     allowed-origins: http://localhost:5500
