@@ -5,6 +5,8 @@ import br.com.lojinhadakatia.catalog.service.CatalogService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -28,10 +30,15 @@ public class AdminCatalogController {
 
     @GetMapping("/products")
     public Page<ProductResponse> all(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(required=false) @Size(max=180) String q,
+            @RequestParam(required=false) @Positive Long brandId,
+            @RequestParam(required=false) @Positive Long categoryId,
+            @RequestParam(required=false) Boolean published,
+            @RequestParam(required=false) Boolean available,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(10000) int page,
             @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size) {
-        return catalog.search(null, null, null, null,
-            PageRequest.of(page, size, Sort.by("id").descending()), true);
+        return catalog.search(q,brandId,categoryId,available,
+            PageRequest.of(page,size,Sort.by("id").descending()),true,"recent",null,published);
     }
 
     @GetMapping("/products/{id}")

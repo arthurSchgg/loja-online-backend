@@ -5,7 +5,10 @@ import br.com.lojinhadakatia.offering.entity.*;
 import br.com.lojinhadakatia.offering.repository.ServiceOfferingRepository;
 import br.com.lojinhadakatia.offering.repository.OfferingOptionRepository;
 import br.com.lojinhadakatia.shared.exception.*;
-import java.net.URI;
+import br.com.lojinhadakatia.catalog.dto.ImageRequest;
+import br.com.lojinhadakatia.catalog.dto.ImageResponse;
+import br.com.lojinhadakatia.media.ImageReferenceValidator;
+import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -22,7 +25,10 @@ import org.springframework.transaction.annotation.Transactional;
 public class OfferingService {
  private final ServiceOfferingRepository repo;
  private final OfferingOptionRepository options;
- public OfferingService(ServiceOfferingRepository repo, OfferingOptionRepository options){this.repo=repo;this.options=options;}
+ private final ImageReferenceValidator imageReferences;
+ public OfferingService(ServiceOfferingRepository repo, OfferingOptionRepository options,ImageReferenceValidator imageReferences){
+  this.repo=repo;this.options=options;this.imageReferences=imageReferences;
+ }
  public List<OfferingResponse> published(OfferingType type){
   return mapAll(type==null?repo.findByPublishedTrueOrderByIdDesc():repo.findByPublishedTrueAndTypeOrderByIdDesc(type),true);
  }
@@ -31,17 +37,20 @@ public class OfferingService {
  public List<OfferingResponse> adminAll(){return mapAll(repo.findAll(),false);}
  public OfferingResponse adminOne(Long id){return mapAdmin(find(id));}
  @Transactional public OfferingResponse create(OfferingRequest request){
-  validate(request);
-  return mapAdmin(repo.saveAndFlush(new ServiceOffering(request.title().trim(),request.description(),
-    request.type(),request.price(),request.imageUrl(),request.published(),request.available())));
+  var images=images(request,null);
+  var entity=new ServiceOffering(request.title().trim(),request.description(),
+    request.type(),request.price(),request.imageUrl(),request.published(),request.available());
+  entity.replaceImages(images);
+  return mapAdmin(repo.saveAndFlush(entity));
  }
  @Transactional public OfferingResponse update(Long id,OfferingRequest request){
-  validate(request);
   var entity=lock(id);
+  var images=images(request,entity);
   if(entity.getType()==OfferingType.CANDLE && request.type()!=OfferingType.CANDLE && options.existsByOfferingId(id))
    throw new BusinessException("Remova as opções de personalização antes de mudar o tipo do serviço.");
   entity.update(request.title().trim(),request.description(),request.type(),request.price(),
     request.imageUrl(),request.published(),request.available());
+  entity.replaceImages(images);
   return mapAdmin(repo.saveAndFlush(entity));
  }
  @Transactional public void delete(Long id){
@@ -94,14 +103,21 @@ public class OfferingService {
  private ServiceOffering find(Long id){return repo.findById(id).orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada."));}
  private ServiceOffering lock(Long id){return repo.findByIdForUpdate(id)
      .orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada."));}
- private void validate(OfferingRequest request){
-  String image=request.imageUrl();
-  if(image!=null&&!image.isBlank()){
-   URI uri;
-   try{uri=URI.create(image);}catch(Exception e){throw new BusinessException("URL da imagem inválida.");}
-   if(!"https".equalsIgnoreCase(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)
-    throw new BusinessException("A imagem deve usar URL HTTPS pública.");
-  }
+ private List<ImageRequest> images(OfferingRequest request,ServiceOffering existing){
+  if(request.images()!=null)return imageReferences.ordered(request.images(),true);
+  String url=request.imageUrl();
+  if(existing!=null&&Objects.equals(url,existing.getImageUrl())&&!existing.getImages().isEmpty())
+   return imageReferences.ordered(currentImages(existing).stream()
+       .map(item->new ImageRequest(item.url(),item.position(),item.altText())).toList(),true);
+  return imageReferences.ordered(url==null||url.isBlank()?List.of():List.of(new ImageRequest(url,0,null)),true);
+ }
+ private List<ImageResponse> currentImages(ServiceOffering o){
+  var cover=o.getImageUrl();
+  if(cover==null||cover.isBlank())return List.of();
+  var saved=o.getImages();
+  if(saved.isEmpty()||!Objects.equals(cover,saved.getFirst().getUrl()))
+   return List.of(new ImageResponse(cover,0,null));
+  return saved.stream().map(item->new ImageResponse(item.getUrl(),item.getPosition(),item.getAltText())).toList();
  }
  private OfferingResponse map(ServiceOffering o){
   return makeResponse(o,true,options.findByOfferingIdOrderByPositionAscIdAsc(o.getId()));
@@ -122,6 +138,6 @@ public class OfferingService {
       .map(item->new OfferingOptionResponse(item.getKind(),item.getLabel(),item.getPosition(),item.isActive()))
       .toList();
   return new OfferingResponse(o.getId(),o.getTitle(),o.getDescription(),o.getType(),
-    o.getPrice(),o.getImageUrl(),o.isPublished(),o.isAvailable(),listed);
+    o.getPrice(),o.getImageUrl(),o.isPublished(),o.isAvailable(),listed,currentImages(o));
  }
 }
