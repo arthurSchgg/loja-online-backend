@@ -1,0 +1,142 @@
+{
+  "source": "Gravação do catálogo WhatsApp fornecida em 2026-11-17; descrições resumidas; fotos WebP provisórias.",
+  "reviewRequired": true,
+  "products": [
+    {
+      "name": "Maquiagem Corporal Bronzeado Instantâneo",
+      "brand": "Skelt",
+      "description": "Maquiagem corporal com efeito bronzeado imediato, indicada no catálogo para uniformizar visualmente o tom da pele. O anúncio informa duração de 12 a 24 horas e remoção no banho.",
+      "price": "99.90",
+      "categories": [
+        "Maquiagem corporal"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/maquiagem-corporal-bronzeado-instantaneo.webp",
+          "altText": "Imagem provisória do catálogo: Maquiagem Corporal Bronzeado Instantâneo"
+        }
+      ]
+    },
+    {
+      "name": "Kit Miniaturas Sellers Set",
+      "brand": "Skelt",
+      "description": "Kit com três fragrâncias de 15 ml cada da Skelt, em versões miniatura para transportar e experimentar.",
+      "price": "99.90",
+      "categories": [
+        "Kits de fragrâncias"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/kit-miniaturas-sellers-set.webp",
+          "altText": "Imagem provisória do catálogo: Kit Miniaturas Sellers Set"
+        }
+      ]
+    },
+    {
+      "name": "Kit miniaturas Exótic Set",
+      "brand": "Skelt",
+      "description": "Kit com três miniaturas de 15 ml, com fragrâncias descritas no catálogo como inspiradas em destinos ensolarados, incluindo Milos e Bahamas.",
+      "price": "99.90",
+      "categories": [
+        "Kits de fragrâncias"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/kit-miniaturas-exotic-set.webp",
+          "altText": "Imagem provisória do catálogo: Kit miniaturas Exótic Set"
+        }
+      ]
+    },
+    {
+      "name": "Kit Miniaturas Trends Set",
+      "brand": "Skelt",
+      "description": "Kit com três fragrâncias de 15 ml cada da Skelt, em frascos compactos.",
+      "price": "99.90",
+      "categories": [
+        "Kits de fragrâncias"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/kit-miniaturas-trends-set.webp",
+          "altText": "Imagem provisória do catálogo: Kit Miniaturas Trends Set"
+        }
+      ]
+    },
+    {
+      "name": "Mousse Autobronzeador Dark",
+      "brand": "Skelt",
+      "description": "Mousse autobronzeador para efeito de bronzeado intenso. Segundo o catálogo, contém nano-resveratrol, tem duração anunciada de 7 a 12 dias e rendimento de 5 a 8 aplicações. Luva aplicadora não inclusa.",
+      "price": "130.00",
+      "categories": [
+        "Autobronzeadores"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/mousse-autobronzeador-dark.webp",
+          "altText": "Imagem provisória do catálogo: Mousse Autobronzeador Dark"
+        }
+      ]
+    },
+    {
+      "name": "Luva aplicadora de autobronzeador",
+      "brand": "Skelt",
+      "description": "Luva aplicadora de autobronzeador e maquiagem corporal, descrita como lavável e reutilizável, para espalhar o produto de forma uniforme.",
+      "price": "35.00",
+      "categories": [
+        "Acessórios"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/luva-aplicadora-autobronzeador.webp",
+          "altText": "Imagem provisória do catálogo: Luva aplicadora de autobronzeador"
+        }
+      ]
+    },
+    {
+      "name": "Autobronzeador Bifásico",
+      "brand": "Skelt",
+      "description": "Autobronzeador bifásico com fragrância Grand Bahama e intensidade média. O catálogo informa duração de 7 a 12 dias e recomenda agitar antes do uso. Notas citadas: abacaxi, bergamota, água de coco, flores solares, limão, baunilha e musk.",
+      "price": "104.00",
+      "categories": [
+        "Autobronzeadores"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/autobronzeador-bifasico.webp",
+          "altText": "Imagem provisória do catálogo: Autobronzeador Bifásico"
+        }
+      ]
+    },
+    {
+      "name": "Maquiagem Corporal Iluminador",
+      "brand": "Skelt",
+      "description": "Iluminador corporal Skelt para brilho na pele, indicado no anúncio para braços, pernas, colo e ombros.",
+      "price": "99.90",
+      "categories": [
+        "Maquiagem corporal"
+      ],
+      "available": false,
+      "published": false,
+      "images": [
+        {
+          "url": "assets/images/catalogo/skelt/maquiagem-corporal-iluminador.webp",
+          "altText": "Imagem provisória do catálogo: Maquiagem Corporal Iluminador"
+        }
+      ]
+    }
+  ]
+}

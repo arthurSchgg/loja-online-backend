@@ -19,4 +19,4 @@ O formato de snapshot evita usar um token cross-repo em cada build de produção
 
 Os endpoints administrativos permanecem restritos a sessão HTTP autenticada com papel ADMIN. As páginas de login e recuperação e seus CSS/JS podem ser entregues sem autenticação, mas não contêm registros administrativos. O frontend público Cloudflare exclui todo o painel e não encaminha rotas de autenticação. Não desative CSRF ou autenticação para corrigir problemas de origem.
 
-A recuperação por e-mail depende de configuração protegida e SMTP homologado. Na modalidade Free atual do Render, as portas SMTP usuais 25, 465 e 587 são bloqueadas; decidir transporte compatível com a hospedagem ou um plano aprovado antes de divulgar a recuperação como funcional.
+O painel envia recuperações por um transporte configurado explicitamente. SMTP é o padrão para instalações próprias e homologação; no Render Free, configure o transporte HTTPS Resend conforme [ADMIN-EMAIL-HTTPS.md](ADMIN-EMAIL-HTTPS.md). Sem remetente e credencial válidos, o recurso permanece indisponível; não desative a proteção da conta.

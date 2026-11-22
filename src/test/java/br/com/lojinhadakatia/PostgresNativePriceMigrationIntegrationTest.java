@@ -1,11 +1,17 @@
 package br.com.lojinhadakatia;
 
 import java.sql.DriverManager;
+import java.math.BigDecimal;
 import java.util.UUID;
+import br.com.lojinhadakatia.catalog.service.CatalogPriceStorage;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.MigrationVersion;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.DriverManagerDataSource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 import static org.junit.jupiter.api.Assertions.*;
 
 /** Exercise the V17 -> V19 upgrade on disposable PostgreSQL data. */
@@ -19,6 +25,12 @@ class PostgresNativePriceMigrationIntegrationTest {
         String schema="ci_price_"+UUID.randomUUID().toString().replace("-","");
         Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
             .locations("classpath:db/migration").target(MigrationVersion.fromVersion("17")).load().migrate();
+        var ds=new DriverManagerDataSource(url+(url.contains("?")?"&":"?")+"currentSchema="+schema,user,password);
+        var jdbc=new JdbcTemplate(ds);
+        var tx=new TransactionTemplate(new DataSourceTransactionManager(ds));
+        var storage=new CatalogPriceStorage(jdbc);
+        assertEquals(BigDecimal.ZERO,tx.execute(s->storage.toStoredPrice(null)));
+        assertEquals(new BigDecimal("29.90"),tx.execute(s->storage.toStoredPrice(new BigDecimal("29.90"))));
         try(var connection=DriverManager.getConnection(url,user,password);
             var statement=connection.createStatement()){
             statement.executeUpdate("INSERT INTO "+schema+".brands(id,name) VALUES (1,'Marca fictícia')");
@@ -29,6 +41,13 @@ class PostgresNativePriceMigrationIntegrationTest {
             .locations("classpath:db/migration").load();
         assertEquals(2,upgraded.migrate().migrationsExecuted);
         upgraded.validate();
+        assertNull(tx.execute(s->storage.toStoredPrice(null)));
+        // A rollback artifact with the bridge target must still validate a
+        // database after V18/V19, without undoing the migrations.
+        var bridge=Flyway.configure().dataSource(url,user,password).schemas(schema).defaultSchema(schema)
+            .locations("classpath:db/migration").target(MigrationVersion.fromVersion("17")).load();
+        assertDoesNotThrow(bridge::validate);
+        assertEquals(0,bridge.migrate().migrationsExecuted);
         try(var connection=DriverManager.getConnection(url,user,password);
             var statement=connection.createStatement();
             var rows=statement.executeQuery("SELECT name,price,available,published,stock_quantity FROM "+

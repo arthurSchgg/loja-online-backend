@@ -16,7 +16,26 @@ BACKUP_DIR=./backups bash scripts/backup-postgres.sh
 
 O script gera arquivo `.dump` de formato custom (sem propriedade/ACL), valida a estrutura com `pg_restore --list` e produz checksum SHA-256. Os arquivos devem ser transferidos para armazenamento criptografado, com controle de acesso e retenção definida.
 
-**Atenção:** um checksum é útil para detectar alteração acidental, mas não substitui criptografia, proteção contra exclusão, imutabilidade ou verificação real de restauração.
+**Atenção:** um checksum é útil para detectar alteração acidental, mas não substitui criptografia, proteção contra exclusão, imutabilidade ou verificação real de restauração. Para dados reais, use o procedimento cifrado abaixo; o dump simples é adequado a ambientes fictícios isolados.
+
+## Backup independente cifrado
+
+Use a conexão direta do Neon (não o pooler), TLS com verificação de certificado e a **chave pública GPG** do responsável, cuja impressão digital deve ser conferida por um canal confiável. A chave privada permanece sob controle do responsável; não colocá-la no GitHub, Render ou no mesmo destino do backup. Nunca compartilhar senhas pelo chat.
+
+```bash
+export PGSSLMODE=verify-full
+# Configure PGSSLROOTCERT com a CA confiável, PGHOST/PGUSER/PGDATABASE/PGPASSWORD
+# e BACKUP_GPG_RECIPIENT com a impressão digital completa da chave pública.
+BACKUP_DIR=/caminho/privado/independente bash scripts/backup-postgres-encrypted.sh
+```
+
+O dump é cifrado em fluxo, sem gravar o arquivo original em disco. O resultado é `.dump.gpg` e checksum relativo. No computador de manutenção, com a chave privada, teste a restauração para um banco novo e isolado:
+
+```bash
+RESTORE_TARGET_DATABASE=lojinha_restore_test bash scripts/verify-encrypted-restore.sh arquivo.dump.gpg
+```
+
+Programar em equipamento autorizado uma execução diária e uma cópia semanal fora do servidor; conservar 7 diários e 4 semanais, verificando ao menos uma restauração por mês. Não remover a última cópia boa antes de validar a mais nova. O agendamento externo depende do destino e da chave escolhidos pelo responsável; não está automaticamente ativado por este repositório.
 
 ## Testar restauração
 

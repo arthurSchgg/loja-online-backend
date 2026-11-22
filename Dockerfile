@@ -4,7 +4,12 @@ WORKDIR /workspace
 COPY pom.xml .
 RUN mvn -B -q -DskipTests dependency:go-offline
 COPY src ./src
-RUN mvn -B -DskipTests package
+COPY docs/ADMIN-BUNDLE-MANIFEST.sha256 ./docs/ADMIN-BUNDLE-MANIFEST.sha256
+RUN cd src/main/resources/static && sha256sum -c /workspace/docs/ADMIN-BUNDLE-MANIFEST.sha256
+# Keep a build-time quality gate even when GitHub's hosted runners are unavailable.
+# External integrations are separately tested against disposable Postgres/Mailpit;
+# a production build must never use external application credentials for tests.
+RUN RUN_POSTGRES_INTEGRATION=false RUN_SMTP_INTEGRATION=false mvn -B verify
 
 # Stage 2: non-root runtime with only the application artifact.
 FROM eclipse-temurin:21-jre

@@ -44,6 +44,17 @@ class CatalogCommercialIntegrityIntegrationTest {
         return create("/api/v1/admin/products",product(name,brand,categories,priceFields,published)).get("id").asLong();
     }
 
+    @Test void preservesBundledCatalogPhotosOnAdministrativeEdits() throws Exception {
+        long brand=brand();
+        String image="assets/images/catalogo/pdf-2026/produto-teste.webp";
+        String request=product("Foto do catálogo",brand,"[]","\"price\":25",true)
+            .replace("https://example.invalid/product.webp",image);
+        long id=create("/api/v1/admin/products",request).get("id").asLong();
+        mvc.perform(put("/api/v1/admin/products/"+id).with(user("tester").roles("ADMIN")).with(csrf())
+            .contentType(MediaType.APPLICATION_JSON).content(request))
+            .andExpect(status().isOk()).andExpect(jsonPath("$.images[0].url").value(image));
+    }
+
     @Test void pendingPriceIsExplicitAndCannotBecomeAFreeConsultation() throws Exception {
         long brand=brand();
         var pending=create("/api/v1/admin/products",product("Sem preço",brand,"[]",

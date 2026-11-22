@@ -37,6 +37,10 @@ server:
         secure: ${SESSION_COOKIE_SECURE:true}
         same-site: lax
 management:
+  health:
+    # Delivery is asynchronous and must not take the public catalog offline.
+    mail:
+      enabled: false
   endpoints:
     web:
       exposure:
@@ -55,6 +59,8 @@ app:
     email-outbox-key: ${EMAIL_OUTBOX_KEY:}
     password-reset-url: ${ADMIN_PASSWORD_RESET_URL:}
     mail-from: ${MAIL_FROM:}
+    email-transport: ${EMAIL_TRANSPORT:smtp}
+    resend-api-key: ${RESEND_API_KEY:}
     email-change-url: ${ADMIN_EMAIL_CHANGE_URL:}
     breached-password-check-enabled: ${BREACHED_PASSWORD_CHECK_ENABLED:true}
   cors:
