@@ -40,8 +40,7 @@ public class AdminPasswordRecoveryService {
     }
 
     private boolean configured() {
-        return outbox.configured() && resetUrl.startsWith("https://")
-            && !resetUrl.contains("?") && !resetUrl.contains("#");
+        return outbox.configured() && AdminRecoveryUrl.valid(resetUrl);
     }
 
     /** Always returns the same status regardless of whether the email matches. */
@@ -63,7 +62,7 @@ public class AdminPasswordRecoveryService {
 
     @Transactional
     public void confirm(String token, String next, String confirmation) {
-        if (token == null || token.isBlank()) throw invalid();
+        if (token == null || token.length()>256 || token.isBlank()) throw invalid();
         if (next == null || next.length() < 12 || next.length() > 128 || !next.equals(confirmation))
             throw new IllegalArgumentException("Nova senha inválida.");
         // Serialized by locking the only administrator to prevent simultaneous token reuse.

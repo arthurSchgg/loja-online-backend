@@ -34,15 +34,15 @@ def price(value):
         amount = Decimal(raw)
     except InvalidOperation as exc:
         raise ValueError("Preço inválido") from exc
-    if not amount.is_finite():
-        raise ValueError("Preço não finito")
+    if not amount.is_finite() or amount <= 0:
+        raise ValueError("Preço precisa ser positivo ou explicitamente sob consulta")
     return str(amount.quantize(Decimal("0.01")))
 
 
 def validate_image(url):
     if not isinstance(url, str) or not 1 <= len(url) <= 2048:
         raise ValueError("URL da imagem ausente ou longa demais")
-    if re.fullmatch(r"assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\\.webp", url):
+    if re.fullmatch(r"assets/images/catalogo/[a-z0-9-]+/[a-z0-9-]+\.webp", url):
         return url
     parsed = urllib.parse.urlsplit(url)
     if parsed.scheme.lower() != "https" or not parsed.hostname or parsed.username or parsed.password or parsed.port:
@@ -88,7 +88,15 @@ def check_manifest(path):
             description = item.get("description") or ""
             if not isinstance(description, str) or len(description) > 4000:
                 raise ValueError("Descrição deve ter até 4000 caracteres")
-            amount = price(item.get("price", ""))
+            price_status = item.get("priceStatus", "CONFIRMED")
+            if price_status == "ON_REQUEST":
+                if item.get("price") is not None:
+                    raise ValueError("Valor sob consulta exige price=null")
+                amount = None
+            elif price_status == "CONFIRMED":
+                amount = price(item.get("price", ""))
+            else:
+                raise ValueError("priceStatus inválido")
             images = item.get("images")
             if not isinstance(images, list) or not 1 <= len(images) <= 12:
                 raise ValueError("Informe de 1 a 12 imagens por produto")
@@ -110,7 +118,7 @@ def check_manifest(path):
             products.append({
                 "name": name.strip(), "brand": brand.strip(),
                 "categories": [c.strip() for c in categories],
-                "description": description.strip(), "price": amount,
+                "description": description.strip(), "price": amount, "priceStatus": price_status,
                 "available": item.get("available", False),
                 "images": processed_images, "published": False
             })
@@ -176,7 +184,9 @@ class API:
         user = self.request("GET", "/auth/me")
         if not isinstance(user, dict) or user.get("authenticated") is not True:
             raise RuntimeError("Sessão administrativa não confirmada")
-        return headers
+        # Spring Security rotates the CSRF token when authentication changes.
+        token = self.request("GET", "/auth/csrf")
+        return {token["headerName"]: token["token"]}
 
 
 def index_unique(items):
@@ -232,7 +242,7 @@ def apply(api, records, update_existing=False, local_preview=False):
                 categories[key] = cat["id"]
             cat_ids.append(categories[key])
         payload = {k: record[k] for k in
-                   ("name", "description", "price", "available", "published", "images")}
+                   ("name", "description", "price", "priceStatus", "available", "published", "images")}
         payload["published"] = local_preview
         payload["available"] = False  # Never declare items available before stock verification
         payload["brandId"] = brands[brand_name]

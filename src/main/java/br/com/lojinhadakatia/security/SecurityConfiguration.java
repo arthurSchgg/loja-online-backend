@@ -93,15 +93,12 @@ public class SecurityConfiguration {
             .addFilterBefore(new AdminSessionVersionFilter(credentials, rejectUnversionedSessions), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                // Admin HTML/JS/CSS are publicly downloadable UI resources on the API origin.
-                // Only the backend's ADMIN endpoints hold protected data; never authorize
-                // /api/v1/admin/** as static resources or disable CSRF for login.
+                // The login/recovery UI is a static bundle on the same origin.
+                // It contains no private records; every admin API remains protected.
                 .requestMatchers(HttpMethod.GET,
-                    "/admin.html", "/admin-experiences.html",
-                    "/reset-password.html", "/confirm-email.html",
+                    "/admin.html", "/admin-experiences.html", "/reset-password.html", "/confirm-email.html",
                     "/admin/*.js", "/admin/*.css",
-                    "/assets/css/tokens.css", "/assets/css/base.css",
-                    "/assets/css/components.css",
+                    "/assets/css/tokens.css", "/assets/css/base.css", "/assets/css/components.css",
                     "/assets/images/brand/logo-katia.svg").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
@@ -109,7 +106,7 @@ public class SecurityConfiguration {
                     "/api/v1/auth/email-change/confirm").permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/products", "/api/v1/products/*",
-                    "/api/v1/products/*/whatsapp",
+                    "/api/v1/products/*/whatsapp", "/api/v1/products/*/related",
                     "/api/v1/brands", "/api/v1/categories", "/api/v1/store",
                     "/api/v1/experiences", "/api/v1/experiences/*",
                     "/api/v1/offerings", "/api/v1/offerings/*",

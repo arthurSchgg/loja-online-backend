@@ -43,6 +43,9 @@ public class OfferingOption {
     }
 
     public Long getId() { return id; }
+    // Not a JavaBeans property: repository paths such as OfferingId must
+    // continue resolving the JPA relationship offering.id.
+    public Long offeringId() { return offering.getId(); }
     public Kind getKind() { return kind; }
     public String getLabel() { return label; }
     public int getPosition() { return position; }

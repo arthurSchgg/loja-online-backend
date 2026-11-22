@@ -1,5 +1,6 @@
 package br.com.lojinhadakatia;
 
+import br.com.lojinhadakatia.security.BreachedPasswordVerifier;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -7,6 +8,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.env.Environment;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -35,12 +37,17 @@ class StagingProfileIntegrationTest {
 
     @Autowired private MockMvc mvc;
     @Autowired private Environment environment;
+    // The staging configuration remains fail-closed. Mock only the external
+    // verifier for this isolated test; breach checks have dedicated tests.
+    @MockitoBean private BreachedPasswordVerifier breachedPasswordVerifier;
 
     @Test
     void sessionCookieIsSecureInStaging() {
         assertEquals(Boolean.TRUE,
             environment.getProperty("server.servlet.session.cookie.secure", Boolean.class));
         assertEquals("lax", environment.getProperty("server.servlet.session.cookie.same-site"));
+        assertEquals(Boolean.TRUE,
+            environment.getProperty("app.security.breached-password-check-enabled",Boolean.class));
     }
 
     @Test

@@ -10,5 +10,9 @@ target/
 backups/
 *.dump
 *.dump.sha256
+*.dump.gpg
+*.dump.gpg.sha256
 staging-local-ca.crt
 *.log
+__pycache__/
+*.pyc

@@ -16,6 +16,8 @@ jobs:
           cache: maven
       - name: Validate Java package layout and internal source imports
         run: python3 scripts/check_java_references.py
+      - name: Verify the same-origin admin bundle manifest and public separation
+        run: python3 scripts/verify_admin_bundle.py
       - name: Test staging login bootstrap readiness safeguards
         run: python3 -m unittest discover -s scripts -p 'test_staging_smoke_login.py'
       - name: Validate public storefront JSON contract and redaction helpers
@@ -24,6 +26,10 @@ jobs:
         run: |
           python3 -m py_compile scripts/import_catalog.py
           python3 -m unittest discover -s scripts -p 'test_import_catalog.py'
+      - name: Verify independent encrypted backup and restore guards
+        run: |
+          bash -n scripts/backup-postgres-encrypted.sh scripts/verify-encrypted-restore.sh
+          python3 -m unittest discover -s scripts -p 'test_backup_encrypted.py'
       - name: Validate Docker Compose definitions without starting containers
         run: |
           docker compose --env-file .env.example -f compose.yaml config --quiet

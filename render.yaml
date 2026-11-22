@@ -1,5 +1,5 @@
 # Render Free + Neon (PostgreSQL externo); SEM Render Postgres e SEM planos pagos.
-# Aplicação API somente. O painel administrativo depende de hospedagem same-origin (#180).
+# API e snapshot do painel administrativo na mesma origem. Deploy manual controlado.
 services:
   - type: web
     name: lojinha-da-katia-api

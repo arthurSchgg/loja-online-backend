@@ -17,8 +17,9 @@ public class AdminPasswordRecoveryController {
     }
 
     public record ResetRequest(@NotBlank @Email @Size(max=254) String email) {}
-    public record ResetConfirm(@NotBlank String token, @NotBlank String newPassword,
-                               @NotBlank String confirmPassword) {}
+    public record ResetConfirm(@NotBlank @Size(max=256) String token,
+                               @NotBlank @Size(min=12,max=128) String newPassword,
+                               @NotBlank @Size(min=12,max=128) String confirmPassword) {}
 
     @PostMapping("/request")
     public ResponseEntity<Void> request(@Valid @RequestBody ResetRequest body, HttpServletRequest request) {

@@ -21,6 +21,8 @@ spring:
       ddl-auto: validate
   flyway:
     enabled: true
+    # Temporary rollback-compatible bridge: deploy before enabling V18/V19.
+    target: '17'
 springdoc:
   api-docs:
     enabled: false
@@ -34,3 +36,7 @@ management:
   endpoint:
     health:
       show-details: never
+app:
+  security:
+    password-reset-url: ${ADMIN_PASSWORD_RESET_URL:https://lojinha-da-katia-api-rjvx.onrender.com/reset-password.html}
+    email-change-url: ${ADMIN_EMAIL_CHANGE_URL:https://lojinha-da-katia-api-rjvx.onrender.com/confirm-email.html}

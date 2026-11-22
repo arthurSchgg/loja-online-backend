@@ -1,37 +1,22 @@
-# Painel administrativo na mesma origem do backend
+# Painel administrativo sob a mesma origem da API
 
-**Ambiente de revisão:** `https://lojinha-da-katia-api-rjvx.onrender.com/admin.html`
+O serviço Render da Lojinha usa um bundle estático do painel no mesmo host HTTPS da API. Em 21/11/2026, o deploy ativo `b6963adb192fa3d6c740d3e4748fa1250140edcd` servia o painel na branch `feature/DEPLOY-001-render-neon`, com autodeploy desativado. A leitura pública de `/admin.html` respondeu 200 após o serviço aquecer; a leitura anônima de `/api/v1/admin/products` respondeu 401. Isso comprova a entrega dos arquivos e a fronteira anônima, **não** valida login, SMTP ou o uso administrativo real.
 
-## Estrutura e fonte
+Esta revisão leva o bundle para a branch de integração, evitando que a promoção futura de `develop` remova o painel que já existe no serviço. O repositório frontend continua sendo a fonte canônica dos arquivos; não edite duas versões manualmente.
 
-Os dois repositórios GitHub são **privados**. O Render acessa o repositório backend, mas não pode importar automaticamente os arquivos administrativos privados do frontend durante um build Docker sem outro token. Para evitar credenciais cross-repo no Render e não expor o painel no Cloudflare Pages, incluímos um **snapshot versionado do bundle administrativo** em `src/main/resources/static/`, copiado da branch `feature/DEPLOY-001-cloudflare-pages` do repositório `arthurSchgg/loja-online-frontend` (commit `b82d2bb54311a86773452c1c94e2ea025d85802b`).
+## Como sincronizar uma nova versão
 
-Arquivos copiados: `admin.html`, `admin-experiences.html`, `reset-password.html`, `confirm-email.html`, toda a pasta `admin/`, CSS público compartilhado em `assets/css/{tokens,base,components}.css` e marca `assets/images/brand/logo-katia.svg`.
+1. No frontend, finalize e teste a revisão correspondente.
+2. Gere o artefato administrativo com `PUBLIC_STOREFRONT_URL=https://main.loja-online-frontend.pages.dev/ npm run build:admin` (no PowerShell, defina a variável de ambiente antes do comando). O domínio público é configuração não secreta.
+3. Inclua por PR apenas os arquivos de `dist-admin/` em `src/main/resources/static/`. Não copie `dist/`, `dist-hml/`, o catálogo, arquivos de ambiente nem credenciais.
+4. Atualize `docs/ADMIN-BUNDLE-MANIFEST.sha256` com os hashes SHA-256 de todos os caminhos relativos ao diretório estático; revise a diferença com a fonte frontend.
+5. Execute `python3 scripts/verify_admin_bundle.py` e `mvn -B verify`, incluindo `AdminSameOriginStaticBundleTest`.
+6. Registre o commit frontend usado no PR de backend. Só promova a versão depois de homologação e revisão de rollback.
 
-**Atenção à sincronização:** qualquer alteração nos arquivos acima no frontend exige novo snapshot **por PR no backend** e revisão. A cópia aqui é um artefato estático, **não** é um segundo projeto frontend independente, nem altera a API.
+O formato de snapshot evita usar um token cross-repo em cada build de produção. O manifesto verifica o conjunto exato de arquivos e os hashes, não substitui revisão de origem.
 
 ## Segurança
 
-- Spring Security permite por GET apenas os caminhos explícitos dos recursos estáticos; `/api/v1/admin/**` continua com `hasRole("ADMIN")`.
-- Login usa `POST /api/v1/auth/login` + CSRF sob o mesmo host HTTPS, com cookie `Secure`, `HttpOnly` e `SameSite=Lax`.
-- Os arquivos HTML/CSS/JS do login são públicos (como qualquer frontend), mas não incluem dados administrativos protegidos. O backend autoriza cada leitura/gravação, não o JavaScript.
-- Nenhum arquivo administrativo será copiado para `dist/` do Cloudflare Pages; o bundle `dist-admin/` continua excluído no build público.
-- Nem o código nem os recursos estáticos contêm senhas ou strings do banco. Segredos ficam exclusivamente no Render.
-- Não desativar CSRF, trocar CORS por `*` ou expor credenciais para corrigir sessão cross-origin.
-- Recuperação de senha e troca de e-mail dependem de SMTP configurado e testado. **Ainda não divulgar o painel para uso comercial antes dessa validação.**
+Os endpoints administrativos permanecem restritos a sessão HTTP autenticada com papel ADMIN. As páginas de login e recuperação e seus CSS/JS podem ser entregues sem autenticação, mas não contêm registros administrativos. O frontend público Cloudflare exclui todo o painel e não encaminha rotas de autenticação. Não desative CSRF ou autenticação para corrigir problemas de origem.
 
-## Verificações antes de fechar a issue #180
-
-1. Passar testes do backend: `mvn clean verify`, incluindo `AdminSameOriginStaticBundleTest`.
-2. Confirmar build Docker e `GET /actuator/health` em Render com HTTP 200.
-3. Confirmar `GET /admin.html`, `GET /admin/api.js`, `GET /reset-password.html` em HTTPS com status 200.
-4. Confirmar `GET /api/v1/admin/products` sem autenticação com status 401.
-5. Teste manual HTTPS com administradora: login, listagem dos oito rascunhos Skelt, alterar cadastro de teste, CSRF, logout, expiração de sessão e reautenticação.
-6. Configurar SMTP, backup do Neon e validar recuperação de senha.
-7. Integrar somente depois de CI confiável, revisão de código e homologação comercial.
-
-**Nenhuma atualização comercial pode ser publicada automaticamente.** O banco Neon contém oito produtos Skelt em rascunho e indisponíveis. Os WebP são prévias de baixa resolução e ainda precisam de imagens autorizadas para uso final.
-
-## Limitações
-
-O link "Voltar à vitrine" no painel originalmente aponta para `index.html`, que **não** está empacotado no backend. Após configurar a URL real do Cloudflare Pages, ajustar esse link em ambos os repositórios e sincronizar o bundle.
+O painel envia recuperações por um transporte configurado explicitamente. SMTP é o padrão para instalações próprias e homologação; no Render Free, configure o transporte HTTPS Resend conforme [ADMIN-EMAIL-HTTPS.md](ADMIN-EMAIL-HTTPS.md). Sem remetente e credencial válidos, o recurso permanece indisponível; não desative a proteção da conta.

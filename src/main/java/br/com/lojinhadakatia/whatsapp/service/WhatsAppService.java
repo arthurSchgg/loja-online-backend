@@ -1,6 +1,9 @@
 package br.com.lojinhadakatia.whatsapp.service;
 
 import br.com.lojinhadakatia.catalog.service.CatalogService;
+import br.com.lojinhadakatia.catalog.dto.ProductResponse;
+import br.com.lojinhadakatia.catalog.dto.ProductPriceStatus;
+import br.com.lojinhadakatia.offering.dto.OfferingResponse;
 import br.com.lojinhadakatia.offering.service.OfferingService;
 import br.com.lojinhadakatia.store.repository.StoreInformationRepository;
 import br.com.lojinhadakatia.whatsapp.dto.WhatsAppLinkResponse;
@@ -36,18 +39,15 @@ public class WhatsAppService {
     /** Uma consulta só é permitida para produtos atualmente publicados. */
     public WhatsAppLinkResponse forProduct(Long productId) {
         var product = catalogService.published(productId);
-        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
-        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name() +
-            ". Preço atual: " + NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(product.effectivePrice()) + ".");
+        requireConfirmedProduct(product);
+        return productLink(product);
     }
 
     /** Uma consulta só é permitida para serviços atualmente publicados. */
     public WhatsAppLinkResponse forOffering(Long offeringId) {
         var offering = offeringService.publicOne(offeringId);
         if (!offering.available()) throw new BusinessException("Serviço indisponível para consulta.");
-        String price = offering.price() == null ? "Valor sob consulta" :
-            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
-        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + price + ".");
+        return offeringLink(offering);
     }
 
     /** Revalida dados atuais para o usuário confirmar antes de abrir o WhatsApp. */
@@ -57,11 +57,12 @@ public class WhatsAppService {
                 if (request.customizations()!=null && !request.customizations().isEmpty())
                     throw new BusinessException("Produtos não aceitam opções de velas.");
                 var product = catalogService.published(request.id());
-                if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+                requireConfirmedProduct(product);
                 if (request.expectedPrice() == null ||
                     product.effectivePrice().compareTo(request.expectedPrice()) != 0)
                     throw new BusinessException("O preço do produto mudou; atualize a confirmação.");
-                return forProduct(request.id());
+                // Use the checked snapshot rather than re-fetching between validation and response.
+                return productLink(product);
             }
             case OFFERING -> {
                 var offering = offeringService.publicOne(request.id());
@@ -71,8 +72,8 @@ public class WhatsAppService {
                 if ((actual == null) != (expected == null) ||
                     (actual != null && actual.compareTo(expected) != 0))
                     throw new BusinessException("O valor da oferta mudou; atualize a confirmação.");
-                var selections = offeringService.validateCustomizations(request.id(), request.customizations());
-                if (selections.isEmpty()) return forOffering(request.id());
+                var selections = offeringService.validateCustomizations(offering, request.customizations());
+                if (selections.isEmpty()) return offeringLink(offering);
                 String formatted = actual == null ? "Valor sob consulta" :
                     NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(actual);
                 String options = selections.entrySet().stream()
@@ -83,6 +84,25 @@ public class WhatsAppService {
             }
             default -> throw new BusinessException("Tipo de consulta inválido.");
         }
+    }
+
+    private void requireConfirmedProduct(ProductResponse product) {
+        if (product.priceStatus()==ProductPriceStatus.ON_REQUEST ||
+            product.effectivePrice()==null || product.effectivePrice().signum()<=0)
+            throw new BusinessException("O preço deste produto ainda não foi confirmado.");
+        if (!product.available()) throw new BusinessException("Produto indisponível para consulta.");
+    }
+
+    private WhatsAppLinkResponse productLink(ProductResponse product) {
+        return buildLink("Olá! Gostaria de saber mais sobre o produto: " + product.name()
+            + ". Preço atual: " + NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR"))
+            .format(product.effectivePrice()) + ".");
+    }
+
+    private WhatsAppLinkResponse offeringLink(OfferingResponse offering) {
+        String formatted = offering.price() == null ? "Valor sob consulta" :
+            NumberFormat.getCurrencyInstance(Locale.forLanguageTag("pt-BR")).format(offering.price());
+        return buildLink("Olá! Gostaria de saber mais sobre: " + offering.title() + ". " + formatted + ".");
     }
 
     private WhatsAppLinkResponse buildLink(String message) {
