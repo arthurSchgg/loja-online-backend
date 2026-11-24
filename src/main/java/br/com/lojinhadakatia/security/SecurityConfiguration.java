@@ -74,12 +74,27 @@ public class SecurityConfiguration {
     @Bean
     SecurityFilterChain webSecurity(HttpSecurity http, LoginAttemptLimiter loginLimiter,
                                    AdminCredentialService credentials, AdminSecurityNotifier notifier,
+                                   AdminTotp totp, PasswordEncoder passwordEncoder,
                                    @Value("${app.security.reject-unversioned-sessions:true}")
                                    boolean rejectUnversionedSessions) throws Exception {
         HttpSessionCsrfTokenRepository csrfRepository = new HttpSessionCsrfTokenRepository();
         csrfRepository.setHeaderName("X-CSRF-TOKEN");
+        var provider = new org.springframework.security.authentication.dao.DaoAuthenticationProvider(credentials) {
+            @Override
+            protected void additionalAuthenticationChecks(
+                    org.springframework.security.core.userdetails.UserDetails user,
+                    org.springframework.security.authentication.UsernamePasswordAuthenticationToken authentication) {
+                String code = authentication.getDetails() instanceof AdminTotp.LoginDetails details
+                    ? details.take() : null;
+                super.additionalAuthenticationChecks(user, authentication);
+                if (!totp.verify(code))
+                    throw new org.springframework.security.authentication.BadCredentialsException("Credenciais inválidas.");
+            }
+        };
+        provider.setPasswordEncoder(passwordEncoder);
 
         return http
+            .authenticationManager(new org.springframework.security.authentication.ProviderManager(provider))
             .cors(Customizer.withDefaults())
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfRepository)
@@ -92,14 +107,16 @@ public class SecurityConfiguration {
             .addFilterBefore(new LoginThrottleFilter(loginLimiter), UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(new AdminSessionVersionFilter(credentials, rejectUnversionedSessions), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/admin.html", "/admin-experiences.html").denyAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 // The login/recovery UI is a static bundle on the same origin.
                 // It contains no private records; every admin API remains protected.
                 .requestMatchers(HttpMethod.GET,
-                    "/admin.html", "/admin-experiences.html", "/reset-password.html", "/confirm-email.html",
+                    AdminPageController.LOGIN, "/reset-password.html", "/confirm-email.html",
                     "/admin/*.js", "/admin/*.css",
                     "/assets/css/tokens.css", "/assets/css/base.css", "/assets/css/components.css",
                     "/assets/images/brand/logo-katia.svg").permitAll()
+                .requestMatchers(HttpMethod.GET, AdminPageController.EXPERIENCES).hasRole("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm",
@@ -120,6 +137,7 @@ public class SecurityConfiguration {
                 .anyRequest().denyAll())
             .formLogin(form -> form
                 .loginProcessingUrl("/api/v1/auth/login")
+                .authenticationDetailsSource(request -> new AdminTotp.LoginDetails(request.getParameter("otp")))
                 .successHandler((request, response, authentication) -> {
                     loginLimiter.succeeded(authentication.getName(), request.getRemoteAddr());
                     request.getSession(true).setAttribute(AdminSessionVersionFilter.VERSION_ATTRIBUTE,
@@ -132,6 +150,8 @@ public class SecurityConfiguration {
                     String attemptedUsername = request.getParameter("username");
                     loginLimiter.failed(attemptedUsername, request.getRemoteAddr());
                     if (loginLimiter.retryAfterSeconds(attemptedUsername, request.getRemoteAddr()) > 0) {
+                        org.slf4j.LoggerFactory.getLogger(SecurityConfiguration.class)
+                            .warn("Administrative login temporarily throttled after repeated failures");
                         try { notifier.suspiciousLogin(attemptedUsername); }
                         catch (RuntimeException ignored) { /* Do not change authentication response due to email errors. */ }
                     }
