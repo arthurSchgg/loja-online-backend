@@ -16,10 +16,14 @@ class AdminSameOriginStaticBundleTest {
     @Autowired MockMvc mvc;
 
     @Test void shipsSameOriginHtmlAndAccountRecovery() throws Exception {
-        mvc.perform(get("/admin.html")).andExpect(status().isOk())
+        mvc.perform(get(br.com.lojinhadakatia.security.AdminPageController.LOGIN)).andExpect(status().isOk())
+            .andExpect(header().string("X-Robots-Tag", containsString("noindex")))
+            .andExpect(header().string("Cache-Control", containsString("no-store")))
             .andExpect(content().string(containsString("login-form")))
             .andExpect(content().string(containsString("https://main.loja-online-frontend.pages.dev/")));
-        mvc.perform(get("/admin-experiences.html")).andExpect(status().isOk());
+        mvc.perform(get(br.com.lojinhadakatia.security.AdminPageController.EXPERIENCES)).andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin.html")).andExpect(status().isUnauthorized());
+        mvc.perform(get("/admin-experiences.html")).andExpect(status().isUnauthorized());
         mvc.perform(get("/reset-password.html")).andExpect(status().isOk());
         mvc.perform(get("/confirm-email.html")).andExpect(status().isOk());
         mvc.perform(get("/admin/admin.js")).andExpect(status().isOk())
