@@ -142,7 +142,7 @@ class ManagementLifecycleCoverageTest {
     void campaignLifecycleValidatesUrlsAndDeletionRules() throws Exception {
         String base = "/api/v1/admin/campaigns";
         long id = create(base, """
-            {"title":"Destaque","published":true,"position":1,"linkUrl":"https://example.com/"}
+            {"title":"Destaque","published":true,"position":1,"linkUrl":"/catalogo.html"}
             """);
         mvc.perform(get(base).with(user("tester").roles("ADMIN")))
             .andExpect(status().isOk()).andExpect(jsonPath("$[0].title").value("Destaque"));

@@ -1,12 +1,24 @@
 name: Backend CI
 on:
   push:
-    branches: [main, develop, 'feature/**', 'fix/**', 'integration/**', 'release/**']
+    # Feature/fix work is verified on its PR. Avoid a duplicate full Docker
+    # staging build on every feature push while the PR is running.
+    branches: [main, develop, 'integration/**', 'release/**']
   pull_request:
     branches: [main, develop, 'integration/**', 'release/**']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -16,6 +28,8 @@ jobs:
           cache: maven
       - name: Validate Java package layout and internal source imports
         run: python3 scripts/check_java_references.py
+      - name: Verify the same-origin admin bundle manifest and public separation
+        run: python3 scripts/verify_admin_bundle.py
       - name: Test staging login bootstrap readiness safeguards
         run: python3 -m unittest discover -s scripts -p 'test_staging_smoke_login.py'
       - name: Validate public storefront JSON contract and redaction helpers
@@ -24,6 +38,10 @@ jobs:
         run: |
           python3 -m py_compile scripts/import_catalog.py
           python3 -m unittest discover -s scripts -p 'test_import_catalog.py'
+      - name: Verify independent encrypted backup and restore guards
+        run: |
+          for script in scripts/backup-postgres-encrypted.sh scripts/verify-encrypted-restore.sh scripts/run-scheduled-backup.sh; do bash -n "$script"; done
+          python3 -m unittest discover -s scripts -p 'test_backup*.py'
       - name: Validate Docker Compose definitions without starting containers
         run: |
           docker compose --env-file .env.example -f compose.yaml config --quiet
@@ -33,7 +51,7 @@ jobs:
           # Validate Caddy full-stack routing without accessing the private frontend repo.
           docker run --rm -v "${PWD}/deploy/Caddyfile.homologation:/etc/caddy/Caddyfile:ro" \
             caddy:2-alpine caddy validate --config /etc/caddy/Caddyfile
-          bash -n scripts/*.sh
+          for script in scripts/*.sh; do bash -n "$script"; done
       - name: Install and start PostgreSQL for integration tests
         run: |
           sudo apt-get update -qq

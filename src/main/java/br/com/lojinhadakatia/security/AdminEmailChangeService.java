@@ -8,7 +8,6 @@ import java.util.Base64;
 import java.util.HexFormat;
 import java.util.Locale;
 import java.util.Objects;
-import java.net.URI;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -38,14 +37,7 @@ public class AdminEmailChangeService {
     }
 
     private boolean configured() {
-        try {
-            URI uri = URI.create(confirmationUrl);
-            return outbox.configured() && "https".equalsIgnoreCase(uri.getScheme())
-                && uri.getHost() != null && uri.getUserInfo() == null
-                && uri.getRawQuery() == null && uri.getRawFragment() == null;
-        } catch (IllegalArgumentException ex) {
-            return false;
-        }
+        return outbox.configured() && AdminRecoveryUrl.valid(confirmationUrl);
     }
 
     @Transactional

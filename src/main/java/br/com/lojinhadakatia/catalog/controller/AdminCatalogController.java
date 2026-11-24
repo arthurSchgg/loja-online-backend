@@ -5,6 +5,8 @@ import br.com.lojinhadakatia.catalog.service.CatalogService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Positive;
+import jakarta.validation.constraints.Size;
 import java.net.URI;
 import java.util.List;
 import org.springframework.data.domain.Page;
@@ -28,10 +30,15 @@ public class AdminCatalogController {
 
     @GetMapping("/products")
     public Page<ProductResponse> all(
-            @RequestParam(defaultValue = "0") @Min(0) int page,
+            @RequestParam(required=false) @Size(max=180) String q,
+            @RequestParam(required=false) @Positive Long brandId,
+            @RequestParam(required=false) @Positive Long categoryId,
+            @RequestParam(required=false) Boolean published,
+            @RequestParam(required=false) Boolean available,
+            @RequestParam(defaultValue = "0") @Min(0) @Max(10000) int page,
             @RequestParam(defaultValue = "12") @Min(1) @Max(50) int size) {
-        return catalog.search(null, null, null, null,
-            PageRequest.of(page, size, Sort.by("id").descending()), true);
+        return catalog.search(q,brandId,categoryId,available,
+            PageRequest.of(page,size,Sort.by("id").descending()),true,"recent",null,published);
     }
 
     @GetMapping("/products/{id}")
@@ -58,10 +65,10 @@ public class AdminCatalogController {
 
 
     @GetMapping("/brands")
-    public List<LookupDto> brands() { return catalog.adminBrands(); }
+    public List<AdminLookupDto> brands() { return catalog.adminBrands(); }
 
     @GetMapping("/brands/{id}")
-    public LookupDto brand(@PathVariable Long id) { return catalog.adminBrand(id); }
+    public AdminLookupDto brand(@PathVariable Long id) { return catalog.adminBrand(id); }
 
     @PutMapping("/brands/{id}/activate")
     public ResponseEntity<Void> activateBrand(@PathVariable Long id) {
@@ -70,13 +77,13 @@ public class AdminCatalogController {
     }
 
     @PostMapping("/brands")
-    public ResponseEntity<LookupDto> createBrand(@Valid @RequestBody LookupRequest request) {
-        LookupDto result = catalog.addBrand(request);
+    public ResponseEntity<AdminLookupDto> createBrand(@Valid @RequestBody LookupRequest request) {
+        AdminLookupDto result = catalog.addBrand(request);
         return ResponseEntity.created(URI.create("/api/v1/admin/brands/" + result.id())).body(result);
     }
 
     @PutMapping("/brands/{id}")
-    public LookupDto updateBrand(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
+    public AdminLookupDto updateBrand(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
         return catalog.renameBrand(id, request);
     }
 
@@ -88,10 +95,10 @@ public class AdminCatalogController {
 
 
     @GetMapping("/categories")
-    public List<LookupDto> categories() { return catalog.adminCategories(); }
+    public List<AdminLookupDto> categories() { return catalog.adminCategories(); }
 
     @GetMapping("/categories/{id}")
-    public LookupDto category(@PathVariable Long id) { return catalog.adminCategory(id); }
+    public AdminLookupDto category(@PathVariable Long id) { return catalog.adminCategory(id); }
 
     @PutMapping("/categories/{id}/activate")
     public ResponseEntity<Void> activateCategory(@PathVariable Long id) {
@@ -100,13 +107,13 @@ public class AdminCatalogController {
     }
 
     @PostMapping("/categories")
-    public ResponseEntity<LookupDto> createCategory(@Valid @RequestBody LookupRequest request) {
-        LookupDto result = catalog.addCategory(request);
+    public ResponseEntity<AdminLookupDto> createCategory(@Valid @RequestBody LookupRequest request) {
+        AdminLookupDto result = catalog.addCategory(request);
         return ResponseEntity.created(URI.create("/api/v1/admin/categories/" + result.id())).body(result);
     }
 
     @PutMapping("/categories/{id}")
-    public LookupDto updateCategory(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
+    public AdminLookupDto updateCategory(@PathVariable Long id, @Valid @RequestBody LookupRequest request) {
         return catalog.renameCategory(id, request);
     }
 

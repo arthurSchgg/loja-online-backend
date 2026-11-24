@@ -33,6 +33,7 @@ def verify_page(data):
 def verify_products(products):
     previous_price = None
     previous_id = None
+    pending_id = None
     for product in products:
         if not isinstance(product, dict):
             raise AssertionError("Invalid product DTO")
@@ -40,11 +41,20 @@ def verify_products(products):
         if type(product_id) is not int or product_id <= 0:
             raise AssertionError("Invalid product ID")
         raw = product.get("effectivePrice", product.get("price"))
+        if product.get("priceStatus") == "ON_REQUEST":
+            if raw is not None or product.get("price") is not None or product.get("available") is not False:
+                raise AssertionError("Unconfirmed products must not expose a price or allow consultation")
+            if pending_id is not None and product_id >= pending_id:
+                raise AssertionError("Pending prices must use descending ID order")
+            pending_id = product_id
+            continue
+        if pending_id is not None:
+            raise AssertionError("Confirmed prices must appear before unknown prices")
         try:
             price = Decimal(str(raw))
         except (InvalidOperation, ValueError):
             raise AssertionError("Invalid effective price") from None
-        if not price.is_finite() or price < 0:
+        if not price.is_finite() or price <= 0:
             raise AssertionError("Invalid effective price")
         if previous_price is not None and (
             price < previous_price or (price == previous_price and product_id >= previous_id)

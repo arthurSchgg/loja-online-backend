@@ -26,7 +26,7 @@ class CatalogImportTests(unittest.TestCase):
     def test_price_brazilian_and_dot_decimal(self):
         self.assertEqual(price("R$ 1.234,56"), "1234.56")
         self.assertEqual(price("15.9"), "15.90")
-        for value in ("", "-1", "abc", "15,999", "9999999999999"):
+        for value in ("", "0", "0.00", "-1", "abc", "15,999", "9999999999999"):
             with self.subTest(value=value), self.assertRaises(ValueError):
                 price(value)
 
@@ -37,6 +37,16 @@ class CatalogImportTests(unittest.TestCase):
         self.assertEqual(record["price"], "89.90")
         self.assertEqual(record["images"][0]["position"], 0)
         self.assertEqual(record["categories"], ["Categoria de teste"])
+
+    def test_pending_price_is_explicit(self):
+        data = self.valid()
+        data["products"][0].update(price=None, priceStatus="ON_REQUEST")
+        record = check_manifest(self.write(data))[0]
+        self.assertIsNone(record["price"])
+        self.assertEqual(record["priceStatus"], "ON_REQUEST")
+        data["products"][0]["price"] = "0"
+        with self.assertRaisesRegex(ValueError, "sob consulta"):
+            check_manifest(self.write(data))
 
     def test_rejects_duplicated_products(self):
         data = self.valid()

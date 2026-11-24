@@ -16,9 +16,9 @@ public class AdminPasswordController {
     }
 
     public record ChangePasswordRequest(
-        @NotBlank String currentPassword,
-        @NotBlank String newPassword,
-        @NotBlank String confirmPassword) {}
+        @NotBlank @Size(max=128) String currentPassword,
+        @NotBlank @Size(min=12,max=128) String newPassword,
+        @NotBlank @Size(min=12,max=128) String confirmPassword) {}
 
     @PostMapping("/change-password")
     public ResponseEntity<Void> change(@Valid @RequestBody ChangePasswordRequest body,

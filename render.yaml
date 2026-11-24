@@ -1,0 +1,39 @@
+# Render Free + Neon (PostgreSQL externo); SEM Render Postgres e SEM planos pagos.
+# API e snapshot do painel administrativo na mesma origem. Deploy manual controlado.
+services:
+  - type: web
+    name: lojinha-da-katia-api
+    runtime: docker
+    plan: free
+    region: virginia
+    repo: https://github.com/arthurSchgg/loja-online-backend
+    branch: feature/DEPLOY-001-render-neon
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /actuator/health
+    autoDeployTrigger: off
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: SERVER_PORT
+        value: "10000"
+      - key: SESSION_COOKIE_SECURE
+        value: "true"
+      - key: CORS_ALLOWED_ORIGINS
+        value: ""
+      - key: DB_URL
+        sync: false
+      - key: DB_USERNAME
+        value: lojinha
+      - key: DB_PASSWORD
+        sync: false
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: EMAIL_OUTBOX_KEY
+        generateValue: true
+      - key: BREACHED_PASSWORD_CHECK_ENABLED
+        value: "true"

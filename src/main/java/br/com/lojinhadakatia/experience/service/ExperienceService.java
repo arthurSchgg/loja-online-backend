@@ -64,6 +64,8 @@ public class ExperienceService {
  /** Resolve only products actually published, available and with positive stock. */
  private List<ProductResponse> eligibleRecommendations(ExperienceResult winner) {
   var configured=recommendations.findByResultIdOrderByPositionAscIdAsc(winner.getId());
+  int target=Math.min(3,configured.size());
+  if(target==0)return List.of();
   List<ProductResponse> selected=new ArrayList<>();
   Set<Long> seen=new HashSet<>();
   for(var link:configured){
@@ -71,30 +73,30 @@ public class ExperienceService {
    if(!seen.add(product.getId()))continue;
    ProductResponse published=eligible(product.getId());
    if(published!=null)selected.add(published);
-   if(selected.size()==3)return selected;
+   if(selected.size()==target)return List.copyOf(selected);
   }
   // Prefer the same brand; if necessary, use a shared category.
   // Both searches apply publication, manual availability and stock filters.
   for(var link:configured){
-   if(selected.size()==3)break;
+   if(selected.size()==target)break;
    var brandId=link.getProduct().getBrand().getId();
    addFallbacks(catalog.search(null, brandId, null, true,
-       PageRequest.of(0, 40, Sort.by("id").descending()), false).getContent(),selected,seen);
+       PageRequest.of(0, 8, Sort.by("id").descending()), false).getContent(),selected,seen,target);
   }
   for(var link:configured){
-   if(selected.size()==3)break;
+   if(selected.size()==target)break;
    for(var category:link.getProduct().getCategories()){
-    if(selected.size()==3)break;
+    if(selected.size()==target)break;
     addFallbacks(catalog.search(null, null, category.getId(), true,
-        PageRequest.of(0, 40, Sort.by("id").descending()), false).getContent(),selected,seen);
+        PageRequest.of(0, 8, Sort.by("id").descending()), false).getContent(),selected,seen,target);
    }
   }
   return List.copyOf(selected);
  }
 
- private void addFallbacks(List<ProductResponse> candidates, List<ProductResponse> selected, Set<Long> seen) {
+ private void addFallbacks(List<ProductResponse> candidates, List<ProductResponse> selected, Set<Long> seen,int target) {
   for(var candidate:candidates){
-   if(selected.size()==3)break;
+   if(selected.size()==target)break;
    if(candidate.available() && seen.add(candidate.id()))selected.add(candidate);
   }
  }

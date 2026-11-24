@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import jakarta.persistence.LockModeType;
 import java.util.Optional;
-import br.com.lojinhadakatia.catalog.entity.Product;
 public interface ProductRepository extends JpaRepository<Product,Long>,JpaSpecificationExecutor<Product> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select p from Product p where p.id = :id")

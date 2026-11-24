@@ -93,18 +93,26 @@ public class SecurityConfiguration {
             .addFilterBefore(new AdminSessionVersionFilter(credentials, rejectUnversionedSessions), AuthorizationFilter.class)
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                // The login/recovery UI is a static bundle on the same origin.
+                // It contains no private records; every admin API remains protected.
+                .requestMatchers(HttpMethod.GET,
+                    "/admin.html", "/admin-experiences.html", "/reset-password.html", "/confirm-email.html",
+                    "/admin/*.js", "/admin/*.css",
+                    "/assets/css/tokens.css", "/assets/css/base.css", "/assets/css/components.css",
+                    "/assets/images/brand/logo-katia.svg").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/csrf").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/v1/auth/me").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/auth/password-reset/request", "/api/v1/auth/password-reset/confirm",
                     "/api/v1/auth/email-change/confirm").permitAll()
                 .requestMatchers(HttpMethod.GET,
                     "/api/v1/products", "/api/v1/products/*",
-                    "/api/v1/products/*/whatsapp",
+                    "/api/v1/products/*/whatsapp", "/api/v1/products/*/related",
                     "/api/v1/brands", "/api/v1/categories", "/api/v1/store",
                     "/api/v1/experiences", "/api/v1/experiences/*",
                     "/api/v1/offerings", "/api/v1/offerings/*",
                     "/api/v1/offerings/*/whatsapp",
                     "/api/v1/content-sections", "/api/v1/campaigns",
+                    "/api/v1/media/*", "/api/v1/storefront/featured",
                     "/actuator/health", "/actuator/info",
                     "/v3/api-docs", "/v3/api-docs/**",
                     "/swagger-ui/**", "/swagger-ui.html").permitAll()

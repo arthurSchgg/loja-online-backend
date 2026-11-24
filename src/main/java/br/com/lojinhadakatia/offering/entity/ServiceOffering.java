@@ -2,6 +2,9 @@ package br.com.lojinhadakatia.offering.entity;
 import jakarta.persistence.*;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import br.com.lojinhadakatia.catalog.dto.ImageRequest;
 /** Oferta publicada: pode ser vela, oficina ou locação, conforme cadastro real. */
 @Entity @Table(name="service_offerings")
 public class ServiceOffering {
@@ -11,6 +14,10 @@ public class ServiceOffering {
  @Enumerated(EnumType.STRING) @Column(nullable=false,length=30) private OfferingType type;
  @Column(precision=12,scale=2) private BigDecimal price;
  @Column(name="image_url",length=2048) private String imageUrl;
+ @OneToMany(mappedBy="offering",cascade=CascadeType.ALL,orphanRemoval=true)
+ @OrderBy("position ASC, id ASC")
+ @org.hibernate.annotations.BatchSize(size=32)
+ private List<OfferingImage> images=new ArrayList<>();
  @Column(nullable=false) private boolean published;
  @Column(nullable=false) private boolean available = true;
  @Column(name="created_at",nullable=false,updatable=false) private Instant createdAt;
@@ -42,5 +49,11 @@ public class ServiceOffering {
  }
  public Long getId(){return id;} public String getTitle(){return title;} public String getDescription(){return description;}
  public OfferingType getType(){return type;} public BigDecimal getPrice(){return price;} public String getImageUrl(){return imageUrl;}
+ public List<OfferingImage> getImages(){return images;}
+ public void replaceImages(List<ImageRequest> ordered){
+  images.clear();
+  ordered.forEach(item->images.add(new OfferingImage(this,item.url(),item.position(),item.altText())));
+  imageUrl=ordered.isEmpty()?null:ordered.getFirst().url();
+ }
  public boolean isPublished(){return published;} public boolean isAvailable(){return available;}
 }

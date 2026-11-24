@@ -5,7 +5,10 @@ import br.com.lojinhadakatia.offering.entity.*;
 import br.com.lojinhadakatia.offering.repository.ServiceOfferingRepository;
 import br.com.lojinhadakatia.offering.repository.OfferingOptionRepository;
 import br.com.lojinhadakatia.shared.exception.*;
-import java.net.URI;
+import br.com.lojinhadakatia.catalog.dto.ImageRequest;
+import br.com.lojinhadakatia.catalog.dto.ImageResponse;
+import br.com.lojinhadakatia.media.ImageReferenceValidator;
+import java.util.Objects;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -13,6 +16,7 @@ import java.util.LinkedHashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,34 +25,42 @@ import org.springframework.transaction.annotation.Transactional;
 public class OfferingService {
  private final ServiceOfferingRepository repo;
  private final OfferingOptionRepository options;
- public OfferingService(ServiceOfferingRepository repo, OfferingOptionRepository options){this.repo=repo;this.options=options;}
+ private final ImageReferenceValidator imageReferences;
+ public OfferingService(ServiceOfferingRepository repo, OfferingOptionRepository options,ImageReferenceValidator imageReferences){
+  this.repo=repo;this.options=options;this.imageReferences=imageReferences;
+ }
  public List<OfferingResponse> published(OfferingType type){
-  return (type==null?repo.findByPublishedTrueOrderByIdDesc():repo.findByPublishedTrueAndTypeOrderByIdDesc(type))
-     .stream().map(this::map).toList();
+  return mapAll(type==null?repo.findByPublishedTrueOrderByIdDesc():repo.findByPublishedTrueAndTypeOrderByIdDesc(type),true);
  }
  public OfferingResponse publicOne(Long id){return map(repo.findById(id).filter(ServiceOffering::isPublished)
     .orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada.")));}
- public List<OfferingResponse> adminAll(){return repo.findAll().stream().map(this::mapAdmin).toList();}
+ public List<OfferingResponse> adminAll(){return mapAll(repo.findAll(),false);}
  public OfferingResponse adminOne(Long id){return mapAdmin(find(id));}
  @Transactional public OfferingResponse create(OfferingRequest request){
-  validate(request);
-  return map(repo.saveAndFlush(new ServiceOffering(request.title().trim(),request.description(),
-    request.type(),request.price(),request.imageUrl(),request.published(),request.available())));
+  var images=images(request,null);
+  var entity=new ServiceOffering(request.title().trim(),request.description(),
+    request.type(),request.price(),request.imageUrl(),request.published(),request.available());
+  entity.replaceImages(images);
+  return mapAdmin(repo.saveAndFlush(entity));
  }
  @Transactional public OfferingResponse update(Long id,OfferingRequest request){
-  validate(request);
-  var entity=find(id);entity.update(request.title().trim(),request.description(),request.type(),request.price(),
+  var entity=lock(id);
+  var images=images(request,entity);
+  if(entity.getType()==OfferingType.CANDLE && request.type()!=OfferingType.CANDLE && options.existsByOfferingId(id))
+   throw new BusinessException("Remova as opções de personalização antes de mudar o tipo do serviço.");
+  entity.update(request.title().trim(),request.description(),request.type(),request.price(),
     request.imageUrl(),request.published(),request.available());
-  return map(repo.saveAndFlush(entity));
+  entity.replaceImages(images);
+  return mapAdmin(repo.saveAndFlush(entity));
  }
  @Transactional public void delete(Long id){
-  var entity=find(id);
+  var entity=lock(id);
   if(entity.isPublished())throw new BusinessException("Despublique a oferta antes de excluir.");
   repo.delete(entity);
  }
  @Transactional
  public List<OfferingOptionResponse> replaceOptions(Long offeringId, OfferingOptionsRequest request) {
-  var offering=find(offeringId);
+  var offering=lock(offeringId);
   if(offering.getType()!=OfferingType.CANDLE)
    throw new BusinessException("Somente modelos de vela aceitam personalizações.");
   Set<String> keys=new HashSet<>();
@@ -68,19 +80,18 @@ public class OfferingService {
  }
 
  /** Revalidates exact active selections; never calculates a fabricated candle price. */
- public Map<String,String> validateCustomizations(Long offeringId, Map<String,String> selections) {
-  var offering=repo.findById(offeringId).filter(ServiceOffering::isPublished)
-       .orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada."));
+ public Map<String,String> validateCustomizations(OfferingResponse offering, Map<String,String> selections) {
+  // Validate the options belonging to the same response whose price and
+  // availability WhatsApp already checked, without a second database read.
   if(selections==null||selections.isEmpty())return Map.of();
-  if(offering.getType()!=OfferingType.CANDLE)
+  if(offering.type()!=OfferingType.CANDLE)
    throw new BusinessException("Esta oferta não aceita personalizações de vela.");
-  var allowed=options.findByOfferingIdOrderByPositionAscIdAsc(offeringId).stream()
-       .filter(OfferingOption::isActive).toList();
+  var allowed=offering.options().stream().filter(OfferingOptionResponse::active).toList();
   Map<String,String> validated=new LinkedHashMap<>();
   for(var kind:OfferingOption.Kind.values()){
    String value=selections.get(kind.name());
    if(value==null)continue;
-   if(value.isBlank() || allowed.stream().noneMatch(x->x.getKind()==kind && x.getLabel().equals(value)))
+   if(value.isBlank() || allowed.stream().noneMatch(x->x.kind()==kind && x.label().equals(value)))
     throw new BusinessException("Personalização indisponível para este modelo.");
    validated.put(kind.name(),value);
   }
@@ -90,27 +101,43 @@ public class OfferingService {
  }
 
  private ServiceOffering find(Long id){return repo.findById(id).orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada."));}
- private void validate(OfferingRequest request){
-  String image=request.imageUrl();
-  if(image!=null&&!image.isBlank()){
-   URI uri;
-   try{uri=URI.create(image);}catch(Exception e){throw new BusinessException("URL da imagem inválida.");}
-   if(!"https".equalsIgnoreCase(uri.getScheme())||uri.getHost()==null||uri.getUserInfo()!=null)
-    throw new BusinessException("A imagem deve usar URL HTTPS pública.");
-  }
+ private ServiceOffering lock(Long id){return repo.findByIdForUpdate(id)
+     .orElseThrow(()->new ResourceNotFoundException("Oferta não encontrada."));}
+ private List<ImageRequest> images(OfferingRequest request,ServiceOffering existing){
+  if(request.images()!=null)return imageReferences.ordered(request.images(),true);
+  String url=request.imageUrl();
+  if(existing!=null&&Objects.equals(url,existing.getImageUrl())&&!existing.getImages().isEmpty())
+   return imageReferences.ordered(currentImages(existing).stream()
+       .map(item->new ImageRequest(item.url(),item.position(),item.altText())).toList(),true);
+  return imageReferences.ordered(url==null||url.isBlank()?List.of():List.of(new ImageRequest(url,0,null)),true);
+ }
+ private List<ImageResponse> currentImages(ServiceOffering o){
+  var cover=o.getImageUrl();
+  if(cover==null||cover.isBlank())return List.of();
+  var saved=o.getImages();
+  if(saved.isEmpty()||!Objects.equals(cover,saved.getFirst().getUrl()))
+   return List.of(new ImageResponse(cover,0,null));
+  return saved.stream().map(item->new ImageResponse(item.getUrl(),item.getPosition(),item.getAltText())).toList();
  }
  private OfferingResponse map(ServiceOffering o){
-  return makeResponse(o,true);
+  return makeResponse(o,true,options.findByOfferingIdOrderByPositionAscIdAsc(o.getId()));
  }
  private OfferingResponse mapAdmin(ServiceOffering o){
-  return makeResponse(o,false);
+  return makeResponse(o,false,options.findByOfferingIdOrderByPositionAscIdAsc(o.getId()));
  }
- private OfferingResponse makeResponse(ServiceOffering o, boolean publicView){
-  List<OfferingOptionResponse> listed=options.findByOfferingIdOrderByPositionAscIdAsc(o.getId()).stream()
+ private List<OfferingResponse> mapAll(List<ServiceOffering> offerings,boolean publicView){
+  if(offerings.isEmpty())return List.of();
+  var grouped=options.findByOfferingIdInOrderByPositionAscIdAsc(
+      offerings.stream().map(ServiceOffering::getId).toList()).stream()
+      .collect(Collectors.groupingBy(OfferingOption::offeringId));
+  return offerings.stream().map(o->makeResponse(o,publicView,grouped.getOrDefault(o.getId(),List.of()))).toList();
+ }
+ private OfferingResponse makeResponse(ServiceOffering o, boolean publicView,List<OfferingOption> allOptions){
+  List<OfferingOptionResponse> listed=allOptions.stream()
       .filter(item->!publicView||item.isActive())
       .map(item->new OfferingOptionResponse(item.getKind(),item.getLabel(),item.getPosition(),item.isActive()))
       .toList();
   return new OfferingResponse(o.getId(),o.getTitle(),o.getDescription(),o.getType(),
-    o.getPrice(),o.getImageUrl(),o.isPublished(),o.isAvailable(),listed);
+    o.getPrice(),o.getImageUrl(),o.isPublished(),o.isAvailable(),listed,currentImages(o));
  }
 }
